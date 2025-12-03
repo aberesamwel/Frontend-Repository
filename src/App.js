@@ -9,7 +9,8 @@ import Materials from './pages/Materials';
 
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import { projectsData } from './data/mockData';
+import { projectsData, userProfile } from './data/mockData';
+import { ActivityLogger } from './utils/activityLogger';
 
 // Helper functions for backward compatibility
 function extractChassisFromVehicleType(vehicleType) {
@@ -35,6 +36,7 @@ function AppContent() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [profile, setProfile] = useState(userProfile);
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem('bodycraft-projects');
     if (saved) {
@@ -102,13 +104,30 @@ function AppContent() {
     const updatedProjects = [...projects, completeProject];
     setProjects(updatedProjects);
     setIsFormOpen(false);
+    
+    // Log activity
+    ActivityLogger.addActivity(
+      'project',
+      `New project created: ${completeProject.projectId} for ${completeProject.clientName}`,
+      'success'
+    );
   };
   
   const handleUpdateProject = (updatedProject) => {
+    const oldProject = projects.find(p => p.id === updatedProject.id);
     const updatedProjects = projects.map(p => 
       p.id === updatedProject.id ? updatedProject : p
     );
     setProjects(updatedProjects);
+    
+    // Log activity if status changed
+    if (oldProject && oldProject.status !== updatedProject.status) {
+      ActivityLogger.addActivity(
+        'progress',
+        `${updatedProject.projectId}: Status updated to ${updatedProject.status}`,
+        'info'
+      );
+    }
   };
 
   return (
@@ -116,7 +135,12 @@ function AppContent() {
       {/* Mobile-first layout */}
       <div className="flex flex-col lg:flex-row min-h-screen">
         {/* Sidebar - Mobile: overlay, Desktop: fixed */}
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
+        <Sidebar 
+          sidebarOpen={sidebarOpen} 
+          setSidebarOpen={setSidebarOpen}
+          profile={profile}
+          setProfile={setProfile}
+        />
         
         {/* Mobile sidebar overlay */}
         {sidebarOpen && (
@@ -133,6 +157,7 @@ function AppContent() {
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             onAddProject={handleAddProject}
+            profile={profile}
           />
           <div className="flex-1 overflow-auto">
             <Routes>
@@ -155,6 +180,7 @@ function AppContent() {
               } />
               <Route path="/clients" element={<Clients projects={projects} />} />
               <Route path="/materials" element={<Materials />} />
+
               <Route path="/reports" element={<Reports projects={projects} />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
