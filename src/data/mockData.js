@@ -13,7 +13,7 @@ export const kpiData = [
     subtitle: 'In Progress'
   },
   { 
-    title: 'Total Revenue', 
+    title: 'Total Sales', 
     value: '$485,200', 
     change: '+22.5%', 
     changeType: 'positive', 
@@ -116,44 +116,15 @@ export const projectsData = [
   }
 ];
 
-export const recentActivities = [
-  {
-    id: 1,
-    type: 'progress',
-    message: 'VB-2024-001: Welding phase completed - 65% progress',
-    time: '15 minutes ago',
-    status: 'success'
-  },
-  {
-    id: 2,
-    type: 'payment',
-    message: 'Payment received: $15,000 from Metro Logistics LLC',
-    time: '45 minutes ago',
-    status: 'success'
-  },
-  {
-    id: 3,
-    type: 'material',
-    message: 'Material delivery: Steel sheets for VB-2024-003',
-    time: '2 hours ago',
-    status: 'info'
-  },
-  {
-    id: 4,
-    type: 'quality',
-    message: 'Quality inspection passed for VB-2024-004',
-    time: '4 hours ago',
-    status: 'success'
-  }
-];
+// Static activities removed - now using dynamic ActivityLogger
 
 export const monthlyData = [
-  { month: 'Jan', revenue: 285000, projects: 8, profit: 52000 },
-  { month: 'Feb', revenue: 322000, projects: 12, profit: 68000 },
-  { month: 'Mar', revenue: 458000, projects: 15, profit: 89000 },
-  { month: 'Apr', revenue: 394000, projects: 11, profit: 72000 },
-  { month: 'May', revenue: 512000, projects: 18, profit: 95000 },
-  { month: 'Jun', revenue: 485200, projects: 16, profit: 87500 }
+  { month: 'Jan', sales: 285000, projects: 8, profit: 52000 },
+  { month: 'Feb', sales: 322000, projects: 12, profit: 68000 },
+  { month: 'Mar', sales: 458000, projects: 15, profit: 89000 },
+  { month: 'Apr', sales: 394000, projects: 11, profit: 72000 },
+  { month: 'May', sales: 512000, projects: 18, profit: 95000 },
+  { month: 'Jun', sales: 485200, projects: 16, profit: 87500 }
 ];
 
 export const inventoryData = [
@@ -236,7 +207,67 @@ export const navItems = [
   { name: 'Projects', icon: Truck, active: false, path: '/projects' },
   { name: 'Clients', icon: Users, active: false, path: '/clients' },
   { name: 'Materials', icon: Wrench, active: false, path: '/materials' },
-
   { name: 'Reports', icon: FileText, active: false, path: '/reports' },
   { name: 'Settings', icon: Settings, active: false, path: '/settings' }
 ];
+
+export const notifications = [
+  {
+    id: 1,
+    type: 'meeting',
+    title: 'Client Meeting - Metro Logistics',
+    message: 'Project review meeting scheduled for today at 2:00 PM',
+    time: '2024-01-15T14:00:00',
+    priority: 'high',
+    read: false
+  },
+  {
+    id: 2,
+    type: 'deadline',
+    title: 'Project Deadline Approaching',
+    message: 'VB-2024-004 delivery due in 2 days',
+    time: '2024-01-17T09:00:00',
+    priority: 'medium',
+    read: false
+  },
+  {
+    id: 3,
+    type: 'material',
+    title: 'Low Stock Alert',
+    message: 'Welding Rods Pack running low (8 units remaining)',
+    time: '2024-01-15T08:30:00',
+    priority: 'medium',
+    read: true
+  }
+];
+
+export const userProfile = {
+  name: 'John Doe',
+  role: 'Workshop Manager',
+  email: 'john.doe@pexsteel.com',
+  phone: '+1 (555) 123-4567',
+  department: 'Operations',
+  joinDate: '2022-03-15',
+  avatar: null,
+  initials: 'JD',
+  status: 'Online',
+  permissions: ['admin', 'reports', 'projects'],
+  meetings: [
+    {
+      id: 1,
+      title: 'Project Review - Metro Logistics',
+      date: '2024-01-15',
+      time: '14:00',
+      client: 'Metro Logistics LLC',
+      project: 'VB-2024-002'
+    },
+    {
+      id: 2,
+      title: 'Material Supplier Meeting',
+      date: '2024-01-18',
+      time: '10:30',
+      client: 'SteelCorp Industries',
+      project: 'General'
+    }
+  ]
+};

@@ -1,16 +1,84 @@
-import React from 'react';
-import { Menu, Search, Bell, ChevronDown, Plus, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench } from 'lucide-react';
+import { notifications } from '../data/mockData';
 
-const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => {
-  const currentDate = new Date().toLocaleDateString('en-US', {
+const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [notificationList, setNotificationList] = useState(notifications);
+  
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+      checkMeetingNotifications();
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [profile]);
+
+  const checkMeetingNotifications = () => {
+    if (!profile?.meetings) return;
+    
+    const now = new Date();
+    const today = now.toISOString().split('T')[0];
+    
+    profile.meetings.forEach(meeting => {
+      if (meeting.date === today) {
+        const meetingTime = new Date(`${meeting.date}T${meeting.time}:00`);
+        const timeDiff = meetingTime.getTime() - now.getTime();
+        const minutesUntil = Math.floor(timeDiff / (1000 * 60));
+        
+        // Notify 30 minutes before
+        if (minutesUntil === 30 || minutesUntil === 15 || minutesUntil === 5) {
+          const newNotification = {
+            id: Date.now(),
+            type: 'meeting',
+            title: `Upcoming Meeting: ${meeting.title}`,
+            message: `Meeting with ${meeting.client} in ${minutesUntil} minutes`,
+            time: now.toISOString(),
+            priority: minutesUntil <= 5 ? 'high' : 'medium',
+            read: false
+          };
+          
+          setNotificationList(prev => {
+            const exists = prev.find(n => n.title === newNotification.title && n.message === newNotification.message);
+            return exists ? prev : [newNotification, ...prev];
+          });
+        }
+      }
+    });
+  };
+
+  const unreadCount = notificationList.filter(n => !n.read).length;
+
+  const markAsRead = (id) => {
+    setNotificationList(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+  };
+
+  const getNotificationIcon = (type) => {
+    switch(type) {
+      case 'meeting': return Users;
+      case 'deadline': return AlertCircle;
+      case 'material': return Wrench;
+      default: return Bell;
+    }
+  };
+
+  const currentDate = currentTime.toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
     day: 'numeric'
   });
 
+  const timeString = currentTime.toLocaleTimeString('en-US', {
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
   return (
-    <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/50 h-14 sm:h-16 lg:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm relative">
+    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 h-14 sm:h-16 lg:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm relative">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none"></div>
       
@@ -23,12 +91,23 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => 
           <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
         
-        {/* Title - Responsive */}
+        {/* Title & Clock - Responsive */}
         <div className="hidden sm:block min-w-0 flex-1">
           <div className="flex items-center space-x-2 sm:space-x-3 mb-0.5 sm:mb-1">
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 tracking-tight truncate">Workshop Dashboard</h1>
             <div className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200 flex-shrink-0">
               <span className="text-xs font-semibold text-green-700">Live</span>
+            </div>
+            {/* Cool Digital Clock */}
+            <div className="hidden lg:flex items-center bg-gradient-to-r from-slate-800 to-slate-700 text-white px-4 py-2 rounded-xl shadow-lg border border-slate-600/50 backdrop-blur-sm">
+              <Clock className="w-4 h-4 mr-2 text-blue-400 animate-pulse" />
+              <div className="font-mono text-sm font-bold tracking-wider">
+                <span className="text-blue-300">{timeString.split(':')[0]}</span>
+                <span className="text-white animate-pulse">:</span>
+                <span className="text-green-300">{timeString.split(':')[1]}</span>
+                <span className="text-white animate-pulse">:</span>
+                <span className="text-yellow-300">{timeString.split(':')[2]}</span>
+              </div>
             </div>
           </div>
           <div className="hidden lg:flex items-center text-sm text-slate-600">
@@ -37,9 +116,9 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => 
           </div>
         </div>
         
-        {/* Mobile Search */}
-        <div className="sm:hidden flex-1 max-w-xs">
-          <div className="relative">
+        {/* Mobile Search & Clock */}
+        <div className="sm:hidden flex items-center space-x-2 flex-1 max-w-xs">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
@@ -48,6 +127,14 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => 
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-9 pr-3 py-2 w-full border border-slate-200 rounded-lg bg-slate-50/80 focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-300 transition-all duration-300 text-sm placeholder:text-slate-400"
             />
+          </div>
+          {/* Mobile Clock */}
+          <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white px-2 py-1.5 rounded-lg shadow-md flex-shrink-0">
+            <div className="font-mono text-xs font-bold">
+              <span className="text-blue-300">{timeString.split(':')[0]}</span>
+              <span className="text-white">:</span>
+              <span className="text-green-300">{timeString.split(':')[1]}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -67,6 +154,80 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => 
           />
         </div>
 
+        {/* Smart Notifications */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative text-slate-600 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg sm:rounded-xl lg:rounded-2xl p-2 sm:p-2.5 lg:p-3 hover:bg-slate-100/80 transition-all duration-200 group touch-manipulation" 
+            aria-label="Notifications"
+          >
+            <Bell className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
+            {unreadCount > 0 && (
+              <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex items-center justify-center font-bold shadow-lg animate-pulse ring-1 sm:ring-2 ring-white">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </div>
+            )}
+          </button>
+          
+          {/* Notification Dropdown */}
+          {showNotifications && (
+            <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-xl shadow-2xl border border-slate-200 z-50 max-h-96 overflow-y-auto">
+              <div className="p-4 border-b border-slate-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-slate-900">Notifications</h3>
+                  <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div className="max-h-64 overflow-y-auto">
+                {notificationList.length === 0 ? (
+                  <div className="p-4 text-center text-slate-500">
+                    <Bell className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    <p>No notifications</p>
+                  </div>
+                ) : (
+                  notificationList.map((notification) => {
+                    const IconComponent = getNotificationIcon(notification.type);
+                    return (
+                      <div
+                        key={notification.id}
+                        onClick={() => markAsRead(notification.id)}
+                        className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors ${
+                          !notification.read ? 'bg-blue-50/50' : ''
+                        }`}
+                      >
+                        <div className="flex items-start space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            notification.priority === 'high' ? 'bg-red-100 text-red-600' :
+                            notification.priority === 'medium' ? 'bg-yellow-100 text-yellow-600' :
+                            'bg-blue-100 text-blue-600'
+                          }`}>
+                            <IconComponent className="w-4 h-4" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-slate-900 truncate">{notification.title}</p>
+                            <p className="text-xs text-slate-600 mt-1">{notification.message}</p>
+                            <p className="text-xs text-slate-400 mt-1">
+                              {new Date(notification.time).toLocaleTimeString('en-US', { 
+                                hour: '2-digit', 
+                                minute: '2-digit' 
+                              })}
+                            </p>
+                          </div>
+                          {!notification.read && (
+                            <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2"></div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Add Project Button - Mobile optimized */}
         <button 
           onClick={onAddProject}
@@ -78,25 +239,21 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject }) => 
           </div>
         </button>
         
-        {/* Notifications - Mobile optimized */}
-        <div className="relative">
-          <button className="relative text-slate-600 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg sm:rounded-xl lg:rounded-2xl p-2 sm:p-2.5 lg:p-3 hover:bg-slate-100/80 transition-all duration-200 group touch-manipulation" aria-label="Notifications">
-            <Bell className="w-5 h-5 sm:w-6 sm:h-6 group-hover:animate-pulse" />
-            <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 flex items-center justify-center font-bold shadow-lg animate-pulse ring-1 sm:ring-2 ring-white">3</div>
-          </button>
-        </div>
+
         
         {/* User Profile - Mobile optimized */}
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 pl-2 sm:pl-3 lg:pl-4 border-l border-slate-200/70">
           <div className="text-right hidden md:block">
-            <p className="text-xs sm:text-sm font-bold text-slate-900 tracking-wide truncate">John Doe</p>
-            <p className="text-xs text-slate-500 font-medium truncate">Workshop Manager</p>
+            <p className="text-xs sm:text-sm font-bold text-slate-900 tracking-wide truncate">{profile?.name || 'John Doe'}</p>
+            <p className="text-xs text-slate-500 font-medium truncate">{profile?.role || 'Workshop Manager'}</p>
           </div>
           <div className="relative group cursor-pointer">
             <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-blue-200/50 group-hover:ring-blue-300 transition-all duration-300 group-hover:scale-110">
-              <span className="text-white text-xs sm:text-sm font-bold tracking-wide">JD</span>
+              <span className="text-white text-xs sm:text-sm font-bold tracking-wide">{profile?.initials || 'JD'}</span>
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
+            <div className={`absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-sm ${
+              profile?.status === 'Online' ? 'bg-green-400' : 'bg-gray-400'
+            }`}></div>
           </div>
           <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer hidden sm:block" />
         </div>
