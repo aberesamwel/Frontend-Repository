@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Eye, DollarSign, TrendingUp, Calendar, User, MoreHorizontal, X } from 'lucide-react';
+import { ActivityLogger } from '../utils/activityLogger';
 
 const ProjectsTable = ({ searchTerm, projects, onUpdateProject }) => {
   const [selectedProject, setSelectedProject] = useState(null);
@@ -56,6 +57,20 @@ const ProjectsTable = ({ searchTerm, projects, onUpdateProject }) => {
         updates.completedAt = now.toISOString();
         updates.completedDate = now.toLocaleDateString();
         updates.completedTime = now.toLocaleTimeString();
+        
+        // Log completion activity
+        ActivityLogger.addActivity(
+          'progress',
+          `${updatedProject.projectId}: Project completed! Ready for delivery`,
+          'success'
+        );
+      } else {
+        // Log status change activity
+        ActivityLogger.addActivity(
+          'progress',
+          `${updatedProject.projectId}: Status updated to ${newStatus} - ${progressMap[newStatus]}% progress`,
+          'info'
+        );
       }
       
       onUpdateProject(updates);
@@ -72,6 +87,13 @@ const ProjectsTable = ({ searchTerm, projects, onUpdateProject }) => {
         deliveredDate: now.toLocaleDateString(),
         deliveredTime: now.toLocaleTimeString()
       });
+      
+      // Log delivery activity
+      ActivityLogger.addActivity(
+        'delivery',
+        `${project.projectId}: Vehicle delivered to ${project.clientName}`,
+        'success'
+      );
     }
   };
 

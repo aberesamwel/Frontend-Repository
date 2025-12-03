@@ -13,7 +13,7 @@ const RevenueChart = ({ projects }) => {
       return projectDate.getMonth() === currentMonth && projectDate.getFullYear() === currentYear;
     });
     
-    const totalRevenue = projects.reduce((sum, project) => sum + project.clientPayment, 0);
+    const totalSales = projects.reduce((sum, project) => sum + project.clientPayment, 0);
     const totalProfit = projects.reduce((sum, project) => sum + project.profit, 0);
     const totalProjects = projects.length;
     
@@ -24,10 +24,10 @@ const RevenueChart = ({ projects }) => {
       const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
       
       if (!monthlyStats[monthKey]) {
-        monthlyStats[monthKey] = { month: monthKey, revenue: 0, profit: 0, projects: 0 };
+        monthlyStats[monthKey] = { month: monthKey, sales: 0, profit: 0, projects: 0 };
       }
       
-      monthlyStats[monthKey].revenue += project.clientPayment;
+      monthlyStats[monthKey].sales += project.clientPayment;
       monthlyStats[monthKey].profit += project.profit;
       monthlyStats[monthKey].projects += 1;
     });
@@ -35,7 +35,7 @@ const RevenueChart = ({ projects }) => {
     const chartData = Object.values(monthlyStats);
     
     return {
-      totalRevenue,
+      totalSales,
       totalProfit,
       totalProjects,
       chartData
@@ -48,7 +48,7 @@ const RevenueChart = ({ projects }) => {
           <p className="font-semibold text-slate-900 mb-2">{`${label} 2024`}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
-              {`${entry.dataKey}: ${entry.dataKey === 'revenue' || entry.dataKey === 'profit' ? '$' + entry.value.toLocaleString() : entry.value}`}
+              {`${entry.dataKey}: ${entry.dataKey === 'sales' || entry.dataKey === 'profit' ? '$' + entry.value.toLocaleString() : entry.value}`}
             </p>
           ))}
         </div>
@@ -62,8 +62,8 @@ const RevenueChart = ({ projects }) => {
       <div className="p-6 border-b border-slate-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Revenue Overview</h2>
-            <p className="text-sm text-slate-500 mt-1">Monthly revenue and profit from vehicle body projects</p>
+            <h2 className="text-lg font-semibold text-slate-900">Sales Overview</h2>
+            <p className="text-sm text-slate-500 mt-1">Monthly sales and profit from vehicle body projects</p>
           </div>
           <button className="text-slate-400 hover:text-slate-600">
             <MoreHorizontal className="w-5 h-5" />
@@ -76,9 +76,9 @@ const RevenueChart = ({ projects }) => {
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="text-center">
             <div className="text-2xl font-bold text-slate-900">
-              ${(calculatedData.totalRevenue / 1000).toFixed(0)}K
+              ${(calculatedData.totalSales / 1000).toFixed(0)}K
             </div>
-            <div className="text-xs text-slate-500">Total Revenue</div>
+            <div className="text-xs text-slate-500">Total Sales</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600">{calculatedData.totalProjects}</div>
@@ -113,9 +113,9 @@ const RevenueChart = ({ projects }) => {
               iconType="rect"
             />
             <Bar 
-              dataKey="revenue" 
+              dataKey="sales" 
               fill="#3b82f6" 
-              name="Revenue ($)"
+              name="Sales ($)"
               radius={[4, 4, 0, 0]}
               barSize={25}
             />
@@ -134,7 +134,7 @@ const RevenueChart = ({ projects }) => {
           <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
           <span className="text-sm text-green-700 font-medium">
             {calculatedData.totalProjects > 0 
-              ? `Average profit margin: ${((calculatedData.totalProfit / calculatedData.totalRevenue) * 100).toFixed(1)}%`
+              ? `Average profit margin: ${((calculatedData.totalProfit / calculatedData.totalSales) * 100).toFixed(1)}%`
               : 'No projects data available'
             }
           </span>

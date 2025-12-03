@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Package, AlertTriangle, TrendingUp, Search, Edit2, Trash2, X } from 'lucide-react';
+import { ActivityLogger } from '../utils/activityLogger';
 
 const Materials = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,10 +49,27 @@ const Materials = () => {
     setMaterials([...materials, material]);
     setNewMaterial({ name: '', quantity: '', unit: '', price: '', supplier: '' });
     setIsAddFormOpen(false);
+    
+    // Log material addition activity
+    ActivityLogger.addActivity(
+      'material',
+      `New material added: ${material.name} (${quantity} ${material.unit}) from ${material.supplier}`,
+      'info'
+    );
   };
 
   const deleteMaterial = (id) => {
+    const material = materials.find(m => m.id === id);
     setMaterials(materials.filter(m => m.id !== id));
+    
+    if (material) {
+      // Log material deletion activity
+      ActivityLogger.addActivity(
+        'material',
+        `Material removed: ${material.name} deleted from inventory`,
+        'warning'
+      );
+    }
   };
 
   useEffect(() => {

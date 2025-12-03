@@ -2,6 +2,52 @@ import React from 'react';
 import { User, Bell, Shield, Database } from 'lucide-react';
 
 const Settings = () => {
+  const exportAllData = () => {
+    // Get all data from localStorage
+    const projects = JSON.parse(localStorage.getItem('bodycraft-projects') || '[]');
+    const materials = JSON.parse(localStorage.getItem('bodycraft-materials') || '[]');
+    const events = JSON.parse(localStorage.getItem('bodycraft-events') || '[]');
+    const activities = JSON.parse(localStorage.getItem('bodycraft-activities') || '[]');
+    
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      workshop: 'BodyCraft Pro',
+      projects: projects,
+      materials: materials,
+      events: events,
+      activities: activities,
+      summary: {
+        totalProjects: projects.length,
+        totalMaterials: materials.length,
+        totalEvents: events.length,
+        totalActivities: activities.length
+      }
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `BodyCraft_Data_Export_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+  
+  const clearAllData = () => {
+    if (window.confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+      localStorage.removeItem('bodycraft-projects');
+      localStorage.removeItem('bodycraft-materials');
+      localStorage.removeItem('bodycraft-events');
+      localStorage.removeItem('bodycraft-activities');
+      localStorage.removeItem('bodycraft-project-media');
+      localStorage.removeItem('bodycraft-project-updates');
+      alert('All data has been cleared successfully.');
+      window.location.reload();
+    }
+  };
   return (
     <div className="p-6">
       <div className="mb-6">
@@ -73,10 +119,16 @@ const Settings = () => {
             <h3 className="text-lg font-semibold text-slate-900">Data Management</h3>
           </div>
           <div className="space-y-4">
-            <button className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+            <button 
+              onClick={exportAllData}
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+            >
               Export Data
             </button>
-            <button className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700">
+            <button 
+              onClick={clearAllData}
+              className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700"
+            >
               Clear All Data
             </button>
           </div>

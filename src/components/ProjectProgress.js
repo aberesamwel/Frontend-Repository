@@ -1,8 +1,18 @@
-import React, { useState, useMemo } from 'react';
-import { Camera, Video, FileText, Clock, MoreHorizontal, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { FileText, Clock, MoreHorizontal, ChevronDown, Edit3, CheckCircle2 } from 'lucide-react';
+import { ActivityLogger } from '../utils/activityLogger';
 
 const ProjectProgress = ({ projects }) => {
   const [selectedStatus, setSelectedStatus] = useState('All');
+  const [projectUpdates, setProjectUpdates] = useState(() => {
+    const saved = localStorage.getItem('bodycraft-project-updates');
+    return saved ? JSON.parse(saved) : {};
+  });
+  const [editingUpdate, setEditingUpdate] = useState({ projectId: null, note: '' });
+
+  useEffect(() => {
+    localStorage.setItem('bodycraft-project-updates', JSON.stringify(projectUpdates));
+  }, [projectUpdates]);
   
   const statusOptions = ['All', 'Material Sourcing', 'In Progress', 'Welding Phase', 'Quality Check', 'Interior Fitting', 'Completed'];
   
@@ -11,14 +21,59 @@ const ProjectProgress = ({ projects }) => {
     return projects.filter(project => project.status === selectedStatus);
   }, [projects, selectedStatus]);
   
-  const generateProgressNotes = (project) => {
+  const getProjectUpdate = (projectId) => {
+    return projectUpdates[projectId] || null;
+  };
+
+  const addProjectUpdate = (projectId, note) => {
+    if (!note.trim()) return;
+    
+    const update = {
+      id: Date.now(),
+      note: note.trim(),
+      timestamp: new Date().toISOString(),
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+    
+    setProjectUpdates(prev => ({
+      ...prev,
+      [projectId]: update
+    }));
+    
+    // Log activity
+    const project = projects.find(p => p.id === projectId);
+    if (project) {
+      ActivityLogger.addActivity(
+        'progress',
+        `${project.projectId}: Progress note updated - "${note.substring(0, 50)}${note.length > 50 ? '...' : ''}"`,
+        'info'
+      );
+    }
+    
+    setEditingUpdate({ projectId: null, note: '' });
+  };
+
+  const startEditing = (projectId) => {
+    const existingUpdate = getProjectUpdate(projectId);
+    setEditingUpdate({ 
+      projectId, 
+      note: existingUpdate?.note || '' 
+    });
+  };
+
+  const cancelEditing = () => {
+    setEditingUpdate({ projectId: null, note: '' });
+  };
+
+  const getStatusBasedNote = (project) => {
     const notes = {
-      'Material Sourcing': `Materials being sourced for ${project.vehicleType}. Estimated completion in 2 weeks.`,
-      'In Progress': `${project.vehicleType} construction is ${project.progress}% complete. On schedule.`,
-      'Welding Phase': `Welding operations in progress. Frame assembly ${project.progress}% complete.`,
-      'Quality Check': `Quality inspection phase. ${project.vehicleType} undergoing final checks.`,
-      'Interior Fitting': `Interior components being installed. ${project.progress}% complete.`,
-      'Completed': `${project.vehicleType} completed and ready for delivery.`
+      'Material Sourcing': `Sourcing materials for ${project.vehicleType}. Coordinating with suppliers for delivery schedule.`,
+      'In Progress': `${project.vehicleType} fabrication underway. Current progress at ${project.progress}% completion.`,
+      'Welding Phase': `Welding operations in progress. Structural framework ${project.progress}% complete.`,
+      'Quality Check': `Quality assurance phase. ${project.vehicleType} undergoing comprehensive inspection.`,
+      'Interior Fitting': `Interior installation phase. Fitting components and finishing touches in progress.`,
+      'Completed': `${project.vehicleType} fabrication completed. Ready for client delivery and final inspection.`
     };
     return notes[project.status] || `Project ${project.projectId} is ${project.progress}% complete.`;
   };
@@ -28,8 +83,8 @@ const ProjectProgress = ({ projects }) => {
       <div className="p-6 border-b border-slate-200">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Project Updates</h2>
-            <p className="text-sm text-slate-500 mt-1">Latest progress photos and videos for client tracking</p>
+            <h2 className="text-lg font-semibold text-slate-900">Project Progress</h2>
+            <p className="text-sm text-slate-500 mt-1">Real-time project status and progress tracking</p>
           </div>
           <button className="text-slate-400 hover:text-slate-600">
             <MoreHorizontal className="w-5 h-5" />
@@ -72,24 +127,86 @@ const ProjectProgress = ({ projects }) => {
                   </div>
                 </div>
                 
-                <p className="text-sm text-slate-700 mb-3">{generateProgressNotes(project)}</p>
+                {(() => {
+                  const customUpdate = getProjectUpdate(project.id);
+                  const isEditing = editingUpdate.projectId === project.id;
+                  
+                  if (isEditing) {
+                    return (
+                      <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <textarea
+                          value={editingUpdate.note}
+                          onChange={(e) => setEditingUpdate(prev => ({ ...prev, note: e.target.value }))}
+                          className="w-full px-3 py-2 text-sm border border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                          rows="2"
+                          placeholder="Add progress note..."
+                          autoFocus
+                        />
+                        <div className="flex items-center justify-end space-x-2 mt-2">
+                          <button
+                            onClick={cancelEditing}
+                            className="px-3 py-1 text-xs text-slate-600 hover:text-slate-800 transition-colors"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={() => addProjectUpdate(project.id, editingUpdate.note)}
+                            className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors flex items-center"
+                          >
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  return (
+                    <div className="mb-3 group">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <p className="text-sm text-slate-700 leading-relaxed">
+                            {customUpdate?.note || getStatusBasedNote(project)}
+                          </p>
+                          {customUpdate && (
+                            <p className="text-xs text-slate-500 mt-1">
+                              Updated: {customUpdate.date} at {customUpdate.time}
+                            </p>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => startEditing(project.id)}
+                          className="opacity-0 group-hover:opacity-100 ml-2 p-1 text-slate-400 hover:text-blue-600 transition-all duration-200"
+                          title="Edit progress note"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
                 
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex items-center text-sm text-slate-600">
-                      <Camera className="w-4 h-4 mr-1 text-blue-500" />
-                      <span>{Math.floor(Math.random() * 15) + 3} Photos</span>
+                      <FileText className="w-4 h-4 mr-1 text-blue-500" />
+                      <span className="font-medium">{project.status}</span>
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Video className="w-4 h-4 mr-1 text-red-500" />
-                      <span>{Math.floor(Math.random() * 5) + 1} Videos</span>
+                    <div className="flex items-center text-sm text-slate-500">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>Est. {project.estimatedCompletion}</span>
                     </div>
-                    <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                      View Gallery
-                    </button>
                   </div>
-                  <div className="text-xs text-slate-500">
-                    Progress: {project.progress}%
+                  <div className="flex items-center space-x-3">
+                    <div className="text-xs text-slate-500">
+                      Progress: {project.progress}%
+                    </div>
+                    <div className="w-16 bg-slate-200 rounded-full h-1.5">
+                      <div 
+                        className="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
+                        style={{ width: `${project.progress}%` }}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -101,6 +218,8 @@ const ProjectProgress = ({ projects }) => {
           View All Updates
         </button>
       </div>
+
+
     </div>
   );
 };
