@@ -6,6 +6,7 @@ const ServiceTable = ({
   services, 
   onViewDetails, 
   onStatusUpdate, 
+  onPaymentUpdate,
   getStatusColor, 
   getPriorityColor 
 }) => {
@@ -99,6 +100,15 @@ const ServiceTable = ({
                           Balance: ${balanceAmount.toFixed(2)}
                         </div>
                       )}
+                      <select
+                        value={service.amountPaid === 0 ? 'unpaid' : service.amountPaid >= service.totalAmount ? 'paid' : 'partial'}
+                        onChange={(e) => onPaymentUpdate(service.id, e.target.value)}
+                        className={`text-xs mt-1 border rounded px-2 py-1 ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
+                      >
+                        <option value="unpaid">Unpaid</option>
+                        <option value="partial">Partial</option>
+                        <option value="paid">Paid</option>
+                      </select>
                     </div>
                   </td>
                   

@@ -37,6 +37,7 @@ const MetalWorks = () => {
         unitPrice: 45.00,
         totalAmount: 135.00,
         amountPaid: 135.00,
+        paymentStatus: 'paid',
         status: 'completed',
         priority: 'standard',
         dropOffTime: '2024-12-20T09:30:00',
@@ -57,6 +58,7 @@ const MetalWorks = () => {
         unitPrice: 25.00,
         totalAmount: 200.00,
         amountPaid: 100.00,
+        paymentStatus: 'partial',
         status: 'in_progress',
         priority: 'urgent',
         dropOffTime: '2024-12-20T11:00:00'
@@ -145,6 +147,7 @@ const MetalWorks = () => {
       ...newService,
       totalAmount: newService.quantity * newService.unitPrice,
       amountPaid: 0,
+      paymentStatus: 'unpaid',
       status: 'pending',
       dropOffTime: new Date().toISOString()
     };
@@ -182,6 +185,21 @@ const MetalWorks = () => {
         if (newStatus === 'completed') updates.completedTime = now;
         if (newStatus === 'picked_up') updates.pickupTime = now;
         return { ...service, ...updates };
+      }
+      return service;
+    }));
+  };
+
+  const handlePaymentUpdate = (serviceId, paymentStatus) => {
+    setServices(prev => prev.map(service => {
+      if (service.id === serviceId) {
+        let amountPaid = 0;
+        if (paymentStatus === 'paid') {
+          amountPaid = service.totalAmount;
+        } else if (paymentStatus === 'partial') {
+          amountPaid = service.totalAmount * 0.5; // Default to 50% for partial
+        }
+        return { ...service, amountPaid, paymentStatus };
       }
       return service;
     }));
@@ -491,6 +509,7 @@ const MetalWorks = () => {
           services={paginatedServices}
           onViewDetails={setSelectedService}
           onStatusUpdate={handleStatusUpdate}
+          onPaymentUpdate={handlePaymentUpdate}
           getStatusColor={getStatusColor}
           getPriorityColor={getPriorityColor}
         />
