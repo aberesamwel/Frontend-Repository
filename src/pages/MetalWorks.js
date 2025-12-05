@@ -7,6 +7,7 @@ import ServiceTable from '../components/metals/ServiceTable';
 import AddServiceModal from '../components/metals/AddServiceModal';
 import ServiceDetailsModal from '../components/metals/ServiceDetailsModal';
 import { businessAnalytics } from '../utils/timeBasedAnalytics';
+import BusinessCalendar from '../components/analytics/BusinessCalendar';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -344,6 +345,9 @@ const MetalWorks = () => {
             </div>
           </div>
         </div>
+        
+        {/* Business Performance Calendar */}
+        <BusinessCalendar />
         
         {/* Advanced Time-Based Analytics */}
         <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-6 border ${getThemeClass('border', 'secondary')}`}>
