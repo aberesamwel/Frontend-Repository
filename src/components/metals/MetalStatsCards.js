@@ -9,26 +9,30 @@ const MetalStatsCards = ({ stats }) => {
     {
       title: "Total Services",
       value: stats.totalServices,
+      subtitle: `${stats.completedServices} completed`,
       icon: Users,
       color: 'blue'
     },
     {
-      title: "Payments Today",
-      value: `$${stats.paymentsReceived.toFixed(2)}`,
+      title: "Monthly Revenue",
+      value: `$${stats.monthlyRevenue.toFixed(2)}`,
+      subtitle: `${stats.completionRate.toFixed(1)}% completion rate`,
       icon: DollarSign,
       color: 'green'
     },
     {
-      title: "Completed",
-      value: stats.completedServices,
-      icon: CheckCircle,
-      color: 'emerald'
-    },
-    {
-      title: "Pending",
-      value: stats.pendingServices,
+      title: "Outstanding",
+      value: `$${stats.outstandingBalance.toFixed(2)}`,
+      subtitle: `From ${stats.totalServices - stats.completedServices} active jobs`,
       icon: Clock,
       color: 'orange'
+    },
+    {
+      title: "Avg. Job Value",
+      value: `$${stats.averageServiceValue.toFixed(0)}`,
+      subtitle: `Total: $${stats.totalRevenue.toFixed(0)}`,
+      icon: CheckCircle,
+      color: 'purple'
     }
   ];
 
@@ -37,9 +41,12 @@ const MetalStatsCards = ({ stats }) => {
       {cards.map((card, index) => (
         <div key={index} className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-6`}>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <p className={`text-sm ${getThemeClass('text', 'muted')}`}>{card.title}</p>
               <p className={`text-2xl font-bold text-${card.color}-600`}>{card.value}</p>
+              {card.subtitle && (
+                <p className={`text-xs ${getThemeClass('text', 'muted')} mt-1`}>{card.subtitle}</p>
+              )}
             </div>
             <div className={`p-3 bg-${card.color}-100 rounded-lg`}>
               <card.icon className={`w-6 h-6 text-${card.color}-600`} />

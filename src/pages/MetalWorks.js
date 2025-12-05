@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Scissors, Plus } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import MetalStatsCards from '../components/metals/MetalStatsCards';
@@ -11,46 +11,57 @@ const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
   const isDark = theme === 'dark';
 
-  const [services, setServices] = useState([
-    {
-      id: 1,
-      ticketId: 'MW-2024-001',
-      customerName: 'Ahmed Hassan',
-      phone: '+1-555-0123',
-      serviceType: 'cutting',
-      material: 'Steel Plate',
-      gauge: '10mm',
-      dimensions: '2m x 1m',
-      specifications: 'Clean edges required, rectangular cut',
-      quantity: 3,
-      unitPrice: 45.00,
-      totalAmount: 135.00,
-      amountPaid: 135.00,
-      status: 'completed',
-      priority: 'standard',
-      dropOffTime: '2024-12-20T09:30:00',
-      completedTime: '2024-12-20T14:15:00',
-      pickupTime: '2024-12-20T16:45:00'
-    },
-    {
-      id: 2,
-      ticketId: 'MW-2024-002',
-      customerName: 'Maria Rodriguez',
-      phone: '+1-555-0456',
-      serviceType: 'bending',
-      material: 'Aluminum Sheet',
-      gauge: '5mm', 
-      dimensions: '500mm length',
-      specifications: '90° bend precision required',
-      quantity: 8,
-      unitPrice: 25.00,
-      totalAmount: 200.00,
-      amountPaid: 100.00,
-      status: 'in_progress',
-      priority: 'urgent',
-      dropOffTime: '2024-12-20T11:00:00'
+  // Save services to localStorage whenever services change
+  useEffect(() => {
+    localStorage.setItem('metalworks-services', JSON.stringify(services));
+  }, [services]);
+
+  const [services, setServices] = useState(() => {
+    const saved = localStorage.getItem('metalworks-services');
+    if (saved) {
+      return JSON.parse(saved);
     }
-  ]);
+    return [
+      {
+        id: 1,
+        ticketId: 'MW-2024-001',
+        customerName: 'Ahmed Hassan',
+        phone: '+1-555-0123',
+        serviceType: 'cutting',
+        material: 'Steel Plate',
+        gauge: '10mm',
+        dimensions: '2m x 1m',
+        specifications: 'Clean edges required, rectangular cut',
+        quantity: 3,
+        unitPrice: 45.00,
+        totalAmount: 135.00,
+        amountPaid: 135.00,
+        status: 'completed',
+        priority: 'standard',
+        dropOffTime: '2024-12-20T09:30:00',
+        completedTime: '2024-12-20T14:15:00',
+        pickupTime: '2024-12-20T16:45:00'
+      },
+      {
+        id: 2,
+        ticketId: 'MW-2024-002',
+        customerName: 'Maria Rodriguez',
+        phone: '+1-555-0456',
+        serviceType: 'bending',
+        material: 'Aluminum Sheet',
+        gauge: '5mm', 
+        dimensions: '500mm length',
+        specifications: '90° bend precision required',
+        quantity: 8,
+        unitPrice: 25.00,
+        totalAmount: 200.00,
+        amountPaid: 100.00,
+        status: 'in_progress',
+        priority: 'urgent',
+        dropOffTime: '2024-12-20T11:00:00'
+      }
+    ];
+  });
 
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -149,18 +160,32 @@ const MetalWorks = () => {
 
   const getServiceStats = () => {
     const today = new Date().toDateString();
+    const thisMonth = new Date().getMonth();
+    const thisYear = new Date().getFullYear();
+    
     const todayServices = services.filter(s => 
       new Date(s.dropOffTime).toDateString() === today
     );
     
+    const thisMonthServices = services.filter(s => {
+      const serviceDate = new Date(s.dropOffTime);
+      return serviceDate.getMonth() === thisMonth && serviceDate.getFullYear() === thisYear;
+    });
+    
+    const completedServices = services.filter(s => s.status === 'completed');
+    const totalRevenue = completedServices.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalPayments = services.reduce((sum, s) => sum + s.amountPaid, 0);
+    
     return {
       totalServices: services.length,
-      paymentsReceived: todayServices.reduce((sum, s) => sum + s.amountPaid, 0),
-      completedServices: services.filter(s => s.status === 'completed').length,
+      monthlyRevenue: thisMonthServices.reduce((sum, s) => sum + s.totalAmount, 0),
+      completedServices: completedServices.length,
       pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
-      totalRevenue: services.reduce((sum, s) => sum + s.totalAmount, 0),
-      averageServiceValue: services.length > 0 ? 
-        services.reduce((sum, s) => sum + s.totalAmount, 0) / services.length : 0
+      totalRevenue: totalRevenue,
+      totalPayments: totalPayments,
+      outstandingBalance: totalRevenue - totalPayments,
+      averageServiceValue: services.length > 0 ? totalRevenue / services.length : 0,
+      completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0
     };
   };
 
