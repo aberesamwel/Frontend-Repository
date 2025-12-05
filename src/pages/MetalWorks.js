@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Scissors, Plus } from 'lucide-react';
+import { Scissors, Plus, TrendingUp, Calendar, Clock } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import MetalStatsCards from '../components/metals/MetalStatsCards';
 import ServiceFilters from '../components/metals/ServiceFilters';
 import ServiceTable from '../components/metals/ServiceTable';
 import AddServiceModal from '../components/metals/AddServiceModal';
 import ServiceDetailsModal from '../components/metals/ServiceDetailsModal';
+import { businessAnalytics } from '../utils/timeBasedAnalytics';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -128,6 +129,15 @@ const MetalWorks = () => {
       status: 'pending',
       dropOffTime: new Date().toISOString()
     };
+
+    // Record in analytics system
+    businessAnalytics.recordEvent('service_created', {
+      serviceId: service.id,
+      ticketId: service.ticketId,
+      totalAmount: service.totalAmount,
+      serviceType: service.serviceType,
+      customerName: service.customerName
+    });
 
     setServices(prev => [...prev, service]);
     setNewService({
@@ -335,10 +345,55 @@ const MetalWorks = () => {
           </div>
         </div>
         
-        {/* Business Intelligence Summary */}
+        {/* Advanced Time-Based Analytics */}
         <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-6 border ${getThemeClass('border', 'secondary')}`}>
-          <h4 className={`font-semibold ${getThemeClass('text', 'primary')} mb-4`}>Business Intelligence Summary</h4>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className={`font-semibold ${getThemeClass('text', 'primary')}`}>Advanced Business Analytics</h4>
+            <div className="flex items-center space-x-2">
+              <TrendingUp className="w-5 h-5 text-blue-500" />
+              <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Real-time Intelligence</span>
+            </div>
+          </div>
+          
+          {/* Last 3 Days Performance */}
+          <div className="mb-6">
+            <h5 className={`font-medium ${getThemeClass('text', 'primary')} mb-3 flex items-center`}>
+              <Calendar className="w-4 h-4 mr-2 text-blue-500" />
+              Last 3 Days Performance
+            </h5>
+            <div className="grid grid-cols-3 gap-4">
+              {businessAnalytics.getLastNDays(3).map((day, index) => (
+                <div key={day.date} className={`${getThemeClass('bg', 'secondary')} rounded-lg p-4 border ${getThemeClass('border', 'primary')}`}>
+                  <div className="text-center">
+                    <div className={`text-xs ${getThemeClass('text', 'muted')} mb-1`}>{day.dayName}</div>
+                    <div className={`text-lg font-bold ${getThemeClass('text', 'primary')}`}>${day.totalSales.toFixed(0)}</div>
+                    <div className={`text-xs text-green-600`}>${day.totalPayments.toFixed(0)} collected</div>
+                    <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{day.serviceCount} services</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Hourly Performance Today */}
+          <div className="mb-6">
+            <h5 className={`font-medium ${getThemeClass('text', 'primary')} mb-3 flex items-center`}>
+              <Clock className="w-4 h-4 mr-2 text-purple-500" />
+              Today's Hourly Performance
+            </h5>
+            <div className="grid grid-cols-6 gap-2">
+              {businessAnalytics.getLastNHours(6).map((hour, index) => (
+                <div key={hour.hour} className={`${getThemeClass('bg', 'secondary')} rounded p-2 border ${getThemeClass('border', 'primary')} text-center`}>
+                  <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{hour.time}</div>
+                  <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>${hour.totalSales.toFixed(0)}</div>
+                  <div className={`text-xs text-blue-600`}>{hour.serviceCount}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* Business Intelligence Summary */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
             <div className="text-center">
               <div className={`text-2xl font-bold text-blue-600`}>{stats.totalServices}</div>
               <div className={`text-sm ${getThemeClass('text', 'muted')}`}>Total Jobs</div>
@@ -359,7 +414,7 @@ const MetalWorks = () => {
           
           {/* Outstanding Balance Alert */}
           {stats.outstandingBalance > 0 && (
-            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-orange-800">Outstanding Balance</span>
                 <span className="text-lg font-bold text-orange-600">${stats.outstandingBalance.toFixed(2)}</span>
