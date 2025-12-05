@@ -80,7 +80,42 @@ const AddServiceModal = ({
               value={newService.material}
               onChange={(e) => setNewService({...newService, material: e.target.value})}
               className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              placeholder="e.g., Steel Plate 10mm, Aluminum Sheet 5mm"
+              placeholder="e.g., Steel Plate, Aluminum Sheet"
+            />
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Gauge/Thickness</label>
+              <input
+                type="text"
+                value={newService.gauge || ''}
+                onChange={(e) => setNewService({...newService, gauge: e.target.value})}
+                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="e.g., 10mm, 16 gauge"
+              />
+            </div>
+            
+            <div>
+              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Dimensions</label>
+              <input
+                type="text"
+                value={newService.dimensions || ''}
+                onChange={(e) => setNewService({...newService, dimensions: e.target.value})}
+                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                placeholder="e.g., 2m x 1m, 500mm length"
+              />
+            </div>
+          </div>
+          
+          <div>
+            <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Specifications</label>
+            <textarea
+              value={newService.specifications || ''}
+              onChange={(e) => setNewService({...newService, specifications: e.target.value})}
+              className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+              rows="3"
+              placeholder="Detailed specifications and requirements"
             />
           </div>
           

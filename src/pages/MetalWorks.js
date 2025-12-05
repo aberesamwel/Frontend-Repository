@@ -5,6 +5,7 @@ import MetalStatsCards from '../components/metals/MetalStatsCards';
 import ServiceFilters from '../components/metals/ServiceFilters';
 import ServiceTable from '../components/metals/ServiceTable';
 import AddServiceModal from '../components/metals/AddServiceModal';
+import ServiceDetailsModal from '../components/metals/ServiceDetailsModal';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -17,7 +18,10 @@ const MetalWorks = () => {
       customerName: 'Ahmed Hassan',
       phone: '+1-555-0123',
       serviceType: 'cutting',
-      material: 'Steel Plate 10mm',
+      material: 'Steel Plate',
+      gauge: '10mm',
+      dimensions: '2m x 1m',
+      specifications: 'Clean edges required, rectangular cut',
       quantity: 3,
       unitPrice: 45.00,
       totalAmount: 135.00,
@@ -34,7 +38,10 @@ const MetalWorks = () => {
       customerName: 'Maria Rodriguez',
       phone: '+1-555-0456',
       serviceType: 'bending',
-      material: 'Aluminum Sheet 5mm',
+      material: 'Aluminum Sheet',
+      gauge: '5mm', 
+      dimensions: '500mm length',
+      specifications: '90° bend precision required',
       quantity: 8,
       unitPrice: 25.00,
       totalAmount: 200.00,
@@ -55,6 +62,9 @@ const MetalWorks = () => {
     phone: '',
     serviceType: 'cutting',
     material: '',
+    gauge: '',
+    dimensions: '',
+    specifications: '',
     quantity: 1,
     unitPrice: 0,
     priority: 'standard'
@@ -114,6 +124,9 @@ const MetalWorks = () => {
       phone: '',
       serviceType: 'cutting',
       material: '',
+      gauge: '',
+      dimensions: '',
+      specifications: '',
       quantity: 1,
       unitPrice: 0,
       priority: 'standard'
@@ -203,6 +216,11 @@ const MetalWorks = () => {
         setNewService={setNewService}
         onSubmit={handleAddService}
         serviceTypes={serviceTypes}
+      />
+      
+      <ServiceDetailsModal 
+        service={selectedService}
+        onClose={() => setSelectedService(null)}
       />
     </div>
   );

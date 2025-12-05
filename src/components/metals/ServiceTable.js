@@ -32,6 +32,7 @@ const ServiceTable = ({
               <th className={`text-left py-4 px-6 font-semibold ${getThemeClass('text', 'primary')}`}>Service</th>
               <th className={`text-left py-4 px-6 font-semibold ${getThemeClass('text', 'primary')}`}>Amount</th>
               <th className={`text-left py-4 px-6 font-semibold ${getThemeClass('text', 'primary')}`}>Status</th>
+              <th className={`text-left py-4 px-6 font-semibold ${getThemeClass('text', 'primary')}`}>Timeline</th>
               <th className={`text-right py-4 px-6 font-semibold ${getThemeClass('text', 'primary')}`}>Actions</th>
             </tr>
           </thead>
@@ -75,7 +76,15 @@ const ServiceTable = ({
                         {service.serviceType.replace('_', ' ')}
                       </div>
                       <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material}</div>
-                      <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity}</div>
+                      <div className="flex items-center space-x-3 mt-1">
+                        <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity}</div>
+                        {service.gauge && (
+                          <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Gauge: {service.gauge}</div>
+                        )}
+                        {service.dimensions && (
+                          <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Size: {service.dimensions}</div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   
@@ -97,6 +106,32 @@ const ServiceTable = ({
                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(service.status)}`}>
                       {service.status.replace('_', ' ').toUpperCase()}
                     </span>
+                  </td>
+                  
+                  <td className="py-4 px-6">
+                    <div className="space-y-1">
+                      <div className={`text-sm ${getThemeClass('text', 'primary')}`}>
+                        {new Date(service.dropOffTime).toLocaleDateString('en-US', { 
+                          weekday: 'short', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </div>
+                      <div className={`text-xs ${getThemeClass('text', 'muted')}`}>
+                        {new Date(service.dropOffTime).toLocaleTimeString('en-US', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </div>
+                      {service.pickupTime && (
+                        <div className="text-xs text-green-600 font-medium">
+                          ✓ Picked up {new Date(service.pickupTime).toLocaleDateString('en-US', { 
+                            month: 'short', 
+                            day: 'numeric' 
+                          })}
+                        </div>
+                      )}
+                    </div>
                   </td>
                   
                   <td className="py-4 px-6 text-right">
