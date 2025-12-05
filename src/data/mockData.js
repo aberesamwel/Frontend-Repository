@@ -1,6 +1,6 @@
 import { 
   Truck, Wrench, Settings, Home, AlertTriangle, 
-  Calendar, TrendingUp, DollarSign, Users, FileText, Hammer 
+  Calendar, TrendingUp, DollarSign, Users, FileText, Hammer, Scissors 
 } from 'lucide-react';
 
 export const kpiData = [
@@ -208,6 +208,7 @@ export const navItems = [
   { name: 'Clients', icon: Users, active: false, path: '/clients' },
   { name: 'Materials', icon: Wrench, active: false, path: '/materials' },
   { name: 'Tools', icon: Hammer, active: false, path: '/tools' },
+  { name: 'Metal Works', icon: Scissors, active: false, path: '/metalworks' },
   { name: 'Calendar', icon: Calendar, active: false, path: '/calendar' },
   { name: 'Reports', icon: FileText, active: false, path: '/reports' },
   { name: 'Settings', icon: Settings, active: false, path: '/settings' }

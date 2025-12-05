@@ -7,6 +7,7 @@ import Projects from './pages/Projects';
 import Clients from './pages/Clients';
 import Materials from './pages/Materials';
 import Tools from './pages/Tools';
+import MetalWorks from './pages/MetalWorks';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
@@ -188,6 +189,7 @@ function AppContent() {
               <Route path="/clients" element={<Clients projects={projects} />} />
               <Route path="/materials" element={<Materials />} />
               <Route path="/tools" element={<Tools />} />
+              <Route path="/metalworks" element={<MetalWorks />} />
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/reports" element={<Reports projects={projects} />} />
               <Route path="/settings" element={<Settings />} />
