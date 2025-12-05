@@ -147,22 +147,24 @@ const MetalWorks = () => {
     }));
   };
 
-  const getTodayStats = () => {
+  const getServiceStats = () => {
     const today = new Date().toDateString();
     const todayServices = services.filter(s => 
       new Date(s.dropOffTime).toDateString() === today
     );
     
     return {
-      totalServices: todayServices.length,
-      totalRevenue: todayServices.reduce((sum, s) => sum + s.amountPaid, 0),
-      completedServices: todayServices.filter(s => s.status === 'completed').length,
-      averageServiceValue: todayServices.length > 0 ? 
-        todayServices.reduce((sum, s) => sum + s.totalAmount, 0) / todayServices.length : 0
+      totalServices: services.length,
+      paymentsReceived: todayServices.reduce((sum, s) => sum + s.amountPaid, 0),
+      completedServices: services.filter(s => s.status === 'completed').length,
+      pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
+      totalRevenue: services.reduce((sum, s) => sum + s.totalAmount, 0),
+      averageServiceValue: services.length > 0 ? 
+        services.reduce((sum, s) => sum + s.totalAmount, 0) / services.length : 0
     };
   };
 
-  const stats = getTodayStats();
+  const stats = getServiceStats();
 
   return (
     <div className="p-6 space-y-6">

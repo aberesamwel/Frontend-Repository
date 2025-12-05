@@ -1,5 +1,5 @@
 import React from 'react';
-import { Users, DollarSign, CheckCircle, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, CheckCircle, Clock } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const MetalStatsCards = ({ stats }) => {
@@ -7,14 +7,14 @@ const MetalStatsCards = ({ stats }) => {
 
   const cards = [
     {
-      title: "Today's Services",
+      title: "Total Services",
       value: stats.totalServices,
       icon: Users,
       color: 'blue'
     },
     {
-      title: "Payments Received",
-      value: `$${stats.totalRevenue.toFixed(2)}`,
+      title: "Payments Today",
+      value: `$${stats.paymentsReceived.toFixed(2)}`,
       icon: DollarSign,
       color: 'green'
     },
@@ -22,13 +22,13 @@ const MetalStatsCards = ({ stats }) => {
       title: "Completed",
       value: stats.completedServices,
       icon: CheckCircle,
-      color: 'blue'
+      color: 'emerald'
     },
     {
-      title: "Avg. Service Value",
-      value: `$${stats.averageServiceValue.toFixed(0)}`,
-      icon: TrendingUp,
-      color: 'purple'
+      title: "Pending",
+      value: stats.pendingServices,
+      icon: Clock,
+      color: 'orange'
     }
   ];
 

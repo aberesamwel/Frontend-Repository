@@ -102,16 +102,20 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
             <div className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200 flex-shrink-0">
               <span className="text-xs font-semibold text-green-700">Live</span>
             </div>
-            {/* Cool Digital Clock */}
-            <div className="hidden lg:flex items-center bg-gradient-to-r from-slate-800 to-slate-700 text-white px-4 py-2 rounded-xl shadow-lg border border-slate-600/50 backdrop-blur-sm">
-              <Clock className="w-4 h-4 mr-2 text-blue-400 animate-pulse" />
-              <div className="font-mono text-sm font-bold tracking-wider">
-                <span className="text-blue-300">{timeString.split(':')[0]}</span>
-                <span className="text-white animate-pulse">:</span>
-                <span className="text-green-300">{timeString.split(':')[1]}</span>
-                <span className="text-white animate-pulse">:</span>
-                <span className="text-yellow-300">{timeString.split(':')[2]}</span>
+            {/* Enhanced Digital Clock */}
+            <div className="hidden lg:flex items-center bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl border border-slate-600/30 backdrop-blur-sm relative overflow-hidden">
+              {/* Subtle animated background */}
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 via-transparent to-purple-600/10 animate-pulse"></div>
+              <Clock className="w-5 h-5 mr-3 text-cyan-400 animate-pulse relative z-10" />
+              <div className="font-mono text-lg font-bold tracking-widest relative z-10">
+                <span className="text-cyan-300 drop-shadow-sm">{timeString.split(':')[0]}</span>
+                <span className="text-white animate-pulse mx-1">:</span>
+                <span className="text-emerald-300 drop-shadow-sm">{timeString.split(':')[1]}</span>
+                <span className="text-white animate-pulse mx-1">:</span>
+                <span className="text-amber-300 drop-shadow-sm">{timeString.split(':')[2]}</span>
               </div>
+              {/* Subtle glow effect */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/5 to-purple-500/5 blur-sm"></div>
             </div>
           </div>
           <div className="hidden lg:flex items-center text-sm text-slate-600">
@@ -132,12 +136,12 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
               className="pl-9 pr-3 py-2 w-full border border-slate-200 rounded-lg bg-slate-50/80 focus:bg-white focus:ring-2 focus:ring-blue-500/50 focus:border-blue-300 transition-all duration-300 text-sm placeholder:text-slate-400"
             />
           </div>
-          {/* Mobile Clock */}
-          <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white px-2 py-1.5 rounded-lg shadow-md flex-shrink-0">
-            <div className="font-mono text-xs font-bold">
-              <span className="text-blue-300">{timeString.split(':')[0]}</span>
-              <span className="text-white">:</span>
-              <span className="text-green-300">{timeString.split(':')[1]}</span>
+          {/* Enhanced Mobile Clock */}
+          <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white px-3 py-2 rounded-xl shadow-lg flex-shrink-0 border border-slate-600/30">
+            <div className="font-mono text-sm font-bold tracking-wider">
+              <span className="text-cyan-300">{timeString.split(':')[0]}</span>
+              <span className="text-white animate-pulse">:</span>
+              <span className="text-emerald-300">{timeString.split(':')[1]}</span>
             </div>
           </div>
         </div>
