@@ -310,8 +310,8 @@ const MetalWorks = () => {
       {/* Business Performance Calendar */}
       <BusinessCalendar />
         
-        {/* Advanced Time-Based Analytics */}
-        <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-6 border ${getThemeClass('border', 'secondary')}`}>
+      {/* Advanced Time-Based Analytics */}
+      <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-6`}>
           <div className="flex items-center justify-between mb-6">
             <h4 className={`font-semibold ${getThemeClass('text', 'primary')}`}>Advanced Business Analytics</h4>
             <div className="flex items-center space-x-2">
@@ -389,7 +389,6 @@ const MetalWorks = () => {
               </div>
             </div>
           )}
-        </div>
       </div>
 
       {/* Filters */}
