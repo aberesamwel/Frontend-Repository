@@ -34,50 +34,9 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
       <div className="relative z-10 h-full overflow-auto">
         <div className="h-full px-6 py-6 flex flex-col">
         
-          {/* Professional Header */}
-          <div className="mb-6">
-            <div className={`${getThemeClass('bg', 'card')} rounded-2xl p-6 ${getThemeClass('border', 'primary')} border shadow-xl`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <Sparkles className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h1 className={`text-2xl font-bold ${getThemeClass('text', 'primary')}`}>Pexsteel Workshop</h1>
-                    <p className={`${getThemeClass('text', 'tertiary')} text-sm`}>Production Management Dashboard</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-6">
-                  <div className="flex items-center space-x-6">
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${getThemeClass('text', 'primary')}`}>{activeProjects}</div>
-                      <div className={`text-xs ${getThemeClass('text', 'muted')}`}>Active Projects</div>
-                    </div>
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${getThemeClass('text', 'primary')}`}>${(totalRevenue/1000).toFixed(0)}K</div>
-                      <div className={`text-xs ${getThemeClass('text', 'muted')}`}>Total Revenue</div>
-                    </div>
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${getThemeClass('text', 'primary')}`}>{completedProjects}</div>
-                      <div className={`text-xs ${getThemeClass('text', 'muted')}`}>Completed</div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className={`${getThemeClass('text', 'secondary')} text-sm font-mono`}>
-                      {currentTime.toLocaleTimeString()}
-                    </div>
-                    <div className={`${getThemeClass('text', 'muted')} text-xs`}>
-                      {currentTime.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Enhanced KPI Cards */}
+
+          {/* KPI Cards */}
           <div className="mb-6">
             <KPICards projects={projects} />
           </div>
@@ -113,31 +72,34 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
             {/* Right Column - Projects & Progress */}
             <div className="lg:col-span-1 space-y-6">
               
-              {/* Projects Table */}
+              {/* Projects Overview */}
               <div className={`${getThemeClass('bg', 'card')} ${getThemeClass('border', 'primary')} border rounded-2xl overflow-hidden flex flex-col shadow-xl`} style={{height: 'calc(60% - 12px)'}}>
-                <div className={`p-6 ${getThemeClass('border', 'primary')} border-b`}>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')}`}>Project Management</h3>
-                      <p className={`${getThemeClass('text', 'tertiary')} text-sm mt-1`}>Active vehicle body building operations</p>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                      <div className={`${getThemeClass('text', 'secondary')} text-sm font-medium`}>
-                        {projects.length} Projects
-                      </div>
-                      <button className={`${getThemeClass('interactive', 'primary')} px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center shadow-lg hover:shadow-xl focus:ring-2 focus:ring-blue-500 focus:ring-offset-2`}>
-                        View All
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </button>
-                    </div>
-                  </div>
+                <div className={`p-4 ${getThemeClass('border', 'primary')} border-b`}>
+                  <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')}`}>Recent Projects</h3>
                 </div>
-                <div className="flex-1 overflow-hidden">
-                  <ProjectsTable 
-                    searchTerm={searchTerm} 
-                    projects={projects} 
-                    onUpdateProject={onUpdateProject}
-                  />
+                <div className="flex-1 overflow-auto p-4">
+                  <div className="space-y-3">
+                    {projects.slice(0, 4).map(project => (
+                      <div key={project.id} className={`p-3 rounded-lg ${getThemeClass('bg', 'tertiary')} border ${getThemeClass('border', 'primary')}`}>
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId}</div>
+                            <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.clientName}</div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress}%</div>
+                            <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{project.status}</div>
+                          </div>
+                        </div>
+                        <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2 mt-2`}>
+                          <div 
+                            className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               

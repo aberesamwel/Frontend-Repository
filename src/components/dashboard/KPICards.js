@@ -78,13 +78,11 @@ const KPICards = ({ projects = [] }) => {
                   }`}>
                     {kpi.change}
                   </span>
-                  <span className="text-xs text-slate-500 truncate">vs last month</span>
+                  <span className="text-xs text-slate-500 truncate">{kpi.subtitle}</span>
                 </div>
               )}
               
-              {kpi.subtitle && (
-                <p className="text-xs text-slate-500 mt-1 truncate">{kpi.subtitle}</p>
-              )}
+
             </div>
           </div>
         </div>
