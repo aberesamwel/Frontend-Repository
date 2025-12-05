@@ -13,7 +13,7 @@ const MetalStatsCards = ({ stats }) => {
       color: 'blue'
     },
     {
-      title: "Revenue Today",
+      title: "Payments Received",
       value: `$${stats.totalRevenue.toFixed(2)}`,
       icon: DollarSign,
       color: 'green'

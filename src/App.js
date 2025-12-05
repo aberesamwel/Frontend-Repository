@@ -92,6 +92,7 @@ function AppContent() {
                            newQuantity <= 10 ? 'Critical' :
                            newQuantity <= 25 ? 'Low Stock' : 'In Stock';
           
+                           
           return {
             ...inventoryItem,
             quantity: newQuantity,
