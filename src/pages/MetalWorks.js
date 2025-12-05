@@ -243,6 +243,7 @@ const MetalWorks = () => {
     const completedServices = services.filter(s => s.status === 'completed');
     const totalRevenue = services.reduce((sum, s) => sum + s.totalAmount, 0);
     const totalPayments = services.reduce((sum, s) => sum + s.amountPaid, 0);
+    const totalDebt = services.reduce((sum, s) => sum + Math.max(0, s.totalAmount - s.amountPaid), 0);
     
     return {
       // Daily metrics
@@ -266,6 +267,7 @@ const MetalWorks = () => {
       pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
       totalRevenue,
       totalPayments,
+      totalDebt,
       outstandingBalance: totalRevenue - totalPayments,
       averageJobValue: services.length > 0 ? totalRevenue / services.length : 0,
       completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0

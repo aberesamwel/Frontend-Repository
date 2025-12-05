@@ -56,11 +56,11 @@ const MetalStatsCards = ({ stats }) => {
       color: 'green'
     },
     {
-      title: "Outstanding",
-      value: `$${stats.outstandingBalance.toFixed(2)}`,
+      title: "Customer Debt",
+      value: `$${stats.totalDebt.toFixed(2)}`,
       subtitle: `${stats.pendingServices} pending jobs`,
       icon: Calendar,
-      color: 'orange'
+      color: 'red'
     },
     {
       title: "Avg. Job Value",
