@@ -253,43 +253,187 @@ const MetalWorks = () => {
 
   const generatePDFReport = async () => {
     const jsPDF = (await import('jspdf')).default;
-    const doc = new jsPDF();
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+    let yPosition = margin;
+
+    // Header with brand colors
+    pdf.setFillColor(30, 41, 59); // slate-800
+    pdf.rect(0, 0, pageWidth, 40, 'F');
     
-    // Header
-    doc.setFontSize(20);
-    doc.text('MetalWorks Performance Report', 20, 30);
-    doc.setFontSize(12);
-    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+    // Logo area
+    pdf.setFillColor(59, 130, 246); // blue-500
+    pdf.roundedRect(margin, 10, 12, 12, 2, 2, 'F');
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(8);
+    pdf.text('MW', margin + 3, 18);
     
-    // Summary Stats
-    doc.setFontSize(16);
-    doc.text('Business Summary', 20, 65);
-    doc.setFontSize(12);
-    doc.text(`Total Services: ${stats.totalServices}`, 20, 80);
-    doc.text(`Total Revenue: $${stats.totalRevenue.toFixed(2)}`, 20, 90);
-    doc.text(`Completed Services: ${stats.completedServices}`, 20, 100);
-    doc.text(`Pending Services: ${stats.pendingServices}`, 20, 110);
-    doc.text(`Average Job Value: $${stats.averageJobValue.toFixed(2)}`, 20, 120);
-    doc.text(`Completion Rate: ${stats.completionRate.toFixed(1)}%`, 20, 130);
+    // Company name
+    pdf.setFontSize(20);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('MetalWorks Services', margin + 20, 18);
     
-    // Recent Services
-    doc.setFontSize(16);
-    doc.text('Recent Services', 20, 150);
-    doc.setFontSize(10);
+    pdf.setFontSize(12);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text('Performance Report', margin + 20, 26);
     
-    let yPos = 165;
-    services.slice(0, 10).forEach((service, index) => {
-      if (yPos > 270) {
-        doc.addPage();
-        yPos = 20;
-      }
-      doc.text(`${service.ticketId} - ${service.customerName}`, 20, yPos);
-      doc.text(`${service.serviceType} - $${service.totalAmount.toFixed(2)}`, 20, yPos + 8);
-      doc.text(`Status: ${service.status}`, 20, yPos + 16);
-      yPos += 25;
+    // Date
+    pdf.setFontSize(10);
+    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - margin - 40, 18);
+    pdf.text(`Document ID: MW-${Date.now()}`, pageWidth - margin - 40, 26);
+    
+    yPosition = 55;
+    
+    // Executive Summary
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Executive Summary', margin, yPosition);
+    yPosition += 15;
+    
+    // KPI Cards
+    const kpis = [
+      { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, color: [34, 197, 94] },
+      { label: 'Cash Collected', value: `$${stats.totalPayments.toFixed(2)}`, color: [59, 130, 246] },
+      { label: 'Outstanding', value: `$${stats.outstandingBalance.toFixed(2)}`, color: [147, 51, 234] },
+      { label: 'Completed Jobs', value: stats.completedServices.toString(), color: [249, 115, 22] }
+    ];
+    
+    kpis.forEach((kpi, index) => {
+      const x = margin + (index * (contentWidth / 4));
+      pdf.setFillColor(...kpi.color);
+      pdf.roundedRect(x, yPosition, contentWidth / 4 - 5, 25, 3, 3, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(14);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(kpi.value, x + 5, yPosition + 10);
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(kpi.label, x + 5, yPosition + 18);
     });
     
-    doc.save(`MetalWorks-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+    yPosition += 40;
+    
+    // Service Details Table
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Service Details', margin, yPosition);
+    yPosition += 15;
+    
+    // Table header
+    pdf.setFillColor(248, 250, 252); // gray-50
+    pdf.rect(margin, yPosition, contentWidth, 10, 'F');
+    
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(0, 0, 0);
+    
+    const headers = ['Ticket ID', 'Customer', 'Service', 'Status', 'Amount', 'Paid'];
+    const colWidths = [25, 35, 25, 25, 25, 25];
+    let xPos = margin + 2;
+    
+    headers.forEach((header, index) => {
+      pdf.text(header, xPos, yPosition + 7);
+      xPos += colWidths[index];
+    });
+
+    yPosition += 12;
+    
+    // Table rows
+    const rowsPerPage = 15;
+    let currentPageServices = services.slice(0, rowsPerPage);
+    
+    currentPageServices.forEach((service, index) => {
+      if (yPosition > pageHeight - 40) {
+        pdf.addPage();
+        yPosition = margin;
+      }
+      
+      // Alternating row colors
+      if (index % 2 === 0) {
+        pdf.setFillColor(249, 250, 251);
+        pdf.rect(margin, yPosition, contentWidth, 8, 'F');
+      }
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(0, 0, 0);
+      
+      xPos = margin + 2;
+      const rowData = [
+        service.ticketId,
+        service.customerName.substring(0, 15),
+        service.serviceType.substring(0, 12),
+        service.status,
+        `$${service.totalAmount.toFixed(2)}`,
+        `$${service.amountPaid.toFixed(2)}`
+      ];
+      
+      rowData.forEach((data, colIndex) => {
+        pdf.text(data, xPos, yPosition + 6);
+        xPos += colWidths[colIndex];
+      });
+      
+      yPosition += 10;
+    });
+    
+    // Financial Summary
+    yPosition += 10;
+    if (yPosition > pageHeight - 60) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+    
+    pdf.setFillColor(30, 41, 59);
+    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Financial Analysis', margin + 5, yPosition + 6);
+    
+    yPosition += 15;
+
+    const financialData = [
+      ['Total Revenue:', `$${stats.totalRevenue.toFixed(2)}`],
+      ['Cash Collected:', `$${stats.totalPayments.toFixed(2)}`],
+      ['Outstanding Balance:', `$${stats.outstandingBalance.toFixed(2)}`],
+      ['Collection Rate:', `${(stats.totalPayments / stats.totalRevenue * 100).toFixed(1)}%`],
+      ['Completion Rate:', `${stats.completionRate.toFixed(1)}%`]
+    ];
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'normal');
+    
+    financialData.forEach(([label, value]) => {
+      pdf.text(label, margin + 5, yPosition);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(value, margin + 80, yPosition);
+      pdf.setFont('helvetica', 'normal');
+      yPosition += 8;
+    });
+    
+    // Footer
+    const pageCount = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      pdf.setPage(i);
+      pdf.setFillColor(30, 41, 59);
+      pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(8);
+      pdf.text('Confidential - MetalWorks Service Management System', margin, pageHeight - 8);
+      pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 8);
+    }
+    
+    pdf.save(`MetalWorks_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
