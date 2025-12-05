@@ -274,7 +274,7 @@ const MetalWorks = () => {
     // Company name
     pdf.setFontSize(20);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('MetalWorks Services', margin + 20, 18);
+    pdf.text('Pexsteel Metal Works', margin + 20, 18);
     
     pdf.setFontSize(12);
     pdf.setFont('helvetica', 'normal');
@@ -283,7 +283,7 @@ const MetalWorks = () => {
     // Date
     pdf.setFontSize(10);
     pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - margin - 40, 18);
-    pdf.text(`Document ID: MW-${Date.now()}`, pageWidth - margin - 40, 26);
+    pdf.text(`Document ID: PX-${Date.now()}`, pageWidth - margin - 40, 26);
     
     yPosition = 55;
     
@@ -429,11 +429,11 @@ const MetalWorks = () => {
       
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(8);
-      pdf.text('Confidential - MetalWorks Service Management System', margin, pageHeight - 8);
+      pdf.text('Confidential - Pexsteel Metal Works Management System', margin, pageHeight - 8);
       pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 8);
     }
     
-    pdf.save(`MetalWorks_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    pdf.save(`Pexsteel_MetalWorks_Report_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   return (
@@ -443,7 +443,7 @@ const MetalWorks = () => {
         <div>
           <h1 className={`text-2xl font-bold ${getThemeClass('text', 'primary')} flex items-center`}>
             <Scissors className="w-7 h-7 mr-3 text-blue-600" />
-            Metal Works Services
+            Pexsteel Metal Works
           </h1>
           <p className={`${getThemeClass('text', 'tertiary')} mt-1`}>Cutting, bending & custom metalwork services</p>
         </div>
