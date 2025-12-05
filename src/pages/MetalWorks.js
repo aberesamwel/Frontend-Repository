@@ -11,11 +11,6 @@ const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
   const isDark = theme === 'dark';
 
-  // Save services to localStorage whenever services change
-  useEffect(() => {
-    localStorage.setItem('metalworks-services', JSON.stringify(services));
-  }, [services]);
-
   const [services, setServices] = useState(() => {
     const saved = localStorage.getItem('metalworks-services');
     if (saved) {
@@ -62,6 +57,11 @@ const MetalWorks = () => {
       }
     ];
   });
+
+  // Save services to localStorage whenever services change
+  useEffect(() => {
+    localStorage.setItem('metalworks-services', JSON.stringify(services));
+  }, [services]);
 
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
