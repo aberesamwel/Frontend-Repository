@@ -14,6 +14,7 @@ import Settings from './pages/Settings';
 import { projectsData, userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { businessAnalytics } from './utils/timeBasedAnalytics';
 
 // Helper functions for backward compatibility
 function extractChassisFromVehicleType(vehicleType) {
@@ -110,6 +111,15 @@ function AppContent() {
     setProjects(updatedProjects);
     setIsFormOpen(false);
     
+    // Record in analytics system
+    businessAnalytics.recordEvent('project_created', {
+      projectId: completeProject.id,
+      projectNumber: completeProject.projectId,
+      totalAmount: completeProject.totalCost || 0,
+      clientName: completeProject.clientName,
+      vehicleType: completeProject.vehicleType
+    });
+
     // Log activity
     ActivityLogger.addActivity(
       'project',
@@ -125,8 +135,18 @@ function AppContent() {
     );
     setProjects(updatedProjects);
     
-    // Log activity if status changed
+    // Record analytics for status changes
     if (oldProject && oldProject.status !== updatedProject.status) {
+      if (updatedProject.status === 'Completed') {
+        businessAnalytics.recordEvent('project_completed', {
+          projectId: updatedProject.id,
+          projectNumber: updatedProject.projectId,
+          totalAmount: updatedProject.totalCost || 0,
+          clientName: updatedProject.clientName
+        });
+      }
+      
+      // Log activity
       ActivityLogger.addActivity(
         'progress',
         `${updatedProject.projectId}: Status updated to ${updatedProject.status}`,

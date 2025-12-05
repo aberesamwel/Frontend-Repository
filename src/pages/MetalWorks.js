@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Scissors, Plus, TrendingUp, Calendar, Clock } from 'lucide-react';
+import { Scissors, Plus, TrendingUp, Calendar, Clock, Download, FileText } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import MetalStatsCards from '../components/metals/MetalStatsCards';
 import ServiceFilters from '../components/metals/ServiceFilters';
@@ -233,6 +233,47 @@ const MetalWorks = () => {
 
   const stats = getServiceStats();
 
+  const generatePDFReport = async () => {
+    const jsPDF = (await import('jspdf')).default;
+    const doc = new jsPDF();
+    
+    // Header
+    doc.setFontSize(20);
+    doc.text('MetalWorks Performance Report', 20, 30);
+    doc.setFontSize(12);
+    doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 20, 45);
+    
+    // Summary Stats
+    doc.setFontSize(16);
+    doc.text('Business Summary', 20, 65);
+    doc.setFontSize(12);
+    doc.text(`Total Services: ${stats.totalServices}`, 20, 80);
+    doc.text(`Total Revenue: $${stats.totalRevenue.toFixed(2)}`, 20, 90);
+    doc.text(`Completed Services: ${stats.completedServices}`, 20, 100);
+    doc.text(`Pending Services: ${stats.pendingServices}`, 20, 110);
+    doc.text(`Average Job Value: $${stats.averageJobValue.toFixed(2)}`, 20, 120);
+    doc.text(`Completion Rate: ${stats.completionRate.toFixed(1)}%`, 20, 130);
+    
+    // Recent Services
+    doc.setFontSize(16);
+    doc.text('Recent Services', 20, 150);
+    doc.setFontSize(10);
+    
+    let yPos = 165;
+    services.slice(0, 10).forEach((service, index) => {
+      if (yPos > 270) {
+        doc.addPage();
+        yPos = 20;
+      }
+      doc.text(`${service.ticketId} - ${service.customerName}`, 20, yPos);
+      doc.text(`${service.serviceType} - $${service.totalAmount.toFixed(2)}`, 20, yPos + 8);
+      doc.text(`Status: ${service.status}`, 20, yPos + 16);
+      yPos += 25;
+    });
+    
+    doc.save(`MetalWorks-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -245,13 +286,22 @@ const MetalWorks = () => {
           <p className={`${getThemeClass('text', 'tertiary')} mt-1`}>Cutting, bending & custom metalwork services</p>
         </div>
         
-        <button 
-          onClick={() => setShowServiceModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Service
-        </button>
+        <div className="flex space-x-3">
+          <button 
+            onClick={generatePDFReport}
+            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download Report
+          </button>
+          <button 
+            onClick={() => setShowServiceModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            New Service
+          </button>
+        </div>
       </div>
 
       {/* Modern Analytics Dashboard */}

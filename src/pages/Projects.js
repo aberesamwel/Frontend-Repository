@@ -1,6 +1,8 @@
 import React from 'react';
 import ProjectsTable from '../components/ProjectsTable';
 import AddProjectForm from '../components/AddProjectForm';
+import BusinessCalendar from '../components/analytics/BusinessCalendar';
+import { businessAnalytics } from '../utils/timeBasedAnalytics';
 
 const Projects = ({ projects, onUpdateProject, onAddProject }) => {
   const [isFormOpen, setIsFormOpen] = React.useState(false);
@@ -25,6 +27,11 @@ const Projects = ({ projects, onUpdateProject, onAddProject }) => {
         projects={projects} 
         onUpdateProject={onUpdateProject}
       />
+      
+      {/* Project Performance Analytics */}
+      <div className="mt-8">
+        <BusinessCalendar />
+      </div>
       
       <AddProjectForm 
         isOpen={isFormOpen}
