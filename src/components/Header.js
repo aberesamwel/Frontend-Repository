@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench } from 'lucide-react';
+import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast } from 'lucide-react';
 import { notifications } from '../data/mockData';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
+  const { currentTheme, toggleTheme, highContrast, toggleHighContrast, getThemeClass, isDark } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationList, setNotificationList] = useState(notifications);
@@ -78,9 +80,11 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
   });
 
   return (
-    <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 h-14 sm:h-16 lg:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-sm relative">
+    <header className={`sticky top-0 z-50 ${getThemeClass('bg', 'card')} ${getThemeClass('border', 'primary')} border-b h-14 sm:h-16 lg:h-20 flex items-center justify-between px-4 sm:px-6 lg:px-8 shadow-lg relative transition-all duration-300`}>
       {/* Subtle gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none"></div>
+      {!isDark && (
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-50/30 via-transparent to-indigo-50/20 pointer-events-none"></div>
+      )}
       
       <div className="flex items-center space-x-3 sm:space-x-6 lg:space-x-8 relative z-10 flex-1 min-w-0">
         <button
@@ -180,6 +184,7 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
                   </button>
                 </div>
               </div>
+              
               <div className="max-h-64 overflow-y-auto">
                 {notificationList.length === 0 ? (
                   <div className="p-4 text-center text-slate-500">
@@ -192,10 +197,10 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
                     return (
                       <div
                         key={notification.id}
-                        onClick={() => markAsRead(notification.id)}
                         className={`p-4 border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors ${
                           !notification.read ? 'bg-blue-50/50' : ''
                         }`}
+                        onClick={() => markAsRead(notification.id)}
                       >
                         <div className="flex items-start space-x-3">
                           <div className={`p-2 rounded-lg ${
@@ -206,13 +211,12 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
                             <IconComponent className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-slate-900 truncate">{notification.title}</p>
-                            <p className="text-xs text-slate-600 mt-1">{notification.message}</p>
-                            <p className="text-xs text-slate-400 mt-1">
-                              {new Date(notification.time).toLocaleTimeString('en-US', { 
-                                hour: '2-digit', 
-                                minute: '2-digit' 
-                              })}
+                            <p className={`text-sm font-medium text-slate-900 ${!notification.read ? 'font-semibold' : ''}`}>
+                              {notification.title}
+                            </p>
+                            <p className="text-sm text-slate-600 mt-1">{notification.message}</p>
+                            <p className="text-xs text-slate-400 mt-2">
+                              {new Date(notification.time).toLocaleTimeString()}
                             </p>
                           </div>
                           {!notification.read && (
@@ -224,38 +228,62 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
                   })
                 )}
               </div>
+              
+              <div className="p-4 border-t border-slate-200">
+                <button
+                  onClick={onAddProject}
+                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Project</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Add Project Button - Mobile optimized */}
-        <button 
-          onClick={onAddProject}
-          className="group bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 rounded-lg sm:rounded-xl lg:rounded-2xl font-semibold transition-all duration-300 shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 hover:scale-105 active:scale-95 touch-manipulation"
-        >
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-90 transition-transform duration-300" />
-            <span className="hidden sm:inline text-xs sm:text-sm lg:text-base tracking-wide">New Project</span>
-          </div>
-        </button>
-        
+        {/* Theme Controls */}
+        <div className="flex items-center space-x-2">
+          {/* High Contrast Toggle */}
+          <button
+            onClick={toggleHighContrast}
+            className={`p-2 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              highContrast 
+                ? 'bg-yellow-500 text-black hover:bg-yellow-400' 
+                : `${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')}`
+            }`}
+            title="Toggle High Contrast"
+            aria-label="Toggle High Contrast Mode"
+          >
+            <Contrast className="w-4 h-4 sm:w-5 sm:h-5" />
+          </button>
+          
+          {/* Theme Toggle */}
+          <button
+            onClick={toggleTheme}
+            className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            title={`Switch to ${isDark ? 'Light' : 'Dark'} Theme`}
+            aria-label={`Switch to ${isDark ? 'Light' : 'Dark'} Theme`}
+          >
+            {isDark ? (
+              <Sun className="w-4 h-4 sm:w-5 sm:h-5" />
+            ) : (
+              <Moon className="w-4 h-4 sm:w-5 sm:h-5" />
+            )}
+          </button>
+        </div>
 
-        
-        {/* User Profile - Mobile optimized */}
-        <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4 pl-2 sm:pl-3 lg:pl-4 border-l border-slate-200/70">
-          <div className="text-right hidden md:block">
-            <p className="text-xs sm:text-sm font-bold text-slate-900 tracking-wide truncate">{profile?.name || 'John Doe'}</p>
-            <p className="text-xs text-slate-500 font-medium truncate">{profile?.role || 'Workshop Manager'}</p>
-          </div>
-          <div className="relative group cursor-pointer">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600 rounded-lg sm:rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg ring-2 ring-blue-200/50 group-hover:ring-blue-300 transition-all duration-300 group-hover:scale-110">
-              <span className="text-white text-xs sm:text-sm font-bold tracking-wide">{profile?.initials || 'JD'}</span>
+        {/* User Profile */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex items-center space-x-2 sm:space-x-3 text-right">
+            <div className="hidden sm:block text-right">
+              <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>{profile?.name || 'User'}</div>
+              <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{profile?.role || 'Manager'}</div>
             </div>
-            <div className={`absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 rounded-full border-2 border-white shadow-sm ${
-              profile?.status === 'Online' ? 'bg-green-400' : 'bg-gray-400'
-            }`}></div>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base lg:text-lg shadow-lg ring-2 ring-white">
+              {profile?.initials || 'U'}
+            </div>
           </div>
-          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer hidden sm:block" />
         </div>
       </div>
     </header>

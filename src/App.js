@@ -6,11 +6,13 @@ import Dashboard from './components/Dashboard';
 import Projects from './pages/Projects';
 import Clients from './pages/Clients';
 import Materials from './pages/Materials';
-
+import Tools from './pages/Tools';
+import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import { projectsData, userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
+import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 
 // Helper functions for backward compatibility
 function extractChassisFromVehicleType(vehicleType) {
@@ -34,6 +36,7 @@ function extractBodyFromVehicleType(vehicleType) {
 
 function AppContent() {
   const location = useLocation();
+  const { getThemeClass, isDark } = useTheme();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [profile, setProfile] = useState(userProfile);
@@ -131,7 +134,11 @@ function AppContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-900' 
+        : 'bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20'
+    }`}>
       {/* Mobile-first layout */}
       <div className="flex flex-col lg:flex-row min-h-screen">
         {/* Sidebar - Mobile: overlay, Desktop: fixed */}
@@ -180,7 +187,8 @@ function AppContent() {
               } />
               <Route path="/clients" element={<Clients projects={projects} />} />
               <Route path="/materials" element={<Materials />} />
-
+              <Route path="/tools" element={<Tools />} />
+              <Route path="/calendar" element={<Calendar />} />
               <Route path="/reports" element={<Reports projects={projects} />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
@@ -195,9 +203,11 @@ function AppContent() {
 
 function App() {
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ThemeProvider>
   );
 }
 

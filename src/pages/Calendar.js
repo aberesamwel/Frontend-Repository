@@ -1,128 +1,64 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, ChevronLeft, ChevronRight, Clock, X, MoreHorizontal, Search, Settings } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Users, Wrench, Truck, Bell } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Calendar = () => {
+  const { theme, getThemeClass } = useTheme();
+  const isDark = theme === 'dark';
+  
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [events, setEvents] = useState(() => {
-    const saved = localStorage.getItem('bodycraft-events');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [isEventFormOpen, setIsEventFormOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [showEventModal, setShowEventModal] = useState(false);
+  const [events, setEvents] = useState([
+    {
+      id: 1,
+      title: 'Client Meeting - TRK-2024-001',
+      date: '2024-12-20',
+      time: '10:00 AM',
+      type: 'meeting',
+      priority: 'high',
+      attendees: ['John Smith', 'Sarah Wilson']
+    },
+    {
+      id: 2,
+      title: 'Maintenance Due - Welding Machine',
+      date: '2024-12-22',
+      time: '2:00 PM',
+      type: 'maintenance',
+      priority: 'medium',
+      tool: 'WM-2024-007'
+    },
+    {
+      id: 3,
+      title: 'Project Delivery - TRK-2024-003',
+      date: '2024-12-25',
+      time: '9:00 AM',
+      type: 'delivery',
+      priority: 'high',
+      client: 'Metro Transport'
+    }
+  ]);
+
   const [newEvent, setNewEvent] = useState({
     title: '',
-    description: '',
     date: '',
     time: '',
-    duration: '60',
-    type: 'task',
+    type: 'meeting',
     priority: 'medium',
-    reminder: '15'
+    notes: ''
   });
 
-  const eventTypes = [
-    { value: 'task', label: 'Workshop Task', color: 'bg-blue-500' },
-    { value: 'meeting', label: 'Client Meeting', color: 'bg-green-500' },
-    { value: 'delivery', label: 'Material Delivery', color: 'bg-orange-500' },
-    { value: 'inspection', label: 'Quality Inspection', color: 'bg-purple-500' },
-    { value: 'maintenance', label: 'Equipment Maintenance', color: 'bg-red-500' }
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
   ];
-
-  const priorities = [
-    { value: 'low', label: 'Low Priority', color: 'text-gray-600' },
-    { value: 'medium', label: 'Medium Priority', color: 'text-yellow-600' },
-    { value: 'high', label: 'High Priority', color: 'text-red-600' }
-  ];
-
-  useEffect(() => {
-    localStorage.setItem('bodycraft-events', JSON.stringify(events));
-  }, [events]);
-
-  // Check for notifications
-  useEffect(() => {
-    const checkNotifications = () => {
-      const now = new Date();
-      events.forEach(event => {
-        const eventDateTime = new Date(`${event.date}T${event.time}`);
-        const reminderTime = new Date(eventDateTime.getTime() - (parseInt(event.reminder) * 60000));
-        
-        if (now >= reminderTime && now < eventDateTime && !event.notified) {
-          if (Notification.permission === 'granted') {
-            new Notification(`Workshop Reminder: ${event.title}`, {
-              body: `Starting in ${event.reminder} minutes`,
-              icon: '/favicon.ico'
-            });
-          }
-          // Mark as notified
-          setEvents(prev => prev.map(e => 
-            e.id === event.id ? { ...e, notified: true } : e
-          ));
-        }
-      });
-    };
-
-    // Request notification permission
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    const interval = setInterval(checkNotifications, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [events]);
 
   const getDaysInMonth = (date) => {
-    const year = date.getFullYear();
-    const month = date.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startingDayOfWeek = firstDay.getDay();
-
-    const days = [];
-    
-    // Add empty cells for days before the first day of the month
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-    
-    // Add days of the month
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(new Date(year, month, day));
-    }
-    
-    return days;
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
   };
 
-  const getEventsForDate = (date) => {
-    if (!date) return [];
-    const dateStr = date.toISOString().split('T')[0];
-    return events.filter(event => event.date === dateStr);
-  };
-
-  const addEvent = (e) => {
-    e.preventDefault();
-    const event = {
-      id: Date.now(),
-      ...newEvent,
-      notified: false,
-      createdAt: new Date().toISOString()
-    };
-    setEvents([...events, event]);
-    setNewEvent({
-      title: '',
-      description: '',
-      date: '',
-      time: '',
-      duration: '60',
-      type: 'task',
-      priority: 'medium',
-      reminder: '15'
-    });
-    setIsEventFormOpen(false);
-  };
-
-  const deleteEvent = (eventId) => {
-    setEvents(events.filter(e => e.id !== eventId));
+  const getFirstDayOfMonth = (date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
   const navigateMonth = (direction) => {
@@ -133,204 +69,212 @@ const Calendar = () => {
     });
   };
 
-  const isToday = (date) => {
-    if (!date) return false;
-    const today = new Date();
-    return date.toDateString() === today.toDateString();
+  const getEventsForDate = (date) => {
+    const dateStr = date.toISOString().split('T')[0];
+    return events.filter(event => event.date === dateStr);
   };
 
-  const isSelected = (date) => {
-    if (!date || !selectedDate) return false;
-    return date.toDateString() === selectedDate.toDateString();
+  const getEventTypeColor = (type, priority) => {
+    const colors = {
+      meeting: priority === 'high' ? 'bg-blue-500' : 'bg-blue-400',
+      maintenance: priority === 'high' ? 'bg-orange-500' : 'bg-orange-400',
+      delivery: priority === 'high' ? 'bg-green-500' : 'bg-green-400',
+      deadline: 'bg-red-500'
+    };
+    return colors[type] || 'bg-gray-400';
   };
 
-  const getEventTypeColor = (type) => {
-    return eventTypes.find(t => t.value === type)?.color || 'bg-gray-500';
+  const getEventIcon = (type) => {
+    const icons = {
+      meeting: Users,
+      maintenance: Wrench,
+      delivery: Truck,
+      deadline: Bell
+    };
+    return icons[type] || CalendarIcon;
   };
 
-  const days = getDaysInMonth(currentDate);
-  const monthYear = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const renderCalendarDays = () => {
+    const daysInMonth = getDaysInMonth(currentDate);
+    const firstDay = getFirstDayOfMonth(currentDate);
+    const days = [];
+
+    // Empty cells for days before the first day of the month
+    for (let i = 0; i < firstDay; i++) {
+      days.push(<div key={`empty-${i}`} className="h-24"></div>);
+    }
+
+    // Days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+      const dayEvents = getEventsForDate(date);
+      const isToday = date.toDateString() === new Date().toDateString();
+      const isSelected = date.toDateString() === selectedDate.toDateString();
+
+      days.push(
+        <div
+          key={day}
+          onClick={() => setSelectedDate(date)}
+          className={`h-24 p-2 border cursor-pointer transition-all duration-200 ${
+            isDark ? 'border-slate-600 hover:bg-slate-700' : 'border-gray-200 hover:bg-gray-50'
+          } ${isSelected ? (isDark ? 'bg-blue-900/30 border-blue-500' : 'bg-blue-50 border-blue-300') : ''} ${
+            isToday ? 'ring-2 ring-blue-500' : ''
+          }`}
+        >
+          <div className={`text-sm font-medium mb-1 ${
+            isToday ? 'text-blue-600' : getThemeClass('text', 'primary')
+          }`}>
+            {day}
+          </div>
+          <div className="space-y-1">
+            {dayEvents.slice(0, 2).map(event => {
+              const EventIcon = getEventIcon(event.type);
+              return (
+                <div
+                  key={event.id}
+                  className={`text-xs px-1 py-0.5 rounded text-white truncate flex items-center ${getEventTypeColor(event.type, event.priority)}`}
+                >
+                  <EventIcon className="w-3 h-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{event.title}</span>
+                </div>
+              );
+            })}
+            {dayEvents.length > 2 && (
+              <div className={`text-xs ${getThemeClass('text', 'muted')} font-medium`}>
+                +{dayEvents.length - 2} more
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    return days;
+  };
+
+  const handleAddEvent = () => {
+    if (!newEvent.title || !newEvent.date || !newEvent.time) return;
+
+    const event = {
+      id: Date.now(),
+      ...newEvent
+    };
+
+    setEvents(prev => [...prev, event]);
+    setNewEvent({ title: '', date: '', time: '', type: 'meeting', priority: 'medium', notes: '' });
+    setShowEventModal(false);
+  };
 
   return (
-    <div className="h-screen bg-white flex flex-col">
-      {/* Google Calendar Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">C</span>
-            </div>
-            <h1 className="text-2xl text-gray-700 font-normal">Calendar</h1>
-          </div>
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <div>
+          <h1 className={`text-2xl font-bold ${getThemeClass('text', 'primary')} flex items-center`}>
+            <CalendarIcon className="w-7 h-7 mr-3 text-blue-600" />
+            Calendar & Scheduling
+          </h1>
+          <p className={`${getThemeClass('text', 'tertiary')} mt-1`}>Manage meetings, deadlines, and maintenance schedules</p>
         </div>
         
-        <div className="flex items-center space-x-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search"
-              className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <button className="p-2 hover:bg-gray-100 rounded-full">
-            <Settings className="w-5 h-5 text-gray-600" />
-          </button>
-        </div>
+        <button 
+          onClick={() => setShowEventModal(true)}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Event
+        </button>
       </div>
 
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left Sidebar */}
-        <div className="w-64 border-r border-gray-200 bg-white">
-          <div className="p-4">
-            <button
-              onClick={() => setIsEventFormOpen(true)}
-              className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors shadow-lg"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Create
-            </button>
-          </div>
-          
-          {/* Mini Calendar */}
-          <div className="px-4 pb-4">
-            <div className="text-sm font-medium text-gray-900 mb-2">{monthYear}</div>
-            <div className="grid grid-cols-7 gap-1 text-xs text-gray-500 mb-2">
-              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                <div key={day} className="text-center py-1">{day}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-1">
-              {days.map((date, index) => {
-                const dayEvents = getEventsForDate(date);
-                return (
-                  <button
-                    key={index}
-                    onClick={() => date && setSelectedDate(date)}
-                    className={`text-xs p-1 rounded hover:bg-blue-100 ${
-                      date ? 'text-gray-900' : 'text-gray-300'
-                    } ${
-                      isToday(date) ? 'bg-blue-600 text-white hover:bg-blue-700' : ''
-                    } ${
-                      isSelected(date) ? 'bg-blue-100' : ''
-                    }`}
-                  >
-                    {date ? date.getDate() : ''}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          {/* My Calendars */}
-          <div className="px-4">
-            <div className="text-sm font-medium text-gray-900 mb-2">My calendars</div>
-            <div className="space-y-1">
-              <div className="flex items-center space-x-2 py-1">
-                <div className="w-3 h-3 bg-blue-600 rounded-sm"></div>
-                <span className="text-sm text-gray-700">Workshop Events</span>
-              </div>
-              <div className="flex items-center space-x-2 py-1">
-                <div className="w-3 h-3 bg-green-600 rounded-sm"></div>
-                <span className="text-sm text-gray-700">Project Deadlines</span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Main Calendar */}
-        <div className="flex-1 flex flex-col">
-          {/* Calendar Toolbar */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-1">
-                <button
-                  onClick={() => navigateMonth(-1)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <ChevronLeft className="w-5 h-5 text-gray-600" />
-                </button>
-                <button
-                  onClick={() => navigateMonth(1)}
-                  className="p-2 hover:bg-gray-100 rounded-full"
-                >
-                  <ChevronRight className="w-5 h-5 text-gray-600" />
-                </button>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Calendar */}
+        <div className="lg:col-span-3">
+          <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
+            {/* Calendar Header */}
+            <div className={`flex items-center justify-between p-4 ${getThemeClass('border', 'primary')} border-b`}>
               <button
-                onClick={() => setCurrentDate(new Date())}
-                className="px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded hover:bg-gray-50"
+                onClick={() => navigateMonth(-1)}
+                className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'primary')} hover:${getThemeClass('text', 'secondary')} transition-colors`}
               >
-                Today
+                <ChevronLeft className="w-5 h-5" />
               </button>
-              <h2 className="text-xl text-gray-900">{monthYear}</h2>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">Month</button>
-              <button className="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">Week</button>
-              <button className="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded">Day</button>
-              <button className="p-2 hover:bg-gray-100 rounded-full">
-                <MoreHorizontal className="w-5 h-5 text-gray-600" />
+              
+              <h2 className={`text-xl font-bold ${getThemeClass('text', 'primary')}`}>
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h2>
+              
+              <button
+                onClick={() => navigateMonth(1)}
+                className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'primary')} hover:${getThemeClass('text', 'secondary')} transition-colors`}
+              >
+                <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-          </div>
 
-          {/* Calendar Grid */}
-          <div className="flex-1 overflow-auto">
-            {/* Day Headers */}
-            <div className="grid grid-cols-7 border-b border-gray-200 bg-gray-50">
-              {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                <div key={day} className="p-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wide border-r border-gray-200 last:border-r-0">
+            {/* Days of Week */}
+            <div className={`grid grid-cols-7 ${getThemeClass('bg', 'tertiary')}`}>
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                <div key={day} className={`p-3 text-center text-sm font-semibold ${getThemeClass('text', 'muted')}`}>
                   {day}
                 </div>
               ))}
             </div>
 
-            {/* Calendar Days */}
-            <div className="grid grid-cols-7 auto-rows-fr" style={{ minHeight: 'calc(100vh - 200px)' }}>
-              {days.map((date, index) => {
-                const dayEvents = getEventsForDate(date);
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7">
+              {renderCalendarDays()}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Today's Events */}
+          <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-4`}>
+            <h3 className={`font-semibold ${getThemeClass('text', 'primary')} mb-3 flex items-center`}>
+              <Clock className="w-4 h-4 mr-2" />
+              Today's Events
+            </h3>
+            <div className="space-y-2">
+              {getEventsForDate(new Date()).length > 0 ? (
+                getEventsForDate(new Date()).map(event => {
+                  const EventIcon = getEventIcon(event.type);
+                  return (
+                    <div key={event.id} className={`p-3 rounded-lg ${getThemeClass('bg', 'tertiary')} border-l-4 ${getEventTypeColor(event.type, event.priority).replace('bg-', 'border-')}`}>
+                      <div className="flex items-center space-x-2">
+                        <EventIcon className="w-4 h-4 text-gray-600" />
+                        <div className="flex-1">
+                          <div className={`font-medium text-sm ${getThemeClass('text', 'primary')}`}>{event.title}</div>
+                          <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{event.time}</div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <p className={`text-sm ${getThemeClass('text', 'muted')} text-center py-4`}>No events today</p>
+              )}
+            </div>
+          </div>
+
+          {/* Upcoming Events */}
+          <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-4`}>
+            <h3 className={`font-semibold ${getThemeClass('text', 'primary')} mb-3 flex items-center`}>
+              <Bell className="w-4 h-4 mr-2" />
+              Upcoming
+            </h3>
+            <div className="space-y-2">
+              {events.slice(0, 3).map(event => {
+                const EventIcon = getEventIcon(event.type);
                 return (
-                  <div
-                    key={index}
-                    onClick={() => date && setSelectedDate(date)}
-                    className={`min-h-[120px] p-2 border-r border-b border-gray-200 last:border-r-0 cursor-pointer hover:bg-gray-50 ${
-                      !date ? 'bg-gray-50' : ''
-                    } ${
-                      isToday(date) ? 'bg-blue-50' : ''
-                    }`}
-                  >
-                    {date && (
-                      <>
-                        <div className={`text-sm mb-2 ${
-                          isToday(date) 
-                            ? 'w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center font-medium' 
-                            : 'text-gray-900'
-                        }`}>
-                          {isToday(date) ? date.getDate() : date.getDate()}
-                        </div>
-                        <div className="space-y-1">
-                          {dayEvents.slice(0, 3).map(event => (
-                            <div
-                              key={event.id}
-                              className="text-xs p-1 bg-blue-100 text-blue-800 rounded truncate cursor-pointer hover:bg-blue-200"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                // Handle event click
-                              }}
-                            >
-                              {event.title}
-                            </div>
-                          ))}
-                          {dayEvents.length > 3 && (
-                            <div className="text-xs text-gray-500 cursor-pointer hover:text-gray-700">
-                              +{dayEvents.length - 3} more
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
+                  <div key={event.id} className={`p-2 rounded-lg ${getThemeClass('bg', 'tertiary')}`}>
+                    <div className="flex items-center space-x-2">
+                      <EventIcon className="w-3 h-3 text-gray-600" />
+                      <div className="flex-1">
+                        <div className={`font-medium text-xs ${getThemeClass('text', 'primary')}`}>{event.title}</div>
+                        <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{event.date} at {event.time}</div>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -339,103 +283,92 @@ const Calendar = () => {
         </div>
       </div>
 
-
-
-      {/* Google Calendar Style Event Modal */}
-      {isEventFormOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md mx-4">
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">New Event</h3>
-              <button
-                onClick={() => setIsEventFormOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-full"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+      {/* Add Event Modal */}
+      {showEventModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-xl w-full max-w-md`}>
+            <div className={`p-6 ${getThemeClass('border', 'primary')} border-b`}>
+              <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')}`}>Add New Event</h3>
             </div>
-
-            <form onSubmit={addEvent} className="p-4 space-y-4">
+            
+            <div className="p-6 space-y-4">
               <div>
+                <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Event Title</label>
                 <input
                   type="text"
-                  required
                   value={newEvent.title}
                   onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-                  className="w-full text-lg font-medium border-0 border-b border-gray-200 focus:border-blue-500 focus:outline-none pb-2"
-                  placeholder="Add title"
+                  className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="Enter event title"
                 />
               </div>
-
-              <div className="flex items-center space-x-3 py-2">
-                <Clock className="w-5 h-5 text-gray-400" />
-                <div className="flex space-x-2">
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Date</label>
                   <input
                     type="date"
-                    required
                     value={newEvent.date}
                     onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                    className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                   />
+                </div>
+                
+                <div>
+                  <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Time</label>
                   <input
                     type="time"
-                    required
                     value={newEvent.time}
                     onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
-                    className="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                   />
                 </div>
               </div>
-
-              <div>
-                <textarea
-                  value={newEvent.description}
-                  onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="3"
-                  placeholder="Add description"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={newEvent.type}
-                  onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {eventTypes.map(type => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
-                  ))}
-                </select>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Type</label>
+                  <select
+                    value={newEvent.type}
+                    onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
+                    className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  >
+                    <option value="meeting">Meeting</option>
+                    <option value="maintenance">Maintenance</option>
+                    <option value="delivery">Delivery</option>
+                    <option value="deadline">Deadline</option>
+                  </select>
+                </div>
                 
-                <select
-                  value={newEvent.duration}
-                  onChange={(e) => setNewEvent({...newEvent, duration: e.target.value})}
-                  className="border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="30">30 min</option>
-                  <option value="60">1 hour</option>
-                  <option value="120">2 hours</option>
-                  <option value="1440">All day</option>
-                </select>
+                <div>
+                  <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Priority</label>
+                  <select
+                    value={newEvent.priority}
+                    onChange={(e) => setNewEvent({...newEvent, priority: e.target.value})}
+                    className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
               </div>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsEventFormOpen(false)}
-                  className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
+            </div>
+            
+            <div className={`p-6 ${getThemeClass('border', 'primary')} border-t flex space-x-3`}>
+              <button
+                onClick={() => setShowEventModal(false)}
+                className={`flex-1 px-4 py-2 border ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')} rounded-lg hover:${getThemeClass('bg', 'hover')} transition-colors`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddEvent}
+                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add Event
+              </button>
+            </div>
           </div>
         </div>
       )}

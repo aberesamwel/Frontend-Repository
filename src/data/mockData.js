@@ -1,6 +1,6 @@
 import { 
   Truck, Wrench, Settings, Home, AlertTriangle, 
-  Calendar, TrendingUp, DollarSign, Users, FileText 
+  Calendar, TrendingUp, DollarSign, Users, FileText, Hammer 
 } from 'lucide-react';
 
 export const kpiData = [
@@ -207,6 +207,8 @@ export const navItems = [
   { name: 'Projects', icon: Truck, active: false, path: '/projects' },
   { name: 'Clients', icon: Users, active: false, path: '/clients' },
   { name: 'Materials', icon: Wrench, active: false, path: '/materials' },
+  { name: 'Tools', icon: Hammer, active: false, path: '/tools' },
+  { name: 'Calendar', icon: Calendar, active: false, path: '/calendar' },
   { name: 'Reports', icon: FileText, active: false, path: '/reports' },
   { name: 'Settings', icon: Settings, active: false, path: '/settings' }
 ];
@@ -238,6 +240,80 @@ export const notifications = [
     time: '2024-01-15T08:30:00',
     priority: 'medium',
     read: true
+  }
+];
+
+export const toolsData = [
+  {
+    id: 1,
+    name: 'Welding Machine - MIG 200A',
+    category: 'Welding Equipment',
+    serialNumber: 'WM-2024-001',
+    status: 'checked_out',
+    checkedOutBy: 'Mike Johnson',
+    checkedOutTime: '2024-01-13T08:30:00', // 2 days ago
+    location: 'Bay 3 - Welding Station',
+    condition: 'Good',
+    notes: 'Heavy welding project'
+  },
+  {
+    id: 2,
+    name: 'Angle Grinder - 9 inch',
+    category: 'Power Tools',
+    serialNumber: 'AG-2024-015',
+    status: 'available',
+    checkedOutBy: null,
+    checkedOutTime: null,
+    location: 'Tool Room A - Shelf 2',
+    condition: 'Excellent',
+    returnedTime: '2024-01-14T16:30:00',
+    lastReturnedBy: 'Tom Wilson'
+  },
+  {
+    id: 3,
+    name: 'Hydraulic Jack - 20 Ton',
+    category: 'Lifting Equipment',
+    serialNumber: 'HJ-2024-008',
+    status: 'checked_out',
+    checkedOutBy: 'Sarah Wilson',
+    checkedOutTime: '2024-01-15T09:15:00', // Today
+    location: 'Bay 1 - Assembly Area',
+    condition: 'Good',
+    notes: 'Vehicle lift maintenance'
+  },
+  {
+    id: 4,
+    name: 'Plasma Cutter - 40A',
+    category: 'Cutting Tools',
+    serialNumber: 'PC-2024-003',
+    status: 'maintenance',
+    checkedOutBy: null,
+    checkedOutTime: null,
+    location: 'Maintenance Shop',
+    condition: 'Under Repair'
+  },
+  {
+    id: 5,
+    name: 'Impact Wrench Set',
+    category: 'Hand Tools',
+    serialNumber: 'IW-2024-022',
+    status: 'available',
+    checkedOutBy: null,
+    checkedOutTime: null,
+    location: 'Tool Room B - Cabinet 5',
+    condition: 'Good'
+  },
+  {
+    id: 6,
+    name: 'Overhead Crane Remote',
+    category: 'Lifting Equipment',
+    serialNumber: 'CR-2024-001',
+    status: 'checked_out',
+    checkedOutBy: 'David Chen',
+    checkedOutTime: '2024-01-10T07:45:00', // 5 days ago (overdue)
+    location: 'Bay 2 - Heavy Assembly',
+    condition: 'Excellent',
+    notes: 'Long-term project use'
   }
 ];
 

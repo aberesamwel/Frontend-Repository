@@ -1,11 +1,53 @@
 import React from 'react';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { kpiData } from '../data/mockData';
+import { TrendingUp, TrendingDown, Truck, DollarSign, AlertTriangle } from 'lucide-react';
 
-const KPICards = () => {
+const KPICards = ({ projects = [] }) => {
+  // Calculate dynamic KPI values from actual project data
+  const activeProjects = projects.filter(p => p.status === 'In Progress').length;
+  const completedProjects = projects.filter(p => p.status === 'Completed').length;
+  const pendingDelivery = projects.filter(p => p.status === 'Completed' && !p.deliveredAt).length;
+  const totalRevenue = projects.reduce((sum, p) => sum + (p.clientPayment || 0), 0);
+  const totalProfit = projects.reduce((sum, p) => sum + (p.profit || 0), 0);
+  const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
+  
+  // Dynamic KPI data
+  const dynamicKpiData = [
+    { 
+      title: 'Active Projects', 
+      value: activeProjects.toString(), 
+      change: '+8', 
+      changeType: 'positive', 
+      icon: Truck,
+      subtitle: 'In Progress'
+    },
+    { 
+      title: 'Total Sales', 
+      value: `$${(totalRevenue/1000).toFixed(0)}K`, 
+      change: '+22.5%', 
+      changeType: 'positive', 
+      icon: DollarSign,
+      subtitle: 'This Month'
+    },
+    { 
+      title: 'Profit Margin', 
+      value: `${profitMargin}%`, 
+      change: '+2.1%', 
+      changeType: 'positive', 
+      icon: TrendingUp,
+      subtitle: 'Average'
+    },
+    { 
+      title: 'Pending Delivery', 
+      value: pendingDelivery.toString(), 
+      change: pendingDelivery > 5 ? '+2' : '-1', 
+      changeType: pendingDelivery > 5 ? 'positive' : 'negative', 
+      icon: AlertTriangle,
+      subtitle: 'Ready for Pickup'
+    }
+  ];
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-4 sm:mb-6 lg:mb-8">
-      {kpiData.map((kpi, index) => (
+      {dynamicKpiData.map((kpi, index) => (
         <div key={index} className="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-5 lg:p-6 hover:shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
           <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
