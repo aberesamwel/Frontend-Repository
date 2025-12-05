@@ -229,15 +229,7 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
                 )}
               </div>
               
-              <div className="p-4 border-t border-slate-200">
-                <button
-                  onClick={onAddProject}
-                  className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-lg transition-all duration-200 font-medium shadow-sm hover:shadow-md"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Project</span>
-                </button>
-              </div>
+
             </div>
           )}
         </div>
