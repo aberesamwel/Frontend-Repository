@@ -221,8 +221,8 @@ const BusinessCalendar = () => {
               <span className={getThemeClass('text', 'muted')}>High</span>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-500 rounded"></div>
-              <span className={getThemeClass('text', 'muted')}>Peak</span>
+              <div className="w-4 h-4 bg-green-500 rounded animate-pulse"></div>
+              <span className={getThemeClass('text', 'muted')}>Peak Performance 🔥</span>
             </div>
           </div>
         </div>
