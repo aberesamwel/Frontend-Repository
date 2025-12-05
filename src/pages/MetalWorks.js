@@ -25,7 +25,13 @@ const MetalWorks = () => {
       completedTime: '2024-12-20T14:15:00',
       pickupTime: '2024-12-20T16:45:00',
       estimatedCompletion: '2024-12-20T15:00:00',
-      notes: 'Clean edges required'
+      notes: 'Clean edges required',
+      paymentHistory: [{
+        amount: 135.00,
+        date: '2024-12-20T16:45:00',
+        method: 'cash'
+      }],
+      fullyPaid: true
     },
     {
       id: 2,
@@ -171,11 +177,23 @@ const MetalWorks = () => {
   };
 
   const handlePayment = (serviceId, amount) => {
-    setServices(prev => prev.map(service => 
-      service.id === serviceId 
-        ? { ...service, amountPaid: service.amountPaid + amount }
-        : service
-    ));
+    setServices(prev => prev.map(service => {
+      if (service.id === serviceId) {
+        const newAmountPaid = service.amountPaid + amount;
+        const paymentHistory = service.paymentHistory || [];
+        return {
+          ...service,
+          amountPaid: newAmountPaid,
+          paymentHistory: [...paymentHistory, {
+            amount,
+            date: new Date().toISOString(),
+            method: 'cash' // Default payment method
+          }],
+          fullyPaid: newAmountPaid >= service.totalAmount
+        };
+      }
+      return service;
+    }));
   };
 
   const getTodayStats = () => {
