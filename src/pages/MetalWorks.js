@@ -712,4 +712,4 @@ const MetalWorks = () => {
   );
 };
 
-export default MetalWorks;
+export default MetalWorks;// UI Enhancement marker
