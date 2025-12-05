@@ -243,8 +243,134 @@ const MetalWorks = () => {
         </button>
       </div>
 
-      {/* Stats Cards */}
+      {/* Modern Analytics Dashboard */}
       <MetalStatsCards stats={stats} />
+      
+      {/* Sales Analytics Charts */}
+      <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-6`}>
+        <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')} mb-6`}>Sales Analytics & Performance</h3>
+        
+        {/* Time Period Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* Daily Performance */}
+          <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium ${getThemeClass('text', 'primary')}`}>Today</h4>
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Sales</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>${stats.dailySales.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Collected</span>
+                <span className={`font-semibold text-green-600`}>${stats.dailyPayments.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Services</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>{stats.dailyServices}</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Monthly Performance */}
+          <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium ${getThemeClass('text', 'primary')}`}>This Month</h4>
+              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Sales</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>${stats.monthlySales.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Collected</span>
+                <span className={`font-semibold text-green-600`}>${stats.monthlyPayments.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Services</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>{stats.monthlyServices}</span>
+              </div>
+              <div className="mt-3 pt-2 border-t ${getThemeClass('border', 'secondary')}">
+                <div className="flex justify-between">
+                  <span className={`text-xs ${getThemeClass('text', 'muted')}`}>Collection Rate</span>
+                  <span className={`text-xs font-semibold ${stats.monthlySales > 0 && (stats.monthlyPayments / stats.monthlySales * 100) > 80 ? 'text-green-600' : 'text-orange-600'}`}>
+                    {stats.monthlySales > 0 ? (stats.monthlyPayments / stats.monthlySales * 100).toFixed(1) : 0}%
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Yearly Performance */}
+          <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium ${getThemeClass('text', 'primary')}`}>This Year</h4>
+              <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Sales</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>${stats.yearlySales.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Collected</span>
+                <span className={`font-semibold text-green-600`}>${stats.yearlyPayments.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`text-sm ${getThemeClass('text', 'muted')}`}>Services</span>
+                <span className={`font-semibold ${getThemeClass('text', 'primary')}`}>{stats.yearlyServices}</span>
+              </div>
+              <div className="mt-3 pt-2 border-t ${getThemeClass('border', 'secondary')}">
+                <div className="flex justify-between">
+                  <span className={`text-xs ${getThemeClass('text', 'muted')}`}>Avg/Month</span>
+                  <span className={`text-xs font-semibold ${getThemeClass('text', 'primary')}`}>
+                    ${(stats.yearlySales / 12).toFixed(0)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Business Intelligence Summary */}
+        <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-6 border ${getThemeClass('border', 'secondary')}`}>
+          <h4 className={`font-semibold ${getThemeClass('text', 'primary')} mb-4`}>Business Intelligence Summary</h4>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="text-center">
+              <div className={`text-2xl font-bold text-blue-600`}>{stats.totalServices}</div>
+              <div className={`text-sm ${getThemeClass('text', 'muted')}`}>Total Jobs</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-2xl font-bold text-green-600`}>${stats.totalRevenue.toFixed(0)}</div>
+              <div className={`text-sm ${getThemeClass('text', 'muted')}`}>Lifetime Sales</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-2xl font-bold text-purple-600`}>${stats.averageJobValue.toFixed(0)}</div>
+              <div className={`text-sm ${getThemeClass('text', 'muted')}`}>Avg Job Value</div>
+            </div>
+            <div className="text-center">
+              <div className={`text-2xl font-bold ${stats.completionRate > 80 ? 'text-green-600' : 'text-orange-600'}`}>{stats.completionRate.toFixed(1)}%</div>
+              <div className={`text-sm ${getThemeClass('text', 'muted')}`}>Completion Rate</div>
+            </div>
+          </div>
+          
+          {/* Outstanding Balance Alert */}
+          {stats.outstandingBalance > 0 && (
+            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-orange-800">Outstanding Balance</span>
+                <span className="text-lg font-bold text-orange-600">${stats.outstandingBalance.toFixed(2)}</span>
+              </div>
+              <div className="text-xs text-orange-600 mt-1">
+                From {stats.pendingServices} pending jobs • Follow up for collection
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Filters */}
       <ServiceFilters 
