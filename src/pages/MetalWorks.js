@@ -159,32 +159,63 @@ const MetalWorks = () => {
   };
 
   const getServiceStats = () => {
-    const today = new Date().toDateString();
-    const thisMonth = new Date().getMonth();
-    const thisYear = new Date().getFullYear();
+    const now = new Date();
+    const today = now.toDateString();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
     
+    // Daily Sales
     const todayServices = services.filter(s => 
       new Date(s.dropOffTime).toDateString() === today
     );
+    const dailySales = todayServices.reduce((sum, s) => sum + s.totalAmount, 0);
+    const dailyPayments = todayServices.reduce((sum, s) => sum + s.amountPaid, 0);
     
+    // Monthly Sales
     const thisMonthServices = services.filter(s => {
       const serviceDate = new Date(s.dropOffTime);
       return serviceDate.getMonth() === thisMonth && serviceDate.getFullYear() === thisYear;
     });
+    const monthlySales = thisMonthServices.reduce((sum, s) => sum + s.totalAmount, 0);
+    const monthlyPayments = thisMonthServices.reduce((sum, s) => sum + s.amountPaid, 0);
     
+    // Yearly Sales
+    const thisYearServices = services.filter(s => {
+      const serviceDate = new Date(s.dropOffTime);
+      return serviceDate.getFullYear() === thisYear;
+    });
+    const yearlySales = thisYearServices.reduce((sum, s) => sum + s.totalAmount, 0);
+    const yearlyPayments = thisYearServices.reduce((sum, s) => sum + s.amountPaid, 0);
+    
+    // All-time totals
     const completedServices = services.filter(s => s.status === 'completed');
-    const totalRevenue = completedServices.reduce((sum, s) => sum + s.totalAmount, 0);
+    const totalRevenue = services.reduce((sum, s) => sum + s.totalAmount, 0);
     const totalPayments = services.reduce((sum, s) => sum + s.amountPaid, 0);
     
     return {
+      // Daily metrics
+      dailySales,
+      dailyPayments,
+      dailyServices: todayServices.length,
+      
+      // Monthly metrics
+      monthlySales,
+      monthlyPayments,
+      monthlyServices: thisMonthServices.length,
+      
+      // Yearly metrics
+      yearlySales,
+      yearlyPayments,
+      yearlyServices: thisYearServices.length,
+      
+      // Overall business metrics
       totalServices: services.length,
-      monthlyRevenue: thisMonthServices.reduce((sum, s) => sum + s.totalAmount, 0),
       completedServices: completedServices.length,
       pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
-      totalRevenue: totalRevenue,
-      totalPayments: totalPayments,
+      totalRevenue,
+      totalPayments,
       outstandingBalance: totalRevenue - totalPayments,
-      averageServiceValue: services.length > 0 ? totalRevenue / services.length : 0,
+      averageJobValue: services.length > 0 ? totalRevenue / services.length : 0,
       completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0
     };
   };
