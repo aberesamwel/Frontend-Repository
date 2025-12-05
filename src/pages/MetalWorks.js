@@ -202,11 +202,21 @@ const MetalWorks = () => {
       new Date(s.dropOffTime).toDateString() === today
     );
     
+    const weeklyServices = services.filter(s => {
+      const serviceDate = new Date(s.dropOffTime);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      return serviceDate >= weekAgo;
+    });
+    
     return {
       totalServices: todayServices.length,
       totalRevenue: todayServices.reduce((sum, s) => sum + s.amountPaid, 0),
       completedServices: todayServices.filter(s => s.status === 'completed').length,
-      pendingServices: todayServices.filter(s => s.status === 'pending').length
+      pendingServices: todayServices.filter(s => s.status === 'pending').length,
+      weeklyRevenue: weeklyServices.reduce((sum, s) => sum + s.amountPaid, 0),
+      averageServiceValue: todayServices.length > 0 ? 
+        todayServices.reduce((sum, s) => sum + s.totalAmount, 0) / todayServices.length : 0,
+      customerRetention: new Set(services.map(s => s.customerName)).size
     };
   };
 
@@ -274,11 +284,11 @@ const MetalWorks = () => {
         <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-6`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm ${getThemeClass('text', 'muted')}`}>Pending</p>
-              <p className="text-2xl font-bold text-orange-600">{stats.pendingServices}</p>
+              <p className={`text-sm ${getThemeClass('text', 'muted')}`}>Avg. Service Value</p>
+              <p className="text-2xl font-bold text-purple-600">${stats.averageServiceValue.toFixed(0)}</p>
             </div>
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <Clock className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-purple-100 rounded-lg">
+              <TrendingUp className="w-6 h-6 text-purple-600" />
             </div>
           </div>
         </div>
