@@ -8,11 +8,15 @@ import AddServiceModal from '../components/metals/AddServiceModal';
 import ServiceDetailsModal from '../components/metals/ServiceDetailsModal';
 import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
+import Pagination from '../components/shared/Pagination';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
   const isDark = theme === 'dark';
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  
   const [services, setServices] = useState(() => {
     const saved = localStorage.getItem('metalworks-services');
     if (saved) {
@@ -117,6 +121,20 @@ const MetalWorks = () => {
     const matchesService = filterService === 'all' || service.serviceType === filterService;
     return matchesSearch && matchesStatus && matchesService;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredServices.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedServices = filteredServices.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const handleAddService = () => {
     if (!newService.customerName || !newService.phone || !newService.material) return;
@@ -324,13 +342,23 @@ const MetalWorks = () => {
       />
 
       {/* Services Table */}
-      <ServiceTable 
-        services={filteredServices}
-        onViewDetails={setSelectedService}
-        onStatusUpdate={handleStatusUpdate}
-        getStatusColor={getStatusColor}
-        getPriorityColor={getPriorityColor}
-      />
+      <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
+        <ServiceTable 
+          services={paginatedServices}
+          onViewDetails={setSelectedService}
+          onStatusUpdate={handleStatusUpdate}
+          getStatusColor={getStatusColor}
+          getPriorityColor={getPriorityColor}
+        />
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredServices.length}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
+      </div>
 
       {/* Add Service Modal */}
       <AddServiceModal 

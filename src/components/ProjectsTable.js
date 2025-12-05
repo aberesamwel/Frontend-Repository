@@ -5,6 +5,7 @@ import ProjectStatsCards from './projects/ProjectStatsCards';
 import ProjectFilters from './projects/ProjectFilters';
 import ProjectTable from './projects/ProjectTable';
 import ProjectDetailsModal from './projects/ProjectDetailsModal';
+import Pagination from './shared/Pagination';
 
 const ProjectsTable = ({ 
   projects, 
@@ -16,6 +17,8 @@ const ProjectsTable = ({
   const { getThemeClass } = useTheme();
   const [selectedProject, setSelectedProject] = useState(null);
   const [statusFilter, setStatusFilter] = useState('All Status');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredProjects = projects.filter(project => {
     const matchesSearch = project.projectId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,6 +27,20 @@ const ProjectsTable = ({
     const matchesStatus = statusFilter === 'All Status' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredProjects.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProjects = filteredProjects.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const handleDelivery = (projectId) => {
     const updatedProject = projects.find(p => p.id === projectId);
@@ -61,12 +78,22 @@ const ProjectsTable = ({
       />
 
       {/* Projects Table */}
-      <ProjectTable 
-        projects={filteredProjects}
-        onViewDetails={setSelectedProject}
-        onDelivery={handleDelivery}
-        onUpdateProject={onUpdateProject}
-      />
+      <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
+        <ProjectTable 
+          projects={paginatedProjects}
+          onViewDetails={setSelectedProject}
+          onDelivery={handleDelivery}
+          onUpdateProject={onUpdateProject}
+        />
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredProjects.length}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
+      </div>
 
       {/* Project Details Modal */}
       <ProjectDetailsModal 

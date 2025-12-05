@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Hammer, Search, Plus, Clock, User, MapPin, AlertCircle, CheckCircle, Wrench, Filter, ChevronDown } from 'lucide-react';
 import { toolsData } from '../data/mockData';
+import Pagination from '../components/shared/Pagination';
 
 const Tools = () => {
   const [tools, setTools] = useState(toolsData);
@@ -8,6 +9,8 @@ const Tools = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showAddToolModal, setShowAddToolModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [selectedTool, setSelectedTool] = useState(null);
   const [checkoutForm, setCheckoutForm] = useState({
     employeeName: '',
@@ -28,6 +31,20 @@ const Tools = () => {
     const matchesFilter = filterStatus === 'all' || tool.status === filterStatus;
     return matchesSearch && matchesFilter;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredTools.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedTools = filteredTools.slice(startIndex, startIndex + itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -537,7 +554,7 @@ const Tools = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
-              {filteredTools.map((tool) => {
+              {paginatedTools.map((tool) => {
                 const StatusIcon = getStatusIcon(tool.status);
                 const daysOut = getDaysCheckedOut(tool.checkedOutTime);
                 const checkoutStatus = getCheckoutStatus(daysOut);
@@ -616,6 +633,14 @@ const Tools = () => {
             </tbody>
           </table>
         </div>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredTools.length}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       </div>
 
       {/* Checkout Modal */}
