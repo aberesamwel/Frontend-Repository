@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Eye, Scissors, Zap } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
@@ -11,6 +11,7 @@ const ServiceTable = ({
   getPriorityColor 
 }) => {
   const { getThemeClass } = useTheme();
+  const [partialAmounts, setPartialAmounts] = useState({});
 
   const getServiceIcon = (serviceType) => {
     const icons = {
@@ -100,15 +101,42 @@ const ServiceTable = ({
                           Balance: ${balanceAmount.toFixed(2)}
                         </div>
                       )}
-                      <select
-                        value={service.amountPaid === 0 ? 'unpaid' : service.amountPaid >= service.totalAmount ? 'paid' : 'partial'}
-                        onChange={(e) => onPaymentUpdate(service.id, e.target.value)}
-                        className={`text-xs mt-1 border rounded px-2 py-1 ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
-                      >
-                        <option value="unpaid">Unpaid</option>
-                        <option value="partial">Partial</option>
-                        <option value="paid">Paid</option>
-                      </select>
+                      <div className="space-y-1">
+                        <select
+                          value={service.amountPaid === 0 ? 'unpaid' : service.amountPaid >= service.totalAmount ? 'paid' : 'partial'}
+                          onChange={(e) => {
+                            const status = e.target.value;
+                            if (status === 'partial') {
+                              setPartialAmounts(prev => ({ ...prev, [service.id]: service.amountPaid || 0 }));
+                            }
+                            onPaymentUpdate(service.id, status);
+                          }}
+                          className={`text-xs border rounded px-2 py-1 w-full ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
+                        >
+                          <option value="unpaid">Unpaid</option>
+                          <option value="partial">Partial</option>
+                          <option value="paid">Paid</option>
+                        </select>
+                        {(service.amountPaid > 0 && service.amountPaid < service.totalAmount) && (
+                          <input
+                            type="number"
+                            min="0"
+                            max={service.totalAmount}
+                            step="0.01"
+                            value={partialAmounts[service.id] || service.amountPaid}
+                            onChange={(e) => {
+                              const amount = parseFloat(e.target.value) || 0;
+                              setPartialAmounts(prev => ({ ...prev, [service.id]: amount }));
+                            }}
+                            onBlur={(e) => {
+                              const amount = parseFloat(e.target.value) || 0;
+                              onPaymentUpdate(service.id, 'partial', amount);
+                            }}
+                            className={`text-xs border rounded px-2 py-1 w-full ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
+                            placeholder="Amount paid"
+                          />
+                        )}
+                      </div>
                     </div>
                   </td>
                   

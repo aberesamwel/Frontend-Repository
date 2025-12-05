@@ -190,14 +190,14 @@ const MetalWorks = () => {
     }));
   };
 
-  const handlePaymentUpdate = (serviceId, paymentStatus) => {
+  const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null) => {
     setServices(prev => prev.map(service => {
       if (service.id === serviceId) {
         let amountPaid = 0;
         if (paymentStatus === 'paid') {
           amountPaid = service.totalAmount;
         } else if (paymentStatus === 'partial') {
-          amountPaid = service.totalAmount * 0.5; // Default to 50% for partial
+          amountPaid = customAmount !== null ? customAmount : service.amountPaid;
         }
         return { ...service, amountPaid, paymentStatus };
       }
