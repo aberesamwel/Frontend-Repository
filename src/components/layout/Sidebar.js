@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { X, Truck, Wrench, Edit3 } from 'lucide-react';
 import { navItems, userProfile } from '../data/mockData';
-import ProfileModal from './ProfileModal';
+import ProfileModal from '../shared/ProfileModal';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, profile, setProfile }) => {
   const location = useLocation();

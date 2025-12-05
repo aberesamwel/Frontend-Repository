@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import KPICards from './KPICards';
-import ProjectsTable from './ProjectsTable';
+import ProjectsTable from '../ProjectsTable';
 import RecentActivity from './RecentActivity';
 import ProjectProgress from './ProjectProgress';
 import AddProjectForm from './AddProjectForm';
