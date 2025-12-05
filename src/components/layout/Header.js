@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast } from 'lucide-react';
-import { notifications } from '../data/mockData';
-import { useTheme } from '../contexts/ThemeContext';
+import { notifications } from '../../data/mockData';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
   const { currentTheme, toggleTheme, highContrast, toggleHighContrast, getThemeClass, isDark } = useTheme();

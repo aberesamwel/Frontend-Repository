@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import KPICards from './KPICards';
 import ProjectsTable from '../ProjectsTable';
-import RecentActivity from './RecentActivity';
-import ProjectProgress from './ProjectProgress';
-import AddProjectForm from './AddProjectForm';
 import { Sparkles, Zap, TrendingUp, Users, Clock, ArrowRight, Play, Pause } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProject, onUpdateProject }) => {
   const { getThemeClass, isDark } = useTheme();
@@ -99,7 +96,16 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
                   </div>
                 </div>
                 <div className="flex-1 overflow-auto p-4">
-                  <RecentActivity />
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-blue-50 border border-blue-200">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <span className="text-sm text-blue-700">Project VB-2024-001 status updated to Quality Check</span>
+                    </div>
+                    <div className="flex items-center space-x-3 p-3 rounded-lg bg-green-50 border border-green-200">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm text-green-700">New project VB-2024-006 added for Metro Logistics</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -142,7 +148,22 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
                   <p className={`${getThemeClass('text', 'tertiary')} text-sm mt-1`}>Real-time updates</p>
                 </div>
                 <div className="flex-1 overflow-auto p-4">
-                  <ProjectProgress projects={projects} />
+                  <div className="space-y-4">
+                    {projects.slice(0, 3).map(project => (
+                      <div key={project.id} className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId}</span>
+                          <span className={`text-sm ${getThemeClass('text', 'secondary')}`}>{project.progress}%</span>
+                        </div>
+                        <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2`}>
+                          <div 
+                            className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
+                            style={{ width: `${project.progress}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -150,11 +171,7 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
         </div>
       </div>
       
-      <AddProjectForm 
-        isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        onAddProject={onAddProject}
-      />
+      {/* Add Project Form will be handled by parent component */}
     </main>
   );
 };
