@@ -163,6 +163,14 @@ const MetalWorks = () => {
       serviceType: service.serviceType,
       customerName: service.customerName
     });
+    
+    // Record initial debt
+    businessAnalytics.recordEvent('debt_created', {
+      serviceId: service.id,
+      ticketId: service.ticketId,
+      debtAmount: service.totalAmount,
+      customerName: service.customerName
+    });
 
     setServices(prev => [...prev, service]);
     setNewService({
@@ -185,8 +193,28 @@ const MetalWorks = () => {
     setServices(prev => prev.map(service => {
       if (service.id === serviceId) {
         const updates = { status: newStatus };
-        if (newStatus === 'completed') updates.completedTime = now;
-        if (newStatus === 'picked_up') updates.pickupTime = now;
+        if (newStatus === 'completed') {
+          updates.completedTime = now;
+          // Record service completion
+          businessAnalytics.recordEvent('service_completed', {
+            serviceId: service.id,
+            ticketId: service.ticketId,
+            totalAmount: service.totalAmount,
+            amountPaid: service.amountPaid,
+            remainingDebt: service.totalAmount - service.amountPaid,
+            customerName: service.customerName
+          });
+        }
+        if (newStatus === 'picked_up') {
+          updates.pickupTime = now;
+          // Record pickup
+          businessAnalytics.recordEvent('service_picked_up', {
+            serviceId: service.id,
+            ticketId: service.ticketId,
+            finalDebt: service.totalAmount - service.amountPaid,
+            customerName: service.customerName
+          });
+        }
         return { ...service, ...updates };
       }
       return service;
@@ -196,12 +224,30 @@ const MetalWorks = () => {
   const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
     setServices(prev => prev.map(service => {
       if (service.id === serviceId) {
+        const oldAmountPaid = service.amountPaid || 0;
         let amountPaid = 0;
         if (paymentStatus === 'paid') {
           amountPaid = service.totalAmount;
         } else if (paymentStatus === 'partial') {
           amountPaid = customAmount !== null ? customAmount : service.amountPaid;
         }
+        
+        // Record payment in analytics if amount changed
+        if (amountPaid !== oldAmountPaid) {
+          const paymentAmount = amountPaid - oldAmountPaid;
+          if (paymentAmount > 0) {
+            businessAnalytics.recordEvent('payment_received', {
+              serviceId: service.id,
+              ticketId: service.ticketId,
+              paymentAmount,
+              totalPaid: amountPaid,
+              remainingDebt: service.totalAmount - amountPaid,
+              paymentMethod: paymentMethod || service.paymentMethod,
+              customerName: service.customerName
+            });
+          }
+        }
+        
         const updates = { amountPaid, paymentStatus };
         if (paymentMethod) updates.paymentMethod = paymentMethod;
         return { ...service, ...updates };
