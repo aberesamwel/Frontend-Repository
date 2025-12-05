@@ -38,6 +38,7 @@ const MetalWorks = () => {
         totalAmount: 135.00,
         amountPaid: 135.00,
         paymentStatus: 'paid',
+        paymentMethod: 'cash',
         status: 'completed',
         priority: 'standard',
         dropOffTime: '2024-12-20T09:30:00',
@@ -59,6 +60,7 @@ const MetalWorks = () => {
         totalAmount: 200.00,
         amountPaid: 100.00,
         paymentStatus: 'partial',
+        paymentMethod: 'mpesa',
         status: 'in_progress',
         priority: 'urgent',
         dropOffTime: '2024-12-20T11:00:00'
@@ -148,6 +150,7 @@ const MetalWorks = () => {
       totalAmount: newService.quantity * newService.unitPrice,
       amountPaid: 0,
       paymentStatus: 'unpaid',
+      paymentMethod: null,
       status: 'pending',
       dropOffTime: new Date().toISOString()
     };
@@ -190,7 +193,7 @@ const MetalWorks = () => {
     }));
   };
 
-  const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null) => {
+  const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
     setServices(prev => prev.map(service => {
       if (service.id === serviceId) {
         let amountPaid = 0;
@@ -199,7 +202,9 @@ const MetalWorks = () => {
         } else if (paymentStatus === 'partial') {
           amountPaid = customAmount !== null ? customAmount : service.amountPaid;
         }
-        return { ...service, amountPaid, paymentStatus };
+        const updates = { amountPaid, paymentStatus };
+        if (paymentMethod) updates.paymentMethod = paymentMethod;
+        return { ...service, ...updates };
       }
       return service;
     }));

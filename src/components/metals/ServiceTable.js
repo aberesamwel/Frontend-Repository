@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, Scissors, Zap } from 'lucide-react';
+import { Eye, Scissors, Zap, Banknote, Smartphone, CreditCard, Landmark, Wallet } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const ServiceTable = ({ 
@@ -12,6 +12,19 @@ const ServiceTable = ({
 }) => {
   const { getThemeClass } = useTheme();
   const [partialAmounts, setPartialAmounts] = useState({});
+
+  const paymentMethods = [
+    { id: 'cash', name: 'Cash', icon: Banknote, color: 'text-green-600' },
+    { id: 'mpesa', name: 'M-Pesa', icon: Smartphone, color: 'text-green-500' },
+    { id: 'card', name: 'Card', icon: CreditCard, color: 'text-blue-600' },
+    { id: 'bank', name: 'Bank Transfer', icon: Landmark, color: 'text-purple-600' },
+    { id: 'crypto', name: 'Crypto', icon: Wallet, color: 'text-orange-500' }
+  ];
+
+  const getPaymentMethodIcon = (method) => {
+    const paymentMethod = paymentMethods.find(pm => pm.id === method);
+    return paymentMethod || { icon: Banknote, color: 'text-gray-500' };
+  };
 
   const getServiceIcon = (serviceType) => {
     const icons = {
@@ -93,8 +106,12 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div>
                       <div className={`font-bold ${getThemeClass('text', 'primary')}`}>${service.totalAmount.toFixed(2)}</div>
-                      <div className={`text-sm ${service.amountPaid >= service.totalAmount ? 'text-green-600' : 'text-orange-600'}`}>
-                        Paid: ${service.amountPaid.toFixed(2)}
+                      <div className={`text-sm flex items-center space-x-2 ${service.amountPaid >= service.totalAmount ? 'text-green-600' : 'text-orange-600'}`}>
+                        <span>Paid: ${service.amountPaid.toFixed(2)}</span>
+                        {service.paymentMethod && (() => {
+                          const { icon: PaymentIcon, color } = getPaymentMethodIcon(service.paymentMethod);
+                          return <PaymentIcon className={`w-3 h-3 ${color}`} />;
+                        })()}
                       </div>
                       {balanceAmount > 0 && (
                         <div className="text-sm text-red-600">
@@ -118,23 +135,47 @@ const ServiceTable = ({
                           <option value="paid">Paid</option>
                         </select>
                         {(service.amountPaid > 0 && service.amountPaid < service.totalAmount) && (
-                          <input
-                            type="number"
-                            min="0"
-                            max={service.totalAmount}
-                            step="0.01"
-                            value={partialAmounts[service.id] || service.amountPaid}
-                            onChange={(e) => {
-                              const amount = parseFloat(e.target.value) || 0;
-                              setPartialAmounts(prev => ({ ...prev, [service.id]: amount }));
-                            }}
-                            onBlur={(e) => {
-                              const amount = parseFloat(e.target.value) || 0;
-                              onPaymentUpdate(service.id, 'partial', amount);
-                            }}
+                          <div className="space-y-1">
+                            <input
+                              type="number"
+                              min="0"
+                              max={service.totalAmount}
+                              step="0.01"
+                              value={partialAmounts[service.id] || service.amountPaid}
+                              onChange={(e) => {
+                                const amount = parseFloat(e.target.value) || 0;
+                                setPartialAmounts(prev => ({ ...prev, [service.id]: amount }));
+                              }}
+                              onBlur={(e) => {
+                                const amount = parseFloat(e.target.value) || 0;
+                                onPaymentUpdate(service.id, 'partial', amount);
+                              }}
+                              className={`text-xs border rounded px-2 py-1 w-full ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
+                              placeholder="Amount paid"
+                            />
+                            <select
+                              value={service.paymentMethod || ''}
+                              onChange={(e) => onPaymentUpdate(service.id, service.paymentStatus, service.amountPaid, e.target.value)}
+                              className={`text-xs border rounded px-2 py-1 w-full ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
+                            >
+                              <option value="">Payment Method</option>
+                              {paymentMethods.map(method => (
+                                <option key={method.id} value={method.id}>{method.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        {service.amountPaid >= service.totalAmount && (
+                          <select
+                            value={service.paymentMethod || ''}
+                            onChange={(e) => onPaymentUpdate(service.id, 'paid', service.totalAmount, e.target.value)}
                             className={`text-xs border rounded px-2 py-1 w-full ${getThemeClass('bg', 'primary')} ${getThemeClass('border', 'primary')} ${getThemeClass('text', 'primary')}`}
-                            placeholder="Amount paid"
-                          />
+                          >
+                            <option value="">Payment Method</option>
+                            {paymentMethods.map(method => (
+                              <option key={method.id} value={method.id}>{method.name}</option>
+                            ))}
+                          </select>
                         )}
                       </div>
                     </div>
