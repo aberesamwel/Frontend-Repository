@@ -5,11 +5,13 @@ import { useTheme } from '../../contexts/ThemeContext';
 const ProjectStatsCards = ({ projects }) => {
   const { getThemeClass } = useTheme();
 
+  const totalRevenue = projects.reduce((sum, p) => sum + (p.clientPayment || 0), 0);
+  const totalProfit = projects.reduce((sum, p) => sum + (p.profit || 0), 0);
+  
   const stats = {
     activeProjects: projects.filter(p => p.status !== 'Completed' && !p.deliveredAt).length,
-    totalSales: projects.reduce((sum, p) => sum + p.clientPayment, 0),
-    avgProfitMargin: projects.length > 0 ? 
-      projects.reduce((sum, p) => sum + p.profitMargin, 0) / projects.length : 0,
+    totalSales: totalRevenue,
+    avgProfitMargin: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
     pendingDelivery: projects.filter(p => p.status === 'Completed' && !p.deliveredAt).length
   };
 
