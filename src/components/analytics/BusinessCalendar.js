@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, TrendingUp, DollarSign, Users, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, TrendingUp, DollarSign, Users, Clock, Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { businessAnalytics } from '../../utils/timeBasedAnalytics';
 
@@ -8,6 +8,7 @@ const BusinessCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarData, setCalendarData] = useState({});
+  const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
 
   useEffect(() => {
     loadCalendarData();
@@ -130,33 +131,76 @@ const BusinessCalendar = () => {
   const selectedDetails = getSelectedDateDetails();
 
   return (
-    <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} p-6`}>
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* Calendar */}
-        <div className="flex-1">
-          {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h3 className={`text-xl font-semibold ${getThemeClass('text', 'primary')}`}>
-              Business Performance Calendar
-            </h3>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => navigateMonth(-1)}
-                className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
-              >
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className={`text-lg font-medium ${getThemeClass('text', 'primary')} min-w-[200px] text-center`}>
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </span>
-              <button
-                onClick={() => navigateMonth(1)}
-                className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
-              >
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+    <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
+      {/* Collapsible Header */}
+      <div 
+        onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
+        className={`flex items-center justify-between p-4 cursor-pointer hover:${getThemeClass('bg', 'hover')} transition-colors border-b ${getThemeClass('border', 'primary')}`}
+      >
+        <div className="flex items-center space-x-3">
+          <div className={`p-2 rounded-lg ${getThemeClass('bg', 'primary')} text-blue-600`}>
+            <Calendar className="w-5 h-5" />
           </div>
+          <div>
+            <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')}`}>
+              Performance Calendar
+            </h3>
+            <p className={`text-sm ${getThemeClass('text', 'muted')}`}>
+              {selectedDate ? `Selected: ${new Date(selectedDate).toLocaleDateString()}` : 'Click to explore daily performance'}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-2">
+          {selectedDate && (
+            <div className="text-right mr-4">
+              <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>
+                ${calendarData[selectedDate]?.totalSales?.toFixed(0) || '0'}
+              </div>
+              <div className={`text-xs ${getThemeClass('text', 'muted')}`}>
+                {calendarData[selectedDate]?.serviceCount || 0} services
+              </div>
+            </div>
+          )}
+          {isCalendarExpanded ? (
+            <ChevronUp className={`w-5 h-5 ${getThemeClass('text', 'secondary')}`} />
+          ) : (
+            <ChevronDown className={`w-5 h-5 ${getThemeClass('text', 'secondary')}`} />
+          )}
+        </div>
+      </div>
+
+      {/* Expandable Calendar Content */}
+      <div className={`transition-all duration-300 ease-in-out ${isCalendarExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* Calendar */}
+            <div className="flex-1">
+              {/* Calendar Navigation */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => navigateMonth(-1)}
+                    className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <span className={`text-lg font-medium ${getThemeClass('text', 'primary')} min-w-[200px] text-center`}>
+                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </span>
+                  <button
+                    onClick={() => navigateMonth(1)}
+                    className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+                <button
+                  onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                >
+                  Today
+                </button>
+              </div>
 
           {/* Day Names */}
           <div className="grid grid-cols-7 gap-1 mb-2">
@@ -225,65 +269,67 @@ const BusinessCalendar = () => {
               <span className={getThemeClass('text', 'muted')}>Peak Performance 🔥</span>
             </div>
           </div>
-        </div>
-
-        {/* Selected Date Details */}
-        {selectedDetails && (
-          <div className="lg:w-80">
-            <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
-              <h4 className={`font-semibold ${getThemeClass('text', 'primary')} mb-4`}>
-                {new Date(selectedDetails.date).toLocaleDateString('en-US', { 
-                  weekday: 'long', 
-                  year: 'numeric', 
-                  month: 'long', 
-                  day: 'numeric' 
-                })}
-              </h4>
-
-              {/* Daily Summary */}
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-blue-600">${selectedDetails.summary.totalSales.toFixed(2)}</div>
-                  <div className="text-xs text-blue-600">Sales</div>
-                </div>
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-green-600">${selectedDetails.summary.totalPayments.toFixed(2)}</div>
-                  <div className="text-xs text-green-600">Collected</div>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <Users className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-purple-600">{selectedDetails.summary.serviceCount}</div>
-                  <div className="text-xs text-purple-600">Services</div>
-                </div>
-                <div className="text-center p-3 bg-orange-50 rounded-lg">
-                  <Clock className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                  <div className="text-lg font-bold text-orange-600">{selectedDetails.events.length}</div>
-                  <div className="text-xs text-orange-600">Events</div>
-                </div>
-              </div>
-
-              {/* Hourly Breakdown */}
-              <div>
-                <h5 className={`font-medium ${getThemeClass('text', 'primary')} mb-3`}>Hourly Activity</h5>
-                <div className="space-y-1 max-h-40 overflow-y-auto">
-                  {selectedDetails.hourlyBreakdown
-                    .filter(hour => hour.totalSales > 0 || hour.serviceCount > 0)
-                    .map(hour => (
-                      <div key={hour.hour} className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded text-sm">
-                        <span className="font-medium">{hour.time}</span>
-                        <div className="flex space-x-3">
-                          <span className="text-green-600">${hour.totalSales.toFixed(0)}</span>
-                          <span className="text-blue-600">{hour.serviceCount} jobs</span>
-                        </div>
-                      </div>
-                    ))}
-                </div>
-              </div>
             </div>
+
+            {/* Selected Date Details */}
+            {selectedDetails && (
+              <div className="lg:w-80">
+                <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
+                  <h4 className={`font-semibold ${getThemeClass('text', 'primary')} mb-4`}>
+                    {new Date(selectedDetails.date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </h4>
+
+                  {/* Daily Summary */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                      <div className="text-lg font-bold text-blue-600">${selectedDetails.summary.totalSales.toFixed(2)}</div>
+                      <div className="text-xs text-blue-600">Sales</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                      <div className="text-lg font-bold text-green-600">${selectedDetails.summary.totalPayments.toFixed(2)}</div>
+                      <div className="text-xs text-green-600">Collected</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <Users className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                      <div className="text-lg font-bold text-purple-600">{selectedDetails.summary.serviceCount}</div>
+                      <div className="text-xs text-purple-600">Services</div>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded-lg">
+                      <Clock className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                      <div className="text-lg font-bold text-orange-600">{selectedDetails.events.length}</div>
+                      <div className="text-xs text-orange-600">Events</div>
+                    </div>
+                  </div>
+
+                  {/* Hourly Breakdown */}
+                  <div>
+                    <h5 className={`font-medium ${getThemeClass('text', 'primary')} mb-3`}>Hourly Activity</h5>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {selectedDetails.hourlyBreakdown
+                        .filter(hour => hour.totalSales > 0 || hour.serviceCount > 0)
+                        .map(hour => (
+                          <div key={hour.hour} className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded text-sm">
+                            <span className="font-medium">{hour.time}</span>
+                            <div className="flex space-x-3">
+                              <span className="text-green-600">${hour.totalSales.toFixed(0)}</span>
+                              <span className="text-blue-600">{hour.serviceCount} jobs</span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
