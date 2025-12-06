@@ -37,10 +37,12 @@ import MetalWorks from './pages/MetalWorks';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import { projectsData, userProfile } from './data/mockData';
+import { userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { businessAnalytics } from './utils/timeBasedAnalytics';
+import { projectService } from './services/projectService';
+import { clientService } from './services/clientService';
 
 /**
  * Helper functions for backward compatibility
@@ -75,29 +77,26 @@ function AppContent() {
    * Projects state - loads from localStorage with backward compatibility
    * Ensures old projects get new fields (chassisBrand, bodyType, materials)
    */
-  const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem('bodycraft-projects');
-    if (saved) {
-      const parsedProjects = JSON.parse(saved);
-      // Ensure backward compatibility for existing projects
-      return parsedProjects.map(project => ({
-        ...project,
-        // Add default values for new fields if they don't exist
-        chassisBrand: project.chassisBrand || extractChassisFromVehicleType(project.vehicleType),
-        chassisModel: project.chassisModel || '',
-        bodyType: project.bodyType || extractBodyFromVehicleType(project.vehicleType),
-        materials: project.materials || [],
-        materialCost: project.materialCost || 0
-      }));
-    }
-    return projectsData;
-  });
+  const [projects, setProjects] = useState([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // Auto-save projects to localStorage whenever they change
+  // Load projects from API
   useEffect(() => {
-    localStorage.setItem('bodycraft-projects', JSON.stringify(projects));
-  }, [projects]);
+    loadProjects();
+  }, []);
+
+  const loadProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await projectService.getAll();
+      setProjects(response.data.results || response.data);
+    } catch (error) {
+      console.error('Error loading projects:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddProject = () => {
     setIsFormOpen(true);
@@ -110,67 +109,51 @@ function AppContent() {
    * - Records analytics event
    * - Logs activity for tracking
    */
-  const handleProjectSubmit = (newProject) => {
-    // Ensure new project has all required fields
-    const completeProject = {
-      ...newProject,
-      chassisBrand: newProject.chassisBrand || '',
-      chassisModel: newProject.chassisModel || '',
-      bodyType: newProject.bodyType || '',
-      materials: newProject.materials || [],
-      materialCost: newProject.materialCost || 0
-    };
-    
-    /**
-     * Material Inventory Management
-     * Automatically deducts used materials from inventory
-     * Updates stock status (In Stock, Low Stock, Critical, Out of Stock)
-     */
-    if (completeProject.materials && completeProject.materials.length > 0) {
-      const currentMaterials = JSON.parse(localStorage.getItem('bodycraft-materials') || '[]');
-      
-      const updatedMaterials = currentMaterials.map(inventoryItem => {
-        const usedMaterial = completeProject.materials.find(m => m.name === inventoryItem.name);
-        
-        if (usedMaterial) {
-          const newQuantity = Math.max(0, inventoryItem.quantity - parseFloat(usedMaterial.quantity || 0));
-          const newStatus = newQuantity === 0 ? 'Out of Stock' :
-                           newQuantity <= 10 ? 'Critical' :
-                           newQuantity <= 25 ? 'Low Stock' : 'In Stock';
-          
-                           
-          return {
-            ...inventoryItem,
-            quantity: newQuantity,
-            status: newStatus,
-            lastUpdated: new Date().toISOString().split('T')[0]
-          };
-        }
-        return inventoryItem;
-      });
-      
-      localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
-    }
-    
-    const updatedProjects = [...projects, completeProject];
-    setProjects(updatedProjects);
-    setIsFormOpen(false);
-    
-    // Record in analytics system
-    businessAnalytics.recordEvent('project_created', {
-      projectId: completeProject.id,
-      projectNumber: completeProject.projectId,
-      totalAmount: completeProject.totalCost || 0,
-      clientName: completeProject.clientName,
-      vehicleType: completeProject.vehicleType
-    });
+  const handleProjectSubmit = async (newProject) => {
+    try {
+      // Get or create client first
+      let clientId = newProject.client;
+      if (!clientId && newProject.clientName) {
+        const clientResponse = await clientService.create({
+          name: newProject.clientName,
+          phone: newProject.phone || '',
+        });
+        clientId = clientResponse.data.id;
+      }
 
-    // Log activity
-    ActivityLogger.addActivity(
-      'project',
-      `New project created: ${completeProject.projectId} for ${completeProject.clientName}`,
-      'success'
-    );
+      const projectData = {
+        project_id: newProject.projectId,
+        client: clientId,
+        chassis_brand: newProject.chassisBrand,
+        chassis_model: newProject.chassisModel,
+        body_type: newProject.bodyType,
+        vehicle_type: newProject.vehicleType,
+        client_payment: parseFloat(newProject.clientPayment),
+        labor_cost: parseFloat(newProject.laborCost),
+        start_date: newProject.startDate,
+        estimated_completion: newProject.estimatedCompletion,
+        materials: newProject.materials?.map(m => ({
+          material_name: m.name,
+          quantity: parseFloat(m.quantity),
+          unit: m.unit,
+          unit_price: parseFloat(m.price),
+          total_cost: parseFloat(m.total)
+        })) || []
+      };
+
+      const response = await projectService.create(projectData);
+      setProjects([...projects, response.data]);
+      setIsFormOpen(false);
+      
+      ActivityLogger.addActivity(
+        'project',
+        `New project created: ${newProject.projectId}`,
+        'success'
+      );
+    } catch (error) {
+      console.error('Error creating project:', error);
+      alert('Failed to create project: ' + (error.response?.data?.message || error.message));
+    }
   };
   
   /**
@@ -178,30 +161,19 @@ function AppContent() {
    * Records analytics events for status changes (especially completion)
    * Logs activity for project tracking
    */
-  const handleUpdateProject = (updatedProject) => {
-    const oldProject = projects.find(p => p.id === updatedProject.id);
-    const updatedProjects = projects.map(p => 
-      p.id === updatedProject.id ? updatedProject : p
-    );
-    setProjects(updatedProjects);
-    
-    // Record analytics for status changes
-    if (oldProject && oldProject.status !== updatedProject.status) {
-      if (updatedProject.status === 'Completed') {
-        businessAnalytics.recordEvent('project_completed', {
-          projectId: updatedProject.id,
-          projectNumber: updatedProject.projectId,
-          totalAmount: updatedProject.totalCost || 0,
-          clientName: updatedProject.clientName
-        });
-      }
+  const handleUpdateProject = async (updatedProject) => {
+    try {
+      const response = await projectService.update(updatedProject.id, updatedProject);
+      setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
       
-      // Log activity
       ActivityLogger.addActivity(
         'progress',
-        `${updatedProject.projectId}: Status updated to ${updatedProject.status}`,
+        `Project updated: ${updatedProject.project_id || updatedProject.projectId}`,
         'info'
       );
+    } catch (error) {
+      console.error('Error updating project:', error);
+      alert('Failed to update project');
     }
   };
 
