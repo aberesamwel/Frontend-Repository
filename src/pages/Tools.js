@@ -21,6 +21,7 @@ const Tools = () => {
     category: '',
     serialNumber: '',
     condition: 'Good',
+    quantity: 1,
     notes: ''
   });
 
@@ -387,24 +388,32 @@ const Tools = () => {
   const submitAddTool = () => {
     if (!addToolForm.name || !addToolForm.category || !addToolForm.serialNumber) return;
     
-    const newTool = {
-      id: Math.max(...tools.map(t => t.id)) + 1,
-      name: addToolForm.name,
-      category: addToolForm.category,
-      serialNumber: addToolForm.serialNumber,
-      status: 'available',
-      checkedOutBy: null,
-      checkedOutTime: null,
-      location: 'Tool Room - New',
-      condition: addToolForm.condition,
-      notes: addToolForm.notes,
-      maintenanceType: null,
-      maintenancePriority: null
-    };
+    const quantity = parseInt(addToolForm.quantity) || 1;
+    const newTools = [];
+    const baseId = Math.max(...tools.map(t => t.id), 0) + 1;
     
-    setTools(prev => [...prev, newTool]);
+    for (let i = 0; i < quantity; i++) {
+      newTools.push({
+        id: baseId + i,
+        name: addToolForm.name,
+        category: addToolForm.category,
+        serialNumber: quantity > 1 ? `${addToolForm.serialNumber}-${String(i + 1).padStart(2, '0')}` : addToolForm.serialNumber,
+        status: 'available',
+        checkedOutBy: null,
+        checkedOutTime: null,
+        location: 'Tool Room - New',
+        condition: addToolForm.condition,
+        notes: addToolForm.notes,
+        maintenanceType: null,
+        maintenancePriority: null,
+        quantity: 1,
+        toolGroup: quantity > 1 ? addToolForm.serialNumber : null
+      });
+    }
+    
+    setTools(prev => [...prev, ...newTools]);
     setShowAddToolModal(false);
-    setAddToolForm({ name: '', category: '', serialNumber: '', condition: 'Good', notes: '' });
+    setAddToolForm({ name: '', category: '', serialNumber: '', condition: 'Good', quantity: 1, notes: '' });
   };
 
   const formatTime = (timeString) => {
@@ -463,6 +472,9 @@ const Tools = () => {
             <div>
               <p className="text-sm text-slate-600">Total Tools</p>
               <p className="text-2xl font-bold text-slate-900">{tools.length}</p>
+              <p className="text-xs text-slate-500 mt-1">
+                {new Set(tools.map(t => t.toolGroup || t.id)).size} unique types
+              </p>
             </div>
             <div className="p-3 bg-blue-100 rounded-lg">
               <Hammer className="w-6 h-6 text-blue-600" />
@@ -563,7 +575,15 @@ const Tools = () => {
                   <tr key={tool.id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-4 px-6">
                       <div>
-                        <div className="font-medium text-slate-900">{tool.name}</div>
+                        <div className="flex items-center space-x-2">
+                          <div className="font-medium text-slate-900">{tool.name}</div>
+                          {tool.toolGroup && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                              <span className="mr-1">🔧</span>
+                              Group: {tool.toolGroup}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-sm text-slate-500">{tool.category} • {tool.serialNumber}</div>
                       </div>
                     </td>
@@ -744,6 +764,44 @@ const Tools = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., WM-2024-007"
                 />
+                <p className="text-xs text-gray-500 mt-1">Base serial number (will auto-increment for multiple units)</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center justify-between">
+                  <span>Quantity *</span>
+                  <span className="text-xs font-normal text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                    {addToolForm.quantity} {addToolForm.quantity === 1 ? 'unit' : 'units'}
+                  </span>
+                </label>
+                <div className="flex items-center space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setAddToolForm({...addToolForm, quantity: Math.max(1, parseInt(addToolForm.quantity) - 1)})}
+                    className="w-10 h-10 rounded-lg border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-600 font-bold transition-all"
+                  >
+                    −
+                  </button>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={addToolForm.quantity}
+                    onChange={(e) => setAddToolForm({...addToolForm, quantity: Math.max(1, Math.min(50, parseInt(e.target.value) || 1))})}
+                    className="flex-1 px-4 py-2 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold text-lg"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setAddToolForm({...addToolForm, quantity: Math.min(50, parseInt(addToolForm.quantity) + 1)})}
+                    className="w-10 h-10 rounded-lg border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-600 font-bold transition-all"
+                  >
+                    +
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-2 flex items-center">
+                  <span className="mr-1">💡</span>
+                  Adding {addToolForm.quantity} {addToolForm.quantity === 1 ? 'tool' : 'identical tools'} with auto-generated serial numbers
+                </p>
               </div>
               
               <div>
