@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
+import { contactsManager } from '../utils/contactsManager';
 
 const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
   const [formData, setFormData] = useState({
     projectId: '',
     clientName: '',
+    phone: '',
     chassisBrand: '',
     chassisModel: '',
     bodyType: '',
@@ -120,6 +122,11 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
       return;
     }
     
+    // Save contact if phone provided
+    if (formData.phone) {
+      contactsManager.saveContact(formData.clientName, formData.phone, 'truck');
+    }
+    
     const materialCost = getTotalMaterialCost();
     const profit = parseFloat(formData.clientPayment) - materialCost - parseFloat(formData.laborCost);
     const profitMargin = (profit / parseFloat(formData.clientPayment)) * 100;
@@ -156,6 +163,7 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
     setFormData({
       projectId: '',
       clientName: '',
+      phone: '',
       chassisBrand: '',
       chassisModel: '',
       bodyType: '',
@@ -203,6 +211,17 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
                 onChange={(e) => setFormData({...formData, clientName: e.target.value})}
                 className="w-full px-3 sm:px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base touch-manipulation"
                 placeholder="Client Company Name"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number</label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                className="w-full px-3 sm:px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base touch-manipulation"
+                placeholder="+1-555-0123"
               />
             </div>
           </div>

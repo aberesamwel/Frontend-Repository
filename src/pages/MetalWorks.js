@@ -27,6 +27,7 @@ import ServiceDetailsModal from '../components/metals/ServiceDetailsModal';
 import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
+import { contactsManager } from '../utils/contactsManager';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -195,6 +196,9 @@ const MetalWorks = () => {
       status: 'pending',
       dropOffTime: new Date().toISOString()
     };
+    
+    // Save contact
+    contactsManager.saveContact(service.customerName, service.phone, 'metalworks');
 
     // Record in analytics system
     businessAnalytics.recordEvent('service_created', {
