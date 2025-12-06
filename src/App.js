@@ -31,7 +31,6 @@ import Header from './components/layout/Header';
 import Dashboard from './components/dashboard/Dashboard';
 import Projects from './pages/Projects';
 import Clients from './pages/Clients';
-import Contacts from './pages/Contacts';
 import Materials from './pages/Materials';
 import Tools from './pages/Tools';
 import MetalWorks from './pages/MetalWorks';
@@ -259,7 +258,6 @@ function AppContent() {
                 />
               } />
               <Route path="/clients" element={<Clients projects={projects} />} />
-              <Route path="/contacts" element={<Contacts />} />
               <Route path="/materials" element={<Materials />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/metalworks" element={<MetalWorks />} />
