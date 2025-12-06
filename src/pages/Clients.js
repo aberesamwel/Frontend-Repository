@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { User, Phone, Mail, MapPin, Truck, Scissors, Filter } from 'lucide-react';
+import { User, Phone, Mail, MapPin, Truck, Scissors, Filter, Search } from 'lucide-react';
 
 const Clients = ({ projects }) => {
   const [metalWorksServices, setMetalWorksServices] = useState([]);
   const [filterType, setFilterType] = useState('all'); // 'all', 'truck', 'metalworks'
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const saved = localStorage.getItem('metalworks-services');
@@ -58,10 +59,17 @@ const Clients = ({ projects }) => {
   }, [projects, metalWorksServices]);
 
   const filteredClients = clients.filter(client => {
-    if (filterType === 'all') return true;
-    if (filterType === 'truck') return client.type === 'truck' || client.type === 'both';
-    if (filterType === 'metalworks') return client.type === 'metalworks' || client.type === 'both';
-    return true;
+    // Filter by type
+    let matchesType = true;
+    if (filterType === 'truck') matchesType = client.type === 'truck' || client.type === 'both';
+    if (filterType === 'metalworks') matchesType = client.type === 'metalworks' || client.type === 'both';
+    
+    // Filter by search term
+    const matchesSearch = searchTerm === '' || 
+      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (client.phone && client.phone.includes(searchTerm));
+    
+    return matchesType && matchesSearch;
   });
 
   const getClientBadge = (type) => {
@@ -144,6 +152,28 @@ const Clients = ({ projects }) => {
         <div className="bg-purple-50 rounded-xl shadow-sm border border-purple-200 p-4">
           <div className="text-sm text-purple-600">Both Services</div>
           <div className="text-2xl font-bold text-purple-700">{stats.both}</div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search clients by name or phone number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-900 placeholder-slate-400"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
