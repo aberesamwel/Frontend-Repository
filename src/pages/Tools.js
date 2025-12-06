@@ -645,7 +645,27 @@ const Tools = () => {
                       )}
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <ActionDropdown tool={tool} onAction={handleToolAction} />
+                      <div className="flex items-center justify-end space-x-2">
+                        {tool.status === 'available' && (
+                          <button
+                            onClick={() => handleCheckout(tool)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                          >
+                            <User className="w-4 h-4" />
+                            <span>Assign</span>
+                          </button>
+                        )}
+                        {tool.status === 'checked_out' && (
+                          <button
+                            onClick={() => handleReturn(tool.id)}
+                            className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1"
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Return</span>
+                          </button>
+                        )}
+                        <ActionDropdown tool={tool} onAction={handleToolAction} />
+                      </div>
                     </td>
                   </tr>
                 );
