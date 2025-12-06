@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "axios": "^1.13.2",
     "html2canvas": "^1.4.1",
     "jspdf": "^3.0.4",
     "lucide": "^0.555.0",
