@@ -141,11 +141,14 @@ const MetalWorks = () => {
   };
 
   const handleAddService = () => {
-    if (!newService.customerName || !newService.phone || !newService.material) return;
+    if (!newService.customerName || !newService.phone || !newService.material) {
+      alert('Please fill in all required fields: Customer Name, Phone, and Material');
+      return;
+    }
 
     const service = {
       id: Date.now(),
-      ticketId: `MW-2024-${String(services.length + 1).padStart(3, '0')}`,
+      ticketId: `PX-${Date.now()}`,
       ...newService,
       totalAmount: newService.quantity * newService.unitPrice,
       amountPaid: 0,
@@ -173,6 +176,8 @@ const MetalWorks = () => {
     });
 
     setServices(prev => [...prev, service]);
+    
+    // Reset form
     setNewService({
       customerName: '',
       phone: '',
@@ -185,6 +190,7 @@ const MetalWorks = () => {
       unitPrice: 0,
       priority: 'standard'
     });
+    
     setShowServiceModal(false);
   };
 
