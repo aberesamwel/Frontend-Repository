@@ -181,7 +181,7 @@ const MetalWorks = () => {
       return;
     }
 
-    const totalAmount = newService.quantity * newService.unitPrice;
+    const totalAmount = newService.totalAmount || (newService.quantity * newService.unitPrice);
     const amountPaid = parseFloat(newService.amountPaid) || 0;
     const paymentStatus = amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial';
     
@@ -194,7 +194,8 @@ const MetalWorks = () => {
       paymentStatus,
       paymentMethod: newService.paymentMethod || null,
       status: 'pending',
-      dropOffTime: new Date().toISOString()
+      dropOffTime: new Date().toISOString(),
+      items: newService.items || []
     };
     
     // Save contact

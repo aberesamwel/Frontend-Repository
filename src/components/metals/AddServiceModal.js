@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Plus, Trash2 } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const AddServiceModal = ({ 
@@ -10,6 +11,76 @@ const AddServiceModal = ({
   serviceTypes 
 }) => {
   const { getThemeClass } = useTheme();
+  const [items, setItems] = useState([{
+    id: 1,
+    serviceType: 'cutting',
+    material: '',
+    gauge: '',
+    dimensions: '',
+    specifications: '',
+    quantity: 1,
+    unitPrice: 0,
+    total: 0
+  }]);
+
+  const addItem = () => {
+    setItems([...items, {
+      id: Date.now(),
+      serviceType: 'cutting',
+      material: '',
+      gauge: '',
+      dimensions: '',
+      specifications: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0
+    }]);
+  };
+
+  const removeItem = (id) => {
+    if (items.length > 1) {
+      setItems(items.filter(item => item.id !== id));
+    }
+  };
+
+  const updateItem = (id, field, value) => {
+    setItems(items.map(item => {
+      if (item.id === id) {
+        const updated = { ...item, [field]: value };
+        if (field === 'quantity' || field === 'unitPrice') {
+          updated.total = (parseFloat(updated.quantity) || 0) * (parseFloat(updated.unitPrice) || 0);
+        }
+        return updated;
+      }
+      return item;
+    }));
+  };
+
+  const getTotalAmount = () => {
+    return items.reduce((sum, item) => sum + (item.total || 0), 0);
+  };
+
+  const handleSubmit = () => {
+    const totalAmount = getTotalAmount();
+    const serviceData = {
+      ...newService,
+      items: items,
+      totalAmount: totalAmount,
+      quantity: items.reduce((sum, item) => sum + (item.quantity || 0), 0)
+    };
+    onSubmit(serviceData);
+    setItems([{
+      id: 1,
+      serviceType: 'cutting',
+      material: '',
+      gauge: '',
+      dimensions: '',
+      specifications: '',
+      quantity: 1,
+      unitPrice: 0,
+      total: 0
+    }]);
+  };
 
   if (!isOpen) return null;
 
@@ -45,102 +116,143 @@ const AddServiceModal = ({
             </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Service Type *</label>
-              <select
-                value={newService.serviceType}
-                onChange={(e) => setNewService({...newService, serviceType: e.target.value})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              >
-                {serviceTypes.map(type => (
-                  <option key={type.id} value={type.id}>{type.name}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Priority</label>
-              <select
-                value={newService.priority}
-                onChange={(e) => setNewService({...newService, priority: e.target.value})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              >
-                <option value="standard">Standard</option>
-                <option value="urgent">Urgent</option>
-                <option value="rush">Rush</option>
-              </select>
-            </div>
-          </div>
-          
           <div>
-            <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Material *</label>
-            <input
-              type="text"
-              value={newService.material}
-              onChange={(e) => setNewService({...newService, material: e.target.value})}
+            <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Priority</label>
+            <select
+              value={newService.priority}
+              onChange={(e) => setNewService({...newService, priority: e.target.value})}
               className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              placeholder="e.g., Steel Plate, Aluminum Sheet"
-            />
+            >
+              <option value="standard">Standard</option>
+              <option value="urgent">Urgent</option>
+              <option value="rush">Rush</option>
+            </select>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Gauge/Thickness</label>
-              <input
-                type="text"
-                value={newService.gauge || ''}
-                onChange={(e) => setNewService({...newService, gauge: e.target.value})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="e.g., 10mm, 16 gauge"
-              />
-            </div>
-            
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Dimensions</label>
-              <input
-                type="text"
-                value={newService.dimensions || ''}
-                onChange={(e) => setNewService({...newService, dimensions: e.target.value})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="e.g., 2m x 1m, 500mm length"
-              />
-            </div>
-          </div>
-          
+          {/* Items Section */}
           <div>
-            <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Specifications</label>
-            <textarea
-              value={newService.specifications || ''}
-              onChange={(e) => setNewService({...newService, specifications: e.target.value})}
-              className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              rows="3"
-              placeholder="Detailed specifications and requirements"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Quantity</label>
-              <input
-                type="number"
-                min="1"
-                value={newService.quantity}
-                onChange={(e) => setNewService({...newService, quantity: parseInt(e.target.value) || 1})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              />
+            <div className="flex items-center justify-between mb-3">
+              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')}`}>Service Items *</label>
+              <button
+                type="button"
+                onClick={addItem}
+                className="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-1" />
+                Add Item
+              </button>
             </div>
             
-            <div>
-              <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Unit Price ($)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={newService.unitPrice}
-                onChange={(e) => setNewService({...newService, unitPrice: parseFloat(e.target.value) || 0})}
-                className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              />
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {items.map((item, index) => (
+                <div key={item.id} className={`p-4 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'tertiary')} space-y-3`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>Item {index + 1}</span>
+                    {items.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Service Type</label>
+                      <select
+                        value={item.serviceType}
+                        onChange={(e) => updateItem(item.id, 'serviceType', e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                      >
+                        {serviceTypes.map(type => (
+                          <option key={type.id} value={type.id}>{type.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Material</label>
+                      <input
+                        type="text"
+                        value={item.material}
+                        onChange={(e) => updateItem(item.id, 'material', e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        placeholder="Steel, Aluminum..."
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Gauge/Thickness</label>
+                      <input
+                        type="text"
+                        value={item.gauge}
+                        onChange={(e) => updateItem(item.id, 'gauge', e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        placeholder="10mm"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Dimensions</label>
+                      <input
+                        type="text"
+                        value={item.dimensions}
+                        onChange={(e) => updateItem(item.id, 'dimensions', e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        placeholder="2m x 1m"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Specifications</label>
+                    <textarea
+                      value={item.specifications}
+                      onChange={(e) => updateItem(item.id, 'specifications', e.target.value)}
+                      className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                      rows="2"
+                      placeholder="Details..."
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Qty</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Price ($)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={item.unitPrice}
+                        onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Total</label>
+                      <div className={`px-2 py-1.5 text-sm ${getThemeClass('bg', 'primary')} rounded font-medium ${getThemeClass('text', 'primary')}`}>
+                        ${item.total.toFixed(2)}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
           
@@ -148,7 +260,7 @@ const AddServiceModal = ({
             <div className="flex justify-between items-center">
               <span className={`font-medium ${getThemeClass('text', 'primary')}`}>Total Amount:</span>
               <span className="text-xl font-bold text-blue-600">
-                ${(newService.quantity * newService.unitPrice).toFixed(2)}
+                ${getTotalAmount().toFixed(2)}
               </span>
             </div>
             
@@ -158,7 +270,7 @@ const AddServiceModal = ({
                 <input
                   type="number"
                   min="0"
-                  max={newService.quantity * newService.unitPrice}
+                  max={getTotalAmount()}
                   step="0.01"
                   value={newService.amountPaid}
                   onChange={(e) => setNewService({...newService, amountPaid: parseFloat(e.target.value) || 0})}
@@ -188,7 +300,7 @@ const AddServiceModal = ({
               <div className="flex justify-between items-center pt-2 border-t ${getThemeClass('border', 'primary')}">
                 <span className={`font-medium ${getThemeClass('text', 'primary')}`}>Remaining Balance:</span>
                 <span className="text-lg font-bold text-red-600">
-                  ${Math.max(0, (newService.quantity * newService.unitPrice) - newService.amountPaid).toFixed(2)}
+                  ${Math.max(0, getTotalAmount() - newService.amountPaid).toFixed(2)}
                 </span>
               </div>
             )}
@@ -203,7 +315,7 @@ const AddServiceModal = ({
             Cancel
           </button>
           <button
-            onClick={onSubmit}
+            onClick={handleSubmit}
             className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             Create Service Ticket
