@@ -88,6 +88,8 @@ const MetalWorks = () => {
     specifications: '',
     quantity: 1,
     unitPrice: 0,
+    amountPaid: 0,
+    paymentMethod: '',
     priority: 'standard'
   });
 
@@ -146,14 +148,18 @@ const MetalWorks = () => {
       return;
     }
 
+    const totalAmount = newService.quantity * newService.unitPrice;
+    const amountPaid = parseFloat(newService.amountPaid) || 0;
+    const paymentStatus = amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial';
+    
     const service = {
       id: Date.now(),
       ticketId: `PX-${Date.now()}`,
       ...newService,
-      totalAmount: newService.quantity * newService.unitPrice,
-      amountPaid: 0,
-      paymentStatus: 'unpaid',
-      paymentMethod: null,
+      totalAmount,
+      amountPaid,
+      paymentStatus,
+      paymentMethod: newService.paymentMethod || null,
       status: 'pending',
       dropOffTime: new Date().toISOString()
     };
@@ -188,6 +194,8 @@ const MetalWorks = () => {
       specifications: '',
       quantity: 1,
       unitPrice: 0,
+      amountPaid: 0,
+      paymentMethod: '',
       priority: 'standard'
     });
     

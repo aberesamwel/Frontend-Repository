@@ -144,13 +144,54 @@ const AddServiceModal = ({
             </div>
           </div>
           
-          <div className={`p-4 ${getThemeClass('bg', 'tertiary')} rounded-lg`}>
+          <div className={`p-4 ${getThemeClass('bg', 'tertiary')} rounded-lg space-y-3`}>
             <div className="flex justify-between items-center">
               <span className={`font-medium ${getThemeClass('text', 'primary')}`}>Total Amount:</span>
-              <span className="text-xl font-bold text-green-600">
+              <span className="text-xl font-bold text-blue-600">
                 ${(newService.quantity * newService.unitPrice).toFixed(2)}
               </span>
             </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Amount Paid ($)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max={newService.quantity * newService.unitPrice}
+                  step="0.01"
+                  value={newService.amountPaid}
+                  onChange={(e) => setNewService({...newService, amountPaid: parseFloat(e.target.value) || 0})}
+                  className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                  placeholder="0.00"
+                />
+              </div>
+              
+              <div>
+                <label className={`block text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Payment Method</label>
+                <select
+                  value={newService.paymentMethod}
+                  onChange={(e) => setNewService({...newService, paymentMethod: e.target.value})}
+                  className={`w-full px-3 py-2 border ${getThemeClass('border', 'primary')} rounded-lg ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                >
+                  <option value="">Select method</option>
+                  <option value="cash">💵 Cash</option>
+                  <option value="mpesa">📱 M-Pesa</option>
+                  <option value="card">💳 Card</option>
+                  <option value="bank">🏛️ Bank Transfer</option>
+                  <option value="crypto">🪙 Crypto</option>
+                </select>
+              </div>
+            </div>
+            
+            {newService.amountPaid > 0 && (
+              <div className="flex justify-between items-center pt-2 border-t ${getThemeClass('border', 'primary')}">
+                <span className={`font-medium ${getThemeClass('text', 'primary')}`}>Remaining Balance:</span>
+                <span className="text-lg font-bold text-red-600">
+                  ${Math.max(0, (newService.quantity * newService.unitPrice) - newService.amountPaid).toFixed(2)}
+                </span>
+              </div>
+            )}
           </div>
         </div>
         
