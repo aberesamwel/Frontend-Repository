@@ -1,3 +1,21 @@
+/**
+ * MetalWorks Component
+ * 
+ * Purpose: Main page for managing metal works services (cutting, bending, welding, fabrication)
+ * 
+ * Features:
+ * - Create new service tickets with customer info and pricing
+ * - Track service status (pending, in progress, completed, picked up)
+ * - Manage customer payments and debt tracking
+ * - Filter services by status and type
+ * - Search services by customer name, ticket ID, or phone
+ * - Generate PDF reports with business metrics
+ * - Display analytics dashboard with sales performance
+ * - Pagination for large service lists
+ * 
+ * Data Storage: Services are persisted in localStorage under 'metalworks-services'
+ */
+
 import React, { useState, useEffect } from 'react';
 import { Scissors, Plus, TrendingUp, Calendar, Clock, Download, FileText } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,9 +32,14 @@ const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
   const isDark = theme === 'dark';
 
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
+  /**
+   * Services state - loads from localStorage or uses default sample data
+   * Each service contains: customer info, service details, pricing, payment status
+   */
   const [services, setServices] = useState(() => {
     const saved = localStorage.getItem('metalworks-services');
     if (saved) {
@@ -68,7 +91,10 @@ const MetalWorks = () => {
     ];
   });
 
-  // Save services to localStorage whenever services change
+  /**
+   * Auto-save services to localStorage whenever they change
+   * This ensures data persists across page refreshes
+   */
   useEffect(() => {
     localStorage.setItem('metalworks-services', JSON.stringify(services));
   }, [services]);
@@ -142,7 +168,13 @@ const MetalWorks = () => {
     setCurrentPage(1);
   };
 
+  /**
+   * Creates a new service ticket
+   * Validates required fields, generates unique ticket ID,
+   * calculates payment status, and records analytics events
+   */
   const handleAddService = () => {
+    // Validate required fields
     if (!newService.customerName || !newService.phone || !newService.material) {
       alert('Please fill in all required fields: Customer Name, Phone, and Material');
       return;
@@ -202,6 +234,10 @@ const MetalWorks = () => {
     setShowServiceModal(false);
   };
 
+  /**
+   * Updates service work status (pending → in_progress → completed → picked_up)
+   * Records completion and pickup events in analytics system
+   */
   const handleStatusUpdate = (serviceId, newStatus) => {
     const now = new Date().toISOString();
     setServices(prev => prev.map(service => {
@@ -235,6 +271,11 @@ const MetalWorks = () => {
     }));
   };
 
+  /**
+   * Updates customer payment information
+   * Calculates payment status (unpaid/partial/paid)
+   * Records payment events in analytics for business intelligence
+   */
   const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
     setServices(prev => prev.map(service => {
       if (service.id === serviceId) {
@@ -270,6 +311,13 @@ const MetalWorks = () => {
     }));
   };
 
+  /**
+   * Calculates comprehensive business statistics:
+   * - Daily, monthly, yearly sales and payments
+   * - Service counts and completion rates
+   * - Total revenue, payments, and outstanding debt
+   * - Average job value and profit margins
+   */
   const getServiceStats = () => {
     const now = new Date();
     const today = now.toDateString();
@@ -336,6 +384,14 @@ const MetalWorks = () => {
 
   const stats = getServiceStats();
 
+  /**
+   * Generates professional PDF report with:
+   * - Branded header with company logo
+   * - Executive summary with KPI cards
+   * - Service details table
+   * - Financial analysis section
+   * - Branded footer with page numbers
+   */
   const generatePDFReport = async () => {
     const jsPDF = (await import('jspdf')).default;
     const pdf = new jsPDF('p', 'mm', 'a4');

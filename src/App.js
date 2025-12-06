@@ -1,3 +1,29 @@
+/**
+ * Main Application Component
+ * 
+ * Purpose: Root component that manages the entire TruckFlow Dashboard application
+ * 
+ * Key Features:
+ * - Truck body building project management
+ * - Material inventory tracking with auto-deduction
+ * - Client relationship management
+ * - Tools and equipment tracking
+ * - Metal works service management
+ * - Business analytics and reporting
+ * - Theme support (light/dark/high-contrast)
+ * 
+ * Data Storage:
+ * - Projects: localStorage 'bodycraft-projects'
+ * - Materials: localStorage 'bodycraft-materials'
+ * - Tools: localStorage (managed in Tools component)
+ * - Metal Works: localStorage 'metalworks-services'
+ * 
+ * Analytics Integration:
+ * - Records project creation and completion events
+ * - Tracks business performance over time
+ * - Generates time-based analytics (hourly, daily, monthly, yearly)
+ */
+
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
@@ -16,7 +42,10 @@ import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
 import { businessAnalytics } from './utils/timeBasedAnalytics';
 
-// Helper functions for backward compatibility
+/**
+ * Helper functions for backward compatibility
+ * These extract chassis brand and body type from old vehicleType format
+ */
 function extractChassisFromVehicleType(vehicleType) {
   if (!vehicleType) return '';
   if (vehicleType.includes('ISUZU')) return 'ISUZU';
@@ -42,6 +71,10 @@ function AppContent() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [profile, setProfile] = useState(userProfile);
+  /**
+   * Projects state - loads from localStorage with backward compatibility
+   * Ensures old projects get new fields (chassisBrand, bodyType, materials)
+   */
   const [projects, setProjects] = useState(() => {
     const saved = localStorage.getItem('bodycraft-projects');
     if (saved) {
@@ -61,6 +94,7 @@ function AppContent() {
   });
   const [isFormOpen, setIsFormOpen] = useState(false);
 
+  // Auto-save projects to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('bodycraft-projects', JSON.stringify(projects));
   }, [projects]);
@@ -69,6 +103,13 @@ function AppContent() {
     setIsFormOpen(true);
   };
 
+  /**
+   * Handles new project creation
+   * - Validates and adds default values
+   * - Deducts materials from inventory
+   * - Records analytics event
+   * - Logs activity for tracking
+   */
   const handleProjectSubmit = (newProject) => {
     // Ensure new project has all required fields
     const completeProject = {
@@ -80,7 +121,11 @@ function AppContent() {
       materialCost: newProject.materialCost || 0
     };
     
-    // Deduct materials from inventory
+    /**
+     * Material Inventory Management
+     * Automatically deducts used materials from inventory
+     * Updates stock status (In Stock, Low Stock, Critical, Out of Stock)
+     */
     if (completeProject.materials && completeProject.materials.length > 0) {
       const currentMaterials = JSON.parse(localStorage.getItem('bodycraft-materials') || '[]');
       
@@ -128,6 +173,11 @@ function AppContent() {
     );
   };
   
+  /**
+   * Updates existing project
+   * Records analytics events for status changes (especially completion)
+   * Logs activity for project tracking
+   */
   const handleUpdateProject = (updatedProject) => {
     const oldProject = projects.find(p => p.id === updatedProject.id);
     const updatedProjects = projects.map(p => 

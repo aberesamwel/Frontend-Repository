@@ -1,11 +1,31 @@
+/**
+ * Clients Component
+ * 
+ * Purpose: Unified client management page that displays all clients from both
+ * truck body building and metal works services in one place.
+ * 
+ * Features:
+ * - Shows clients from both service types with color-coded badges
+ * - Filter clients by service type (All, Truck Body, Metal Works)
+ * - Search clients by name or phone number
+ * - Display total value and profit per client
+ * - List recent projects and services for each client
+ */
+
 import React, { useState, useEffect } from 'react';
 import { User, Phone, Mail, MapPin, Truck, Scissors, Filter, Search } from 'lucide-react';
 
 const Clients = ({ projects }) => {
+  // State for metal works services loaded from localStorage
   const [metalWorksServices, setMetalWorksServices] = useState([]);
-  const [filterType, setFilterType] = useState('all'); // 'all', 'truck', 'metalworks'
+  
+  // Filter state: 'all', 'truck', or 'metalworks'
+  const [filterType, setFilterType] = useState('all');
+  
+  // Search term for filtering clients by name or phone
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Load metal works services from localStorage on component mount
   useEffect(() => {
     const saved = localStorage.getItem('metalworks-services');
     if (saved) {
@@ -13,10 +33,14 @@ const Clients = ({ projects }) => {
     }
   }, []);
 
+  /**
+   * Merge clients from both truck body projects and metal works services
+   * Creates a unified client list with service type indicators
+   */
   const clients = React.useMemo(() => {
     const clientMap = {};
     
-    // Add truck body building clients
+    // Step 1: Add truck body building clients from projects
     projects.forEach(project => {
       if (!clientMap[project.clientName]) {
         clientMap[project.clientName] = {
@@ -33,7 +57,8 @@ const Clients = ({ projects }) => {
       clientMap[project.clientName].totalProfit += project.profit;
     });
     
-    // Add metalworks clients
+    // Step 2: Add metalworks clients from services
+    // If client already exists (uses both services), mark as 'both'
     metalWorksServices.forEach(service => {
       if (!clientMap[service.customerName]) {
         clientMap[service.customerName] = {
@@ -58,13 +83,18 @@ const Clients = ({ projects }) => {
     return Object.values(clientMap);
   }, [projects, metalWorksServices]);
 
+  /**
+   * Filter clients based on:
+   * 1. Service type filter (all/truck/metalworks)
+   * 2. Search term (name or phone number)
+   */
   const filteredClients = clients.filter(client => {
-    // Filter by type
+    // Filter by service type
     let matchesType = true;
     if (filterType === 'truck') matchesType = client.type === 'truck' || client.type === 'both';
     if (filterType === 'metalworks') matchesType = client.type === 'metalworks' || client.type === 'both';
     
-    // Filter by search term
+    // Filter by search term (case-insensitive name or phone match)
     const matchesSearch = searchTerm === '' || 
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (client.phone && client.phone.includes(searchTerm));
@@ -72,6 +102,12 @@ const Clients = ({ projects }) => {
     return matchesType && matchesSearch;
   });
 
+  /**
+   * Returns color-coded badge based on client service type
+   * - Blue badge for truck body clients
+   * - Orange badge for metal works clients
+   * - Dual badges (blue + orange) for clients using both services
+   */
   const getClientBadge = (type) => {
     if (type === 'truck') {
       return (
@@ -105,6 +141,9 @@ const Clients = ({ projects }) => {
     }
   };
 
+  /**
+   * Returns gradient color class for client avatar based on service type
+   */
   const getClientGradient = (type) => {
     if (type === 'truck') return 'from-blue-500 to-indigo-600';
     if (type === 'metalworks') return 'from-orange-500 to-red-600';
@@ -112,6 +151,7 @@ const Clients = ({ projects }) => {
     return 'from-blue-500 to-purple-600';
   };
 
+  // Calculate statistics for dashboard cards
   const stats = {
     total: clients.length,
     truck: clients.filter(c => c.type === 'truck' || c.type === 'both').length,
