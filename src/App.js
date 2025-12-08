@@ -184,9 +184,7 @@ function AppContent() {
           'Delivered': 100
         };
         updateData.progress = progressMap[updatedProject.status] || 0;
-        console.log('Auto-calculated progress:', updateData.progress, 'for status:', updatedProject.status);
       }
-      if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
       if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
         updateData.amount_paid = parseFloat(updatedProject.amount_paid || updatedProject.amountPaid) || 0;
       }
