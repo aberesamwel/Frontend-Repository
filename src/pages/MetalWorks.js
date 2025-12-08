@@ -128,28 +128,38 @@ const MetalWorks = () => {
    * Validates required fields, generates unique ticket ID,
    * calculates payment status, and records analytics events
    */
-  const handleAddService = () => {
+  const handleAddService = (serviceData) => {
     // Validate required fields
-    if (!newService.customerName || !newService.phone || !newService.material) {
-      alert('Please fill in all required fields: Customer Name, Phone, and Material');
+    if (!serviceData.customerName || !serviceData.phone) {
+      alert('Please fill in all required fields: Customer Name and Phone');
+      return;
+    }
+    
+    // Validate at least one item with material
+    const hasValidItem = serviceData.items && serviceData.items.some(item => item.material && item.material.trim() !== '');
+    if (!hasValidItem) {
+      alert('Please add at least one service item with material specified');
       return;
     }
 
-    const totalAmount = newService.totalAmount || (newService.quantity * newService.unitPrice);
-    const amountPaid = parseFloat(newService.amountPaid) || 0;
+    const totalAmount = serviceData.totalAmount || 0;
+    const amountPaid = parseFloat(serviceData.amountPaid) || 0;
     const paymentStatus = amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial';
     
     const service = {
       id: Date.now(),
       ticketId: `PX-${Date.now()}`,
-      ...newService,
+      customerName: serviceData.customerName,
+      phone: serviceData.phone,
+      priority: serviceData.priority || 'standard',
       totalAmount,
       amountPaid,
       paymentStatus,
-      paymentMethod: newService.paymentMethod || null,
+      paymentMethod: serviceData.paymentMethod || null,
       status: 'pending',
       dropOffTime: new Date().toISOString(),
-      items: newService.items || []
+      items: serviceData.items || [],
+      quantity: serviceData.quantity || 0
     };
     
     // Save contact

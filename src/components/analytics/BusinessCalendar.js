@@ -10,9 +10,11 @@ const BusinessCalendar = ({ projects = [] }) => {
   const [calendarData, setCalendarData] = useState({});
   const [isCalendarExpanded, setIsCalendarExpanded] = useState(false);
 
+  const projectsLength = projects.length;
+
   useEffect(() => {
     loadCalendarData();
-  }, [currentDate, projects]);
+  }, [currentDate, projectsLength]);
 
   const loadCalendarData = () => {
     const year = currentDate.getFullYear();
