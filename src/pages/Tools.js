@@ -819,16 +819,10 @@ const Tools = () => {
                     min="1"
                     max="50"
                     value={addToolForm.quantity}
-                    onChange={(e) => {
-                      const val = e.target.value === '' ? '' : parseInt(e.target.value);
-                      if (val === '' || (val >= 1 && val <= 50)) {
-                        setAddToolForm({...addToolForm, quantity: val || 1});
-                      }
-                    }}
+                    onChange={(e) => setAddToolForm({...addToolForm, quantity: e.target.value})}
                     onBlur={(e) => {
-                      if (e.target.value === '' || parseInt(e.target.value) < 1) {
-                        setAddToolForm({...addToolForm, quantity: 1});
-                      }
+                      const val = parseInt(e.target.value) || 1;
+                      setAddToolForm({...addToolForm, quantity: Math.max(1, Math.min(50, val))});
                     }}
                     className="flex-1 px-4 py-2 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold text-lg"
                   />
