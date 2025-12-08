@@ -322,21 +322,31 @@ const MetalWorks = () => {
     const totalPayments = services.reduce((sum, s) => sum + s.amountPaid, 0);
     const totalDebt = services.reduce((sum, s) => sum + Math.max(0, s.totalAmount - s.amountPaid), 0);
     
+    // Estimate profit (30% margin on collected payments)
+    const PROFIT_MARGIN = 0.30;
+    const dailyProfit = dailyPayments * PROFIT_MARGIN;
+    const monthlyProfit = monthlyPayments * PROFIT_MARGIN;
+    const yearlyProfit = yearlyPayments * PROFIT_MARGIN;
+    const totalProfit = totalPayments * PROFIT_MARGIN;
+    
     return {
       // Daily metrics
       dailySales,
       dailyPayments,
       dailyServices: todayServices.length,
+      dailyProfit,
       
       // Monthly metrics
       monthlySales,
       monthlyPayments,
       monthlyServices: thisMonthServices.length,
+      monthlyProfit,
       
       // Yearly metrics
       yearlySales,
       yearlyPayments,
       yearlyServices: thisYearServices.length,
+      yearlyProfit,
       
       // Overall business metrics
       totalServices: services.length,
@@ -344,10 +354,12 @@ const MetalWorks = () => {
       pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
       totalRevenue,
       totalPayments,
+      totalProfit,
       totalDebt,
       outstandingBalance: totalRevenue - totalPayments,
       averageJobValue: services.length > 0 ? totalRevenue / services.length : 0,
-      completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0
+      completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0,
+      profitMargin: PROFIT_MARGIN * 100
     };
   };
 

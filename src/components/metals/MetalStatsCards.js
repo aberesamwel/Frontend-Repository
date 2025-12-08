@@ -11,6 +11,7 @@ const MetalStatsCards = ({ stats }) => {
       title: "Today's Sales",
       sales: stats.dailySales,
       payments: stats.dailyPayments,
+      profit: stats.dailyProfit,
       services: stats.dailyServices,
       subtitle: "Daily Performance"
     },
@@ -18,6 +19,7 @@ const MetalStatsCards = ({ stats }) => {
       title: "This Month",
       sales: stats.monthlySales,
       payments: stats.monthlyPayments,
+      profit: stats.monthlyProfit,
       services: stats.monthlyServices,
       subtitle: "Monthly Performance"
     },
@@ -25,6 +27,7 @@ const MetalStatsCards = ({ stats }) => {
       title: "This Year",
       sales: stats.yearlySales,
       payments: stats.yearlyPayments,
+      profit: stats.yearlyProfit,
       services: stats.yearlyServices,
       subtitle: "Yearly Performance"
     },
@@ -32,6 +35,7 @@ const MetalStatsCards = ({ stats }) => {
       title: "All Time",
       sales: stats.totalRevenue,
       payments: stats.totalPayments,
+      profit: stats.totalProfit,
       services: stats.totalServices,
       subtitle: "Business Lifetime"
     }
@@ -56,18 +60,18 @@ const MetalStatsCards = ({ stats }) => {
       color: 'green'
     },
     {
-      title: "Customer Debt",
-      value: `$${stats.totalDebt.toFixed(2)}`,
-      subtitle: `${stats.pendingServices} pending jobs`,
-      icon: Calendar,
-      color: 'red'
+      title: "Estimated Profit",
+      value: `$${currentPeriod.profit.toFixed(2)}`,
+      subtitle: `${stats.profitMargin}% profit margin (estimated)`,
+      icon: TrendingUp,
+      color: 'purple'
     },
     {
-      title: "Avg. Job Value",
-      value: `$${stats.averageJobValue.toFixed(0)}`,
-      subtitle: `${stats.completionRate.toFixed(1)}% completion rate`,
-      icon: BarChart3,
-      color: 'purple'
+      title: "Customer Debt",
+      value: `$${stats.totalDebt.toFixed(2)}`,
+      subtitle: `${stats.pendingServices} pending • Avg: $${stats.averageJobValue.toFixed(0)}`,
+      icon: Calendar,
+      color: 'red'
     }
   ];
 
