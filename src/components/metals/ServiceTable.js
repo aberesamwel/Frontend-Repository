@@ -88,11 +88,11 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div>
                       <div className={`font-medium ${getThemeClass('text', 'primary')} capitalize`}>
-                        {service.serviceType.replace('_', ' ')}
+                        {service.serviceType ? service.serviceType.replace('_', ' ') : 'N/A'}
                       </div>
-                      <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material}</div>
+                      <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material || 'N/A'}</div>
                       <div className="flex items-center space-x-3 mt-1">
-                        <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity}</div>
+                        <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity || 0}</div>
                         {service.gauge && (
                           <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Gauge: {service.gauge}</div>
                         )}
