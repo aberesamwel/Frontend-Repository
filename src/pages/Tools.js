@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Hammer, Search, Plus, Clock, User, MapPin, AlertCircle, CheckCircle, Wrench, Filter, ChevronDown } from 'lucide-react';
-import { toolsData } from '../data/mockData';
+import { toolService } from '../services/toolService';
 import Pagination from '../components/shared/Pagination';
 
 const Tools = () => {
-  const [tools, setTools] = useState(toolsData);
+  const [tools, setTools] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const loadTools = async () => {
+      try {
+        const response = await toolService.getAll();
+        setTools(response.data.results || response.data || []);
+      } catch (error) {
+        console.error('Error loading tools:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadTools();
+  }, []);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
@@ -385,35 +400,32 @@ const Tools = () => {
     setSelectedTool(null);
   };
 
-  const submitAddTool = () => {
+  const submitAddTool = async () => {
     if (!addToolForm.name || !addToolForm.category || !addToolForm.serialNumber) return;
     
     const quantity = parseInt(addToolForm.quantity) || 1;
-    const newTools = [];
-    const baseId = Math.max(...tools.map(t => t.id), 0) + 1;
     
-    for (let i = 0; i < quantity; i++) {
-      newTools.push({
-        id: baseId + i,
+    try {
+      const toolData = {
         name: addToolForm.name,
         category: addToolForm.category,
-        serialNumber: quantity > 1 ? `${addToolForm.serialNumber}-${String(i + 1).padStart(2, '0')}` : addToolForm.serialNumber,
+        serial_number: addToolForm.serialNumber,
         status: 'available',
-        checkedOutBy: null,
-        checkedOutTime: null,
-        location: 'Tool Room - New',
         condition: addToolForm.condition,
-        notes: addToolForm.notes,
-        maintenanceType: null,
-        maintenancePriority: null,
-        quantity: 1,
-        toolGroup: quantity > 1 ? addToolForm.serialNumber : null
-      });
+        quantity: quantity,
+        tool_group: quantity > 1 ? addToolForm.serialNumber : null,
+        location: 'Tool Room',
+        notes: addToolForm.notes
+      };
+      
+      const response = await toolService.create(toolData);
+      setTools(prev => [...prev, response.data]);
+      setShowAddToolModal(false);
+      setAddToolForm({ name: '', category: '', serialNumber: '', condition: 'Good', quantity: 1, notes: '' });
+    } catch (error) {
+      console.error('Error adding tool:', error);
+      alert('Failed to add tool');
     }
-    
-    setTools(prev => [...prev, ...newTools]);
-    setShowAddToolModal(false);
-    setAddToolForm({ name: '', category: '', serialNumber: '', condition: 'Good', quantity: 1, notes: '' });
   };
 
   const formatTime = (timeString) => {
@@ -807,7 +819,17 @@ const Tools = () => {
                     min="1"
                     max="50"
                     value={addToolForm.quantity}
-                    onChange={(e) => setAddToolForm({...addToolForm, quantity: Math.max(1, Math.min(50, parseInt(e.target.value) || 1))})}
+                    onChange={(e) => {
+                      const val = e.target.value === '' ? '' : parseInt(e.target.value);
+                      if (val === '' || (val >= 1 && val <= 50)) {
+                        setAddToolForm({...addToolForm, quantity: val || 1});
+                      }
+                    }}
+                    onBlur={(e) => {
+                      if (e.target.value === '' || parseInt(e.target.value) < 1) {
+                        setAddToolForm({...addToolForm, quantity: 1});
+                      }
+                    }}
                     className="flex-1 px-4 py-2 text-center border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-semibold text-lg"
                   />
                   <button
