@@ -18,8 +18,8 @@ const AddServiceModal = ({
     gauge: '',
     dimensions: '',
     specifications: '',
-    quantity: 1,
-    unitPrice: 0,
+    quantity: '',
+    unitPrice: '',
     total: 0
   }]);
 
@@ -31,8 +31,8 @@ const AddServiceModal = ({
       gauge: '',
       dimensions: '',
       specifications: '',
-      quantity: 1,
-      unitPrice: 0,
+      quantity: '',
+      unitPrice: '',
       total: 0
     }]);
   };
@@ -76,8 +76,8 @@ const AddServiceModal = ({
       gauge: '',
       dimensions: '',
       specifications: '',
-      quantity: 1,
-      unitPrice: 0,
+      quantity: '',
+      unitPrice: '',
       total: 0
     }]);
   };
@@ -227,8 +227,9 @@ const AddServiceModal = ({
                         type="number"
                         min="1"
                         value={item.quantity}
-                        onChange={(e) => updateItem(item.id, 'quantity', parseInt(e.target.value) || 1)}
+                        onChange={(e) => updateItem(item.id, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
                         className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        placeholder="0"
                       />
                     </div>
                     
@@ -239,8 +240,9 @@ const AddServiceModal = ({
                         min="0"
                         step="0.01"
                         value={item.unitPrice}
-                        onChange={(e) => updateItem(item.id, 'unitPrice', parseFloat(e.target.value) || 0)}
+                        onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
                         className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        placeholder="0.00"
                       />
                     </div>
                     
