@@ -171,6 +171,11 @@ function AppContent() {
           'In Progress': 'welding_phase'
         };
         updateData.status = statusMap[updatedProject.status] || updatedProject.status.toLowerCase().replace(/ /g, '_');
+        
+        // Auto-set progress to 100% when status is Completed
+        if (updatedProject.status === 'Completed') {
+          updateData.progress = 100;
+        }
       }
       if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
       if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
