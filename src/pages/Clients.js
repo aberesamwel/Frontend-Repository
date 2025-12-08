@@ -42,9 +42,10 @@ const Clients = ({ projects }) => {
     
     // Step 1: Add truck body building clients from projects
     projects.forEach(project => {
-      if (!clientMap[project.clientName]) {
-        clientMap[project.clientName] = {
-          name: project.clientName,
+      const clientName = project.clientName || project.client_name || 'Unknown';
+      if (!clientMap[clientName]) {
+        clientMap[clientName] = {
+          name: clientName,
           type: 'truck',
           projects: [],
           services: [],
@@ -52,9 +53,11 @@ const Clients = ({ projects }) => {
           totalProfit: 0
         };
       }
-      clientMap[project.clientName].projects.push(project);
-      clientMap[project.clientName].totalValue += project.clientPayment;
-      clientMap[project.clientName].totalProfit += project.profit;
+      clientMap[clientName].projects.push(project);
+      const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+      const profit = parseFloat(project.profit || 0);
+      clientMap[clientName].totalValue += isNaN(payment) ? 0 : payment;
+      clientMap[clientName].totalProfit += isNaN(profit) ? 0 : profit;
     });
     
     // Step 2: Add metalworks clients from services
@@ -294,7 +297,7 @@ const Clients = ({ projects }) => {
                   </h4>
                   {client.projects.slice(0, 2).map(project => (
                     <div key={project.id} className="text-xs text-slate-500 mb-1 pl-5">
-                      • {project.projectId} - {project.vehicleType}
+                      • {project.projectId || project.project_id} - {project.vehicleType || project.vehicle_type}
                     </div>
                   ))}
                   {client.projects.length > 2 && (
