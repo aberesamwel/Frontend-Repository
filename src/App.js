@@ -183,8 +183,10 @@ function AppContent() {
       console.log('Updating project:', updatedProject.id);
       console.log('Update data:', updateData);
       
-      const response = await projectService.update(updatedProject.id, updateData);
-      setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
+      await projectService.update(updatedProject.id, updateData);
+      
+      // Reload projects to get fresh data from backend
+      await loadProjects();
       
       ActivityLogger.addActivity(
         'progress',
