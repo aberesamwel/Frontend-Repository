@@ -156,12 +156,16 @@ function AppContent() {
    */
   const handleUpdateProject = async (updatedProject) => {
     try {
-      const updateData = {
-        status: updatedProject.status,
-        progress: parseInt(updatedProject.progress) || 0,
-        amount_paid: parseFloat(updatedProject.amount_paid || updatedProject.amountPaid) || 0,
-        notes: updatedProject.notes || ''
-      };
+      const updateData = {};
+      
+      if (updatedProject.status !== undefined) updateData.status = updatedProject.status;
+      if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
+      if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
+        updateData.amount_paid = parseFloat(updatedProject.amount_paid || updatedProject.amountPaid) || 0;
+      }
+      if (updatedProject.notes !== undefined) updateData.notes = updatedProject.notes || '';
+      if (updatedProject.deliveredAt !== undefined) updateData.delivered_at = updatedProject.deliveredAt;
+      if (updatedProject.completedAt !== undefined) updateData.completed_at = updatedProject.completedAt;
 
       const response = await projectService.update(updatedProject.id, updateData);
       setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
