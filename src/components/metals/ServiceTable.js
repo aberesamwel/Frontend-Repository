@@ -88,7 +88,7 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div>
                       <div className={`font-medium ${getThemeClass('text', 'primary')} capitalize`}>
-                        {service.serviceType ? service.serviceType.replace('_', ' ') : 'N/A'}
+                        {(service.serviceType || '').replace('_', ' ') || 'N/A'}
                       </div>
                       <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material || 'N/A'}</div>
                       <div className="flex items-center space-x-3 mt-1">
@@ -106,12 +106,12 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div className="space-y-2">
                       <div className={`font-bold ${getThemeClass('text', 'primary')}`}>
-                        Total: ${service.totalAmount.toFixed(2)}
+                        Total: ${(service.totalAmount || 0).toFixed(2)}
                       </div>
                       
                       <div className="space-y-1">
-                        <div className={`text-sm flex items-center space-x-2 ${service.amountPaid >= service.totalAmount ? 'text-green-600' : 'text-orange-600'}`}>
-                          <span>Paid: ${service.amountPaid.toFixed(2)}</span>
+                        <div className={`text-sm flex items-center space-x-2 ${(service.amountPaid || 0) >= (service.totalAmount || 0) ? 'text-green-600' : 'text-orange-600'}`}>
+                          <span>Paid: ${(service.amountPaid || 0).toFixed(2)}</span>
                           {service.paymentMethod && (() => {
                             const { icon: PaymentIcon, color } = getPaymentMethodIcon(service.paymentMethod);
                             return <PaymentIcon className={`w-3 h-3 ${color}`} />;
