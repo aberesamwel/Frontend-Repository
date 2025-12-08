@@ -184,6 +184,7 @@ function AppContent() {
           'Delivered': 100
         };
         updateData.progress = progressMap[updatedProject.status] || 0;
+        console.log('Auto-calculated progress:', updateData.progress, 'for status:', updatedProject.status);
       }
       if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
       if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
@@ -200,6 +201,8 @@ function AppContent() {
       const response = await projectService.update(updatedProject.id, updateData);
       console.log('Backend response:', response.data);
       console.log('Backend response status:', response.data.status);
+      console.log('Backend response progress:', response.data.progress);
+      console.log('Backend response progress:', response.data.progress);
       
       // Update with backend response using functional setState
       setProjects(prevProjects => {
