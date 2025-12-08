@@ -43,53 +43,7 @@ const MetalWorks = () => {
    */
   const [services, setServices] = useState(() => {
     const saved = localStorage.getItem('metalworks-services');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-    return [
-      {
-        id: 1,
-        ticketId: 'MW-2024-001',
-        customerName: 'Ahmed Hassan',
-        phone: '+1-555-0123',
-        serviceType: 'cutting',
-        material: 'Steel Plate',
-        gauge: '10mm',
-        dimensions: '2m x 1m',
-        specifications: 'Clean edges required, rectangular cut',
-        quantity: 3,
-        unitPrice: 45.00,
-        totalAmount: 135.00,
-        amountPaid: 135.00,
-        paymentStatus: 'paid',
-        paymentMethod: 'cash',
-        status: 'completed',
-        priority: 'standard',
-        dropOffTime: '2024-12-20T09:30:00',
-        completedTime: '2024-12-20T14:15:00',
-        pickupTime: '2024-12-20T16:45:00'
-      },
-      {
-        id: 2,
-        ticketId: 'MW-2024-002',
-        customerName: 'Maria Rodriguez',
-        phone: '+1-555-0456',
-        serviceType: 'bending',
-        material: 'Aluminum Sheet',
-        gauge: '5mm', 
-        dimensions: '500mm length',
-        specifications: '90° bend precision required',
-        quantity: 8,
-        unitPrice: 25.00,
-        totalAmount: 200.00,
-        amountPaid: 100.00,
-        paymentStatus: 'partial',
-        paymentMethod: 'mpesa',
-        status: 'in_progress',
-        priority: 'urgent',
-        dropOffTime: '2024-12-20T11:00:00'
-      }
-    ];
+    return saved ? JSON.parse(saved) : [];
   });
 
   /**

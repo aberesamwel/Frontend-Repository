@@ -111,19 +111,10 @@ function AppContent() {
    */
   const handleProjectSubmit = async (newProject) => {
     try {
-      // Get or create client first
-      let clientId = newProject.client;
-      if (!clientId && newProject.clientName) {
-        const clientResponse = await clientService.create({
-          name: newProject.clientName,
-          phone: newProject.phone || '',
-        });
-        clientId = clientResponse.data.id;
-      }
-
       const projectData = {
         project_id: newProject.projectId,
-        client: clientId,
+        client_name: newProject.clientName,
+        phone: newProject.phone,
         chassis_brand: newProject.chassisBrand,
         chassis_model: newProject.chassisModel,
         body_type: newProject.bodyType,
@@ -152,7 +143,9 @@ function AppContent() {
       );
     } catch (error) {
       console.error('Error creating project:', error);
-      alert('Failed to create project: ' + (error.response?.data?.message || error.message));
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message;
+      alert('Failed to create project: ' + errorMsg);
     }
   };
   
@@ -245,6 +238,13 @@ function AppContent() {
 }
 
 
+
+// localStorage clearing disabled - data persistence enabled
+// Uncomment below lines only if you need to clear data manually
+// localStorage.removeItem('metalworks-services');
+// localStorage.removeItem('bodycraft-materials');
+// localStorage.removeItem('bodycraft-tools');
+// localStorage.removeItem('pexsteel-contacts');
 
 function App() {
   return (

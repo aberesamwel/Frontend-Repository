@@ -1,29 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Package, AlertTriangle, TrendingUp, Search, Edit2, Trash2, X } from 'lucide-react';
 import { ActivityLogger } from '../utils/activityLogger';
+import { materialService } from '../services/materialService';
 
 const Materials = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [materials, setMaterials] = useState(() => {
-    const saved = localStorage.getItem('bodycraft-materials');
-    return saved ? JSON.parse(saved) : [
-      { id: 1, name: 'ANGLE LINES', quantity: 150, unit: 'pcs', price: 25.50, supplier: 'Steel Works Ltd', lastUpdated: '2024-01-15', status: 'In Stock' },
-      { id: 2, name: 'CHANNELS', quantity: 80, unit: 'pcs', price: 45.00, supplier: 'Metal Supply Co', lastUpdated: '2024-01-14', status: 'In Stock' },
-      { id: 3, name: 'PAINT', quantity: 25, unit: 'liters', price: 35.75, supplier: 'Paint Pro', lastUpdated: '2024-01-13', status: 'Low Stock' },
-      { id: 4, name: 'RED OXIDE', quantity: 12, unit: 'liters', price: 28.90, supplier: 'Paint Pro', lastUpdated: '2024-01-12', status: 'Low Stock' },
-      { id: 5, name: 'THINNER', quantity: 30, unit: 'liters', price: 22.50, supplier: 'Chemical Supply', lastUpdated: '2024-01-11', status: 'In Stock' },
-      { id: 6, name: 'TUBES', quantity: 200, unit: 'pcs', price: 18.25, supplier: 'Steel Works Ltd', lastUpdated: '2024-01-10', status: 'In Stock' },
-      { id: 7, name: 'FLAT BAR', quantity: 95, unit: 'pcs', price: 32.00, supplier: 'Metal Supply Co', lastUpdated: '2024-01-09', status: 'In Stock' },
-      { id: 8, name: 'ROUND BAR', quantity: 75, unit: 'pcs', price: 28.75, supplier: 'Steel Works Ltd', lastUpdated: '2024-01-08', status: 'In Stock' },
-      { id: 9, name: 'PIPES', quantity: 120, unit: 'pcs', price: 55.00, supplier: 'Pipe Masters', lastUpdated: '2024-01-07', status: 'In Stock' },
-      { id: 10, name: 'GAS', quantity: 8, unit: 'cylinders', price: 85.00, supplier: 'Gas Supply Inc', lastUpdated: '2024-01-06', status: 'Critical' },
-      { id: 11, name: 'WHITE SILICON', quantity: 45, unit: 'tubes', price: 12.50, supplier: 'Sealant Co', lastUpdated: '2024-01-05', status: 'In Stock' },
-      { id: 12, name: 'SAND PAPER', quantity: 180, unit: 'sheets', price: 3.25, supplier: 'Tools & More', lastUpdated: '2024-01-04', status: 'In Stock' },
-      { id: 13, name: 'FILLER', quantity: 22, unit: 'kg', price: 15.75, supplier: 'Body Shop Supply', lastUpdated: '2024-01-03', status: 'In Stock' }
-    ]
-  });
+  const [materials, setMaterials] = useState([]);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [newMaterial, setNewMaterial] = useState({
     name: '',
     quantity: '',
@@ -35,46 +20,89 @@ const Materials = () => {
 
   const statusOptions = ['In Stock', 'Low Stock', 'Critical', 'Out of Stock', 'On Order'];
 
-  const addMaterial = (e) => {
-    e.preventDefault();
-    const quantity = parseFloat(newMaterial.quantity) || 0;
-    const material = {
-      id: Date.now(),
-      ...newMaterial,
-      quantity: quantity,
-      price: parseFloat(newMaterial.price),
-      status: calculateStatus(quantity),
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    setMaterials([...materials, material]);
-    setNewMaterial({ name: '', quantity: '', unit: '', price: '', supplier: '' });
-    setIsAddFormOpen(false);
-    
-    // Log material addition activity
-    ActivityLogger.addActivity(
-      'material',
-      `New material added: ${material.name} (${quantity} ${material.unit}) from ${material.supplier}`,
-      'info'
-    );
-  };
+  // Load materials from API
+  useEffect(() => {
+    loadMaterials();
+  }, []);
 
-  const deleteMaterial = (id) => {
-    const material = materials.find(m => m.id === id);
-    setMaterials(materials.filter(m => m.id !== id));
-    
-    if (material) {
-      // Log material deletion activity
-      ActivityLogger.addActivity(
-        'material',
-        `Material removed: ${material.name} deleted from inventory`,
-        'warning'
-      );
+  const loadMaterials = async () => {
+    try {
+      setLoading(true);
+      const response = await materialService.getAll();
+      const materialsData = response.data.results || response.data || [];
+      setMaterials(materialsData);
+      // Also save to localStorage for backward compatibility
+      localStorage.setItem('bodycraft-materials', JSON.stringify(materialsData));
+    } catch (error) {
+      console.error('Error loading materials:', error);
+      // Fallback to localStorage if API fails
+      const saved = localStorage.getItem('bodycraft-materials');
+      if (saved) {
+        setMaterials(JSON.parse(saved));
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    localStorage.setItem('bodycraft-materials', JSON.stringify(materials));
-  }, [materials]);
+  const addMaterial = async (e) => {
+    e.preventDefault();
+    try {
+      const quantity = parseFloat(newMaterial.quantity) || 0;
+      const materialData = {
+        name: newMaterial.name,
+        quantity: quantity,
+        unit: newMaterial.unit,
+        price: parseFloat(newMaterial.price),
+        supplier: newMaterial.supplier || ''
+      };
+      
+      const response = await materialService.create(materialData);
+      setMaterials([...materials, response.data]);
+      
+      // Update localStorage
+      const updatedMaterials = [...materials, response.data];
+      localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
+      
+      setNewMaterial({ name: '', quantity: '', unit: '', price: '', supplier: '' });
+      setIsAddFormOpen(false);
+      
+      // Log material addition activity
+      ActivityLogger.addActivity(
+        'material',
+        `New material added: ${response.data.name} (${quantity} ${response.data.unit}) from ${response.data.supplier}`,
+        'info'
+      );
+    } catch (error) {
+      console.error('Error adding material:', error);
+      alert('Failed to add material: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const deleteMaterial = async (id) => {
+    try {
+      const material = materials.find(m => m.id === id);
+      await materialService.update(id, { ...material, is_deleted: true });
+      
+      const updatedMaterials = materials.filter(m => m.id !== id);
+      setMaterials(updatedMaterials);
+      
+      // Update localStorage
+      localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
+      
+      if (material) {
+        // Log material deletion activity
+        ActivityLogger.addActivity(
+          'material',
+          `Material removed: ${material.name} deleted from inventory`,
+          'warning'
+        );
+      }
+    } catch (error) {
+      console.error('Error deleting material:', error);
+      alert('Failed to delete material');
+    }
+  };
 
   const filteredMaterials = materials.filter(material =>
     material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -82,25 +110,27 @@ const Materials = () => {
   );
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'In Stock': return 'bg-green-100 text-green-800';
-      case 'Low Stock': return 'bg-yellow-100 text-yellow-800';
-      case 'Critical': return 'bg-red-100 text-red-800';
-      case 'Out of Stock': return 'bg-gray-100 text-gray-800';
-      case 'On Order': return 'bg-blue-100 text-blue-800';
+    const statusLower = (status || '').toLowerCase().replace(' ', '_');
+    switch (statusLower) {
+      case 'in_stock': return 'bg-green-100 text-green-800';
+      case 'low_stock': return 'bg-yellow-100 text-yellow-800';
+      case 'critical': return 'bg-red-100 text-red-800';
+      case 'out_of_stock': return 'bg-gray-100 text-gray-800';
+      case 'on_order': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  // Refresh materials when component mounts to show updated quantities
+  const formatStatus = (status) => {
+    if (!status) return 'Unknown';
+    return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  // Refresh materials periodically from API
   useEffect(() => {
     const interval = setInterval(() => {
-      const savedMaterials = localStorage.getItem('bodycraft-materials');
-      if (savedMaterials) {
-        const materials = JSON.parse(savedMaterials);
-        setMaterials(materials);
-      }
-    }, 1000); // Refresh every second
+      loadMaterials();
+    }, 30000); // Refresh every 30 seconds
     
     return () => clearInterval(interval);
   }, []);
@@ -113,11 +143,11 @@ const Materials = () => {
   };
 
   const getTotalValue = () => {
-    return materials.reduce((sum, material) => sum + (material.quantity * material.price), 0);
+    return materials.reduce((sum, material) => sum + (material.quantity * (material.price || 0)), 0);
   };
 
   const getLowStockCount = () => {
-    return materials.filter(m => m.status === 'Low Stock' || m.status === 'Critical').length;
+    return materials.filter(m => m.status === 'low_stock' || m.status === 'critical').length;
   };
 
   return (
@@ -174,7 +204,7 @@ const Materials = () => {
             <Package className="w-8 h-8 text-purple-600" />
             <div className="ml-4">
               <p className="text-sm font-medium text-slate-600">In Stock</p>
-              <p className="text-2xl font-bold text-slate-900">{materials.filter(m => m.status === 'In Stock').length}</p>
+              <p className="text-2xl font-bold text-slate-900">{materials.filter(m => m.status === 'in_stock').length}</p>
             </div>
           </div>
         </div>
@@ -220,17 +250,17 @@ const Materials = () => {
                     <div className="text-sm text-slate-900">{material.quantity} {material.unit}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-slate-900">${material.price.toFixed(2)}</div>
+                    <div className="text-sm text-slate-900">${parseFloat(material.price || 0).toFixed(2)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-slate-900">${(material.quantity * material.price).toFixed(2)}</div>
+                    <div className="text-sm font-medium text-slate-900">${(parseFloat(material.quantity || 0) * parseFloat(material.price || 0)).toFixed(2)}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-slate-900">{material.supplier}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(material.status)}`}>
-                      {material.status}
+                      {formatStatus(material.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Storage</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        .success {
+            color: #16a34a;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear localStorage</h1>
+        <p>Click the button below to clear all localStorage data</p>
+        <button onclick="clearStorage()">Clear All Data</button>
+        <div id="result"></div>
+    </div>
+    
+    <script>
+        function clearStorage() {
+            localStorage.removeItem('metalworks-services');
+            localStorage.removeItem('bodycraft-materials');
+            localStorage.removeItem('bodycraft-tools');
+            localStorage.removeItem('pexsteel-contacts');
+            
+            document.getElementById('result').innerHTML = 
+                '<div class="success">✅ All localStorage cleared!<br>Reloading app...</div>';
+            
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

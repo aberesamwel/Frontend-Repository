@@ -108,7 +108,7 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
     return materials.reduce((sum, m) => sum + (m.total || 0), 0);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     // Check inventory availability before submitting
