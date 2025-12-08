@@ -158,7 +158,20 @@ function AppContent() {
     try {
       const updateData = {};
       
-      if (updatedProject.status !== undefined) updateData.status = updatedProject.status;
+      if (updatedProject.status !== undefined) {
+        // Convert frontend status to backend format
+        const statusMap = {
+          'Material Sourcing': 'material_sourcing',
+          'Welding Phase': 'welding_phase',
+          'Painting': 'painting',
+          'Interior Fitting': 'interior_fitting',
+          'Quality Check': 'quality_check',
+          'Completed': 'completed',
+          'Delivered': 'delivered',
+          'In Progress': 'welding_phase'
+        };
+        updateData.status = statusMap[updatedProject.status] || updatedProject.status.toLowerCase().replace(/ /g, '_');
+      }
       if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
       if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
         updateData.amount_paid = parseFloat(updatedProject.amount_paid || updatedProject.amountPaid) || 0;

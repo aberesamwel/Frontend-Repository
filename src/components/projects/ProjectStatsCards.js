@@ -5,8 +5,15 @@ import { useTheme } from '../../contexts/ThemeContext';
 const ProjectStatsCards = ({ projects }) => {
   const { getThemeClass } = useTheme();
 
-  const totalRevenue = projects.reduce((sum, p) => sum + (p.clientPayment || 0), 0);
-  const totalProfit = projects.reduce((sum, p) => sum + (p.profit || 0), 0);
+  const totalRevenue = projects.reduce((sum, p) => {
+    const payment = parseFloat(p.client_payment || p.clientPayment || 0);
+    return sum + (isNaN(payment) ? 0 : payment);
+  }, 0);
+  
+  const totalProfit = projects.reduce((sum, p) => {
+    const profit = parseFloat(p.profit || 0);
+    return sum + (isNaN(profit) ? 0 : profit);
+  }, 0);
   
   const stats = {
     activeProjects: projects.filter(p => p.status !== 'Completed' && !p.deliveredAt).length,
@@ -26,7 +33,7 @@ const ProjectStatsCards = ({ projects }) => {
     },
     {
       title: 'Total Sales',
-      value: `$${(stats.totalSales / 1000).toFixed(0)}K`,
+      value: stats.totalSales >= 1000 ? `$${(stats.totalSales / 1000).toFixed(1)}K` : `$${stats.totalSales.toFixed(0)}`,
       change: '+22.5%',
       changeType: 'positive',
       icon: DollarSign,
