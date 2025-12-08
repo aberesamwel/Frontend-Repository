@@ -3,6 +3,14 @@ import { X, Plus, Trash2 } from 'lucide-react';
 import { contactsManager } from '../utils/contactsManager';
 
 const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
+  const generateProjectId = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `VB-${year}${month}-${random}`;
+  };
+
   const [formData, setFormData] = useState({
     projectId: '',
     clientName: '',
@@ -39,6 +47,14 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
   const [materialsInventory, setMaterialsInventory] = useState([]);
 
   useEffect(() => {
+    if (isOpen) {
+      // Auto-generate Project ID when form opens
+      setFormData(prev => ({
+        ...prev,
+        projectId: generateProjectId()
+      }));
+    }
+    
     const savedMaterials = localStorage.getItem('bodycraft-materials');
     if (savedMaterials) {
       const materials = JSON.parse(savedMaterials);
@@ -191,14 +207,15 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Project ID</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Project ID (Auto-generated)</label>
               <input
                 type="text"
                 required
                 value={formData.projectId}
                 onChange={(e) => setFormData({...formData, projectId: e.target.value})}
-                className="w-full px-3 sm:px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base touch-manipulation"
+                className="w-full px-3 sm:px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-base touch-manipulation bg-slate-50"
                 placeholder="VB-2024-001"
+                readOnly
               />
             </div>
             
