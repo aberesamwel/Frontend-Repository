@@ -180,6 +180,9 @@ function AppContent() {
       if (updatedProject.deliveredAt !== undefined) updateData.delivered_at = updatedProject.deliveredAt;
       if (updatedProject.completedAt !== undefined) updateData.completed_at = updatedProject.completedAt;
 
+      console.log('Updating project:', updatedProject.id);
+      console.log('Update data:', updateData);
+      
       const response = await projectService.update(updatedProject.id, updateData);
       setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
       
@@ -190,9 +193,10 @@ function AppContent() {
       );
     } catch (error) {
       console.error('Error updating project:', error);
-      console.error('Error details:', error.response?.data);
-      const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message;
-      alert('Failed to update project: ' + errorMsg);
+      console.error('Update data that failed:', error.config?.data);
+      console.error('Error response:', error.response?.data);
+      const errorDetails = JSON.stringify(error.response?.data || {});
+      alert('Failed to update project: ' + errorDetails);
     }
   };
 
