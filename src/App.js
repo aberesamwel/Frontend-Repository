@@ -186,11 +186,22 @@ function AppContent() {
       // Send to backend
       const response = await projectService.update(updatedProject.id, updateData);
       console.log('Backend response:', response.data);
+      console.log('Backend response status:', response.data.status);
       
       // Update with backend response using functional setState
-      setProjects(prevProjects => 
-        prevProjects.map(p => p.id === updatedProject.id ? response.data : p)
-      );
+      setProjects(prevProjects => {
+        const updated = prevProjects.map(p => {
+          if (p.id === updatedProject.id) {
+            console.log('Updating project in state:', p.id);
+            console.log('Old status:', p.status);
+            console.log('New status:', response.data.status);
+            return response.data;
+          }
+          return p;
+        });
+        console.log('Updated projects array:', updated);
+        return updated;
+      });
       
       ActivityLogger.addActivity(
         'progress',

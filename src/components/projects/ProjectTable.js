@@ -20,6 +20,20 @@ const ProjectTable = ({
     'Completed'
   ];
 
+  // Convert snake_case from backend to Title Case for display
+  const formatStatus = (status) => {
+    const statusMap = {
+      'material_sourcing': 'Material Sourcing',
+      'welding_phase': 'Welding Phase',
+      'painting': 'Painting',
+      'interior_fitting': 'Interior Fitting',
+      'quality_check': 'Quality Check',
+      'completed': 'Completed',
+      'delivered': 'Delivered'
+    };
+    return statusMap[status] || status;
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'Material Sourcing': isDark ? 'bg-yellow-900/30 text-yellow-300 border-yellow-700' : 'bg-yellow-50 text-yellow-700 border-yellow-200',
@@ -70,9 +84,9 @@ const ProjectTable = ({
 
                 <td className="px-4 py-4">
                   <select
-                    value={project.status}
+                    value={formatStatus(project.status)}
                     onChange={(e) => onUpdateProject({...project, status: e.target.value})}
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${getStatusColor(project.status)} hover:shadow-md`}
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium border cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${getStatusColor(formatStatus(project.status))} hover:shadow-md`}
                   >
                     {statusOptions.map(status => (
                       <option key={status} value={status}>{status}</option>
