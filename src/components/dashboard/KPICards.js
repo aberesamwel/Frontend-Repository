@@ -3,9 +3,9 @@ import { TrendingUp, TrendingDown, Truck, DollarSign, AlertTriangle } from 'luci
 
 const KPICards = ({ projects = [] }) => {
   // Calculate dynamic KPI values from actual project data
-  const activeProjects = projects.filter(p => p.status === 'In Progress').length;
-  const completedProjects = projects.filter(p => p.status === 'Completed').length;
-  const pendingDelivery = projects.filter(p => p.status === 'Completed' && !p.deliveredAt).length;
+  const activeProjects = projects.filter(p => p.status === 'welding_phase' || p.status === 'In Progress').length;
+  const completedProjects = projects.filter(p => p.status === 'completed' || p.status === 'Completed').length;
+  const pendingDelivery = projects.filter(p => (p.status === 'completed' || p.status === 'Completed') && !p.deliveredAt).length;
   
   const totalRevenue = projects.reduce((sum, p) => {
     const payment = parseFloat(p.client_payment || p.clientPayment || 0);

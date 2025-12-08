@@ -16,10 +16,10 @@ const ProjectStatsCards = ({ projects }) => {
   }, 0);
   
   const stats = {
-    activeProjects: projects.filter(p => p.status !== 'Completed' && !p.deliveredAt).length,
+    activeProjects: projects.filter(p => p.status !== 'completed' && p.status !== 'Completed' && !p.deliveredAt).length,
     totalSales: totalRevenue,
     avgProfitMargin: totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0,
-    pendingDelivery: projects.filter(p => p.status === 'Completed' && !p.deliveredAt).length
+    pendingDelivery: projects.filter(p => (p.status === 'completed' || p.status === 'Completed') && !p.deliveredAt).length
   };
 
   const cards = [
