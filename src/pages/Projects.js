@@ -37,6 +37,7 @@ const Projects = ({ projects, onUpdateProject, onAddProject }) => {
         isOpen={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         onAddProject={onAddProject}
+        existingProjects={projects}
       />
     </div>
   );

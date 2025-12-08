@@ -2,13 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { contactsManager } from '../utils/contactsManager';
 
-const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
+const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }) => {
   const generateProjectId = () => {
     const now = new Date();
     const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-    return `VB-${year}${month}-${random}`;
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const projectNumber = (existingProjects.length + 1).toString().padStart(4, '0');
+    return `VB-${year}-${hours}${minutes}-${projectNumber}`;
   };
 
   const [formData, setFormData] = useState({
@@ -207,7 +208,7 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject }) => {
         <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 sm:space-y-6">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Project ID (Auto-generated)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Project ID (Year-Time-Number)</label>
               <input
                 type="text"
                 required
