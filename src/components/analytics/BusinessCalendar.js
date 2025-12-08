@@ -29,7 +29,12 @@ const BusinessCalendar = ({ projects = [] }) => {
 
     // Aggregate project data by date
     projects.forEach(project => {
-      const projectDate = new Date(project.createdAt || project.created_at);
+      const dateStr = project.createdAt || project.created_at;
+      if (!dateStr) return;
+      
+      const projectDate = new Date(dateStr);
+      if (isNaN(projectDate.getTime())) return; // Skip invalid dates
+      
       const dateKey = projectDate.toISOString().split('T')[0];
       
       if (data[dateKey]) {
@@ -92,7 +97,12 @@ const BusinessCalendar = ({ projects = [] }) => {
     
     // Filter projects for selected date
     const dayProjects = projects.filter(project => {
-      const projectDate = new Date(project.createdAt || project.created_at);
+      const dateStr = project.createdAt || project.created_at;
+      if (!dateStr) return false;
+      
+      const projectDate = new Date(dateStr);
+      if (isNaN(projectDate.getTime())) return false;
+      
       return projectDate.toISOString().split('T')[0] === selectedDate;
     });
     
@@ -112,7 +122,12 @@ const BusinessCalendar = ({ projects = [] }) => {
     const hourlyData = [];
     for (let hour = 0; hour < 24; hour++) {
       const hourProjects = dayProjects.filter(p => {
-        const projectDate = new Date(p.createdAt || p.created_at);
+        const dateStr = p.createdAt || p.created_at;
+        if (!dateStr) return false;
+        
+        const projectDate = new Date(dateStr);
+        if (isNaN(projectDate.getTime())) return false;
+        
         return projectDate.getHours() === hour;
       });
       
