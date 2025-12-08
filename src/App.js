@@ -156,7 +156,14 @@ function AppContent() {
    */
   const handleUpdateProject = async (updatedProject) => {
     try {
-      const response = await projectService.update(updatedProject.id, updatedProject);
+      const updateData = {
+        status: updatedProject.status,
+        progress: parseInt(updatedProject.progress) || 0,
+        amount_paid: parseFloat(updatedProject.amount_paid || updatedProject.amountPaid) || 0,
+        notes: updatedProject.notes || ''
+      };
+
+      const response = await projectService.update(updatedProject.id, updateData);
       setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
       
       ActivityLogger.addActivity(
@@ -166,7 +173,9 @@ function AppContent() {
       );
     } catch (error) {
       console.error('Error updating project:', error);
-      alert('Failed to update project');
+      console.error('Error details:', error.response?.data);
+      const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message;
+      alert('Failed to update project: ' + errorMsg);
     }
   };
 
