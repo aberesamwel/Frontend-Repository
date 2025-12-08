@@ -12,26 +12,38 @@ const Reports = ({ projects }) => {
   const reportRef = useRef();
   
   const analytics = useMemo(() => {
-    const totalRevenue = projects.reduce((sum, p) => sum + p.clientPayment, 0);
-    const totalProfit = projects.reduce((sum, p) => sum + p.profit, 0);
-    const totalCosts = projects.reduce((sum, p) => sum + p.materialCost + p.laborCost, 0);
-    const completedProjects = projects.filter(p => p.status === 'Completed').length;
-    const activeProjects = projects.filter(p => p.status === 'In Progress').length;
-    const avgMargin = projects.length > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) : 0;
-    const avgProjectValue = projects.length > 0 ? (totalRevenue / projects.length).toFixed(0) : 0;
+    const totalRevenue = projects.reduce((sum, p) => {
+      const payment = parseFloat(p.clientPayment || p.client_payment || 0);
+      return sum + (isNaN(payment) ? 0 : payment);
+    }, 0);
+    const totalProfit = projects.reduce((sum, p) => {
+      const profit = parseFloat(p.profit || 0);
+      return sum + (isNaN(profit) ? 0 : profit);
+    }, 0);
+    const totalCosts = projects.reduce((sum, p) => {
+      const materialCost = parseFloat(p.materialCost || p.material_cost || 0);
+      const laborCost = parseFloat(p.laborCost || p.labor_cost || 0);
+      return sum + (isNaN(materialCost) ? 0 : materialCost) + (isNaN(laborCost) ? 0 : laborCost);
+    }, 0);
+    const completedProjects = projects.filter(p => p.status === 'completed' || p.status === 'Completed').length;
+    const activeProjects = projects.filter(p => p.status === 'welding_phase' || p.status === 'In Progress').length;
+    const avgMargin = projects.length > 0 && totalRevenue > 0 ? (totalProfit / totalRevenue * 100).toFixed(1) : 0;
+    const avgProjectValue = projects.length > 0 ? (totalRevenue / projects.length / 1000).toFixed(1) : 0;
     
     // Monthly breakdown
     const monthlyData = {};
     projects.forEach(project => {
-      const date = new Date(project.startDate);
+      const date = new Date(project.startDate || project.start_date);
       const monthKey = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
       
       if (!monthlyData[monthKey]) {
         monthlyData[monthKey] = { revenue: 0, profit: 0, projects: 0 };
       }
       
-      monthlyData[monthKey].revenue += project.clientPayment;
-      monthlyData[monthKey].profit += project.profit;
+      const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+      const profit = parseFloat(project.profit || 0);
+      monthlyData[monthKey].revenue += isNaN(payment) ? 0 : payment;
+      monthlyData[monthKey].profit += isNaN(profit) ? 0 : profit;
       monthlyData[monthKey].projects += 1;
     });
     
@@ -173,12 +185,12 @@ const Reports = ({ projects }) => {
       
       xPos = margin + 2;
       const rowData = [
-        project.projectId,
-        project.clientName.substring(0, 15),
-        project.vehicleType.substring(0, 12),
+        project.projectId || project.project_id,
+        (project.clientName || project.client_name || 'N/A').substring(0, 15),
+        (project.vehicleType || project.vehicle_type || 'N/A').substring(0, 12),
         project.status,
-        `$${project.clientPayment.toLocaleString()}`,
-        `$${project.profit.toLocaleString()}`
+        `$${parseFloat(project.clientPayment || project.client_payment || 0).toLocaleString()}`,
+        `$${parseFloat(project.profit || 0).toLocaleString()}`
       ];
       
       rowData.forEach((data, colIndex) => {
@@ -257,14 +269,14 @@ const Reports = ({ projects }) => {
       ['PROJECT BREAKDOWN'],
       ['Project ID', 'Client Name', 'Vehicle Type', 'Status', 'Sales Amount', 'Profit', 'Progress', 'Start Date'],
       ...projects.map(p => [
-        p.projectId,
-        p.clientName,
-        p.vehicleType,
+        p.projectId || p.project_id,
+        p.clientName || p.client_name || 'N/A',
+        p.vehicleType || p.vehicle_type || 'N/A',
         p.status,
-        `$${p.clientPayment.toLocaleString()}`,
-        `$${p.profit.toLocaleString()}`,
-        `${p.progress}%`,
-        p.startDate
+        `$${parseFloat(p.clientPayment || p.client_payment || 0).toLocaleString()}`,
+        `$${parseFloat(p.profit || 0).toLocaleString()}`,
+        `${p.progress || 0}%`,
+        p.startDate || p.start_date
       ]),
       [''],
       ['STATUS SUMMARY'],
@@ -380,22 +392,22 @@ const Reports = ({ projects }) => {
                 </thead>
                 <tbody>
                   {currentProjects.map((project, index) => (
-                    <tr key={project.projectId} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.projectId}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.clientName}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.vehicleType}</td>
+                    <tr key={project.projectId || project.project_id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.projectId || project.project_id}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.clientName || project.client_name || 'N/A'}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">{project.vehicleType || project.vehicle_type || 'N/A'}</td>
                       <td className="border border-gray-300 px-4 py-2 text-sm">
                         <span className={`px-2 py-1 rounded-full text-xs ${
-                          project.status === 'Completed' ? 'bg-green-100 text-green-800' :
-                          project.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                          project.status === 'completed' || project.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                          project.status === 'welding_phase' || project.status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
                           'bg-yellow-100 text-yellow-800'
                         }`}>
                           {project.status}
                         </span>
                       </td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-right">${project.clientPayment.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-right">${project.profit.toLocaleString()}</td>
-                      <td className="border border-gray-300 px-4 py-2 text-sm text-center">{project.progress}%</td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-right">${parseFloat(project.clientPayment || project.client_payment || 0).toLocaleString()}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-right">${parseFloat(project.profit || 0).toLocaleString()}</td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm text-center">{project.progress || 0}%</td>
                     </tr>
                   ))}
                 </tbody>
