@@ -6,8 +6,8 @@ const KPICards = ({ projects = [] }) => {
   const activeProjects = projects.filter(p => p.status === 'In Progress').length;
   const completedProjects = projects.filter(p => p.status === 'Completed').length;
   const pendingDelivery = projects.filter(p => p.status === 'Completed' && !p.deliveredAt).length;
-  const totalRevenue = projects.reduce((sum, p) => sum + (p.clientPayment || 0), 0);
-  const totalProfit = projects.reduce((sum, p) => sum + (p.profit || 0), 0);
+  const totalRevenue = projects.reduce((sum, p) => sum + (parseFloat(p.clientPayment || p.client_payment) || 0), 0);
+  const totalProfit = projects.reduce((sum, p) => sum + (parseFloat(p.profit) || 0), 0);
   const profitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : '0.0';
   
   // Dynamic KPI data
@@ -22,7 +22,7 @@ const KPICards = ({ projects = [] }) => {
     },
     { 
       title: 'Total Sales', 
-      value: `$${(totalRevenue/1000).toFixed(0)}K`, 
+      value: totalRevenue > 0 ? `$${(totalRevenue/1000).toFixed(0)}K` : '$0', 
       change: '+22.5%', 
       changeType: 'positive', 
       icon: DollarSign,
