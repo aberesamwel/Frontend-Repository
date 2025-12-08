@@ -21,9 +21,9 @@ const ProjectsTable = ({
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.projectId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.vehicleType.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (project.projectId || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (project.clientName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (project.vehicleType || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All Status' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
