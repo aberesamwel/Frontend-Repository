@@ -287,7 +287,7 @@ function AppContent() {
               <Route path="/materials" element={<Materials />} />
               <Route path="/tools" element={<Tools />} />
               <Route path="/metalworks" element={<MetalWorks />} />
-              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/calendar" element={<Calendar projects={projects} />} />
               <Route path="/reports" element={<Reports projects={projects} />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>

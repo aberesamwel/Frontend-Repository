@@ -9,26 +9,34 @@ const RevenueChart = ({ projects }) => {
     
     // Calculate current month totals
     const currentMonthProjects = projects.filter(project => {
-      const projectDate = new Date(project.startDate);
+      const projectDate = new Date(project.startDate || project.start_date);
       return projectDate.getMonth() === currentMonth && projectDate.getFullYear() === currentYear;
     });
     
-    const totalSales = projects.reduce((sum, project) => sum + project.clientPayment, 0);
-    const totalProfit = projects.reduce((sum, project) => sum + project.profit, 0);
+    const totalSales = projects.reduce((sum, project) => {
+      const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+      return sum + (isNaN(payment) ? 0 : payment);
+    }, 0);
+    const totalProfit = projects.reduce((sum, project) => {
+      const profit = parseFloat(project.profit || 0);
+      return sum + (isNaN(profit) ? 0 : profit);
+    }, 0);
     const totalProjects = projects.length;
     
     // Generate monthly data from projects
     const monthlyStats = {};
     projects.forEach(project => {
-      const date = new Date(project.startDate);
+      const date = new Date(project.startDate || project.start_date);
       const monthKey = date.toLocaleDateString('en-US', { month: 'short' });
       
       if (!monthlyStats[monthKey]) {
         monthlyStats[monthKey] = { month: monthKey, sales: 0, profit: 0, projects: 0 };
       }
       
-      monthlyStats[monthKey].sales += project.clientPayment;
-      monthlyStats[monthKey].profit += project.profit;
+      const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+      const profit = parseFloat(project.profit || 0);
+      monthlyStats[monthKey].sales += isNaN(payment) ? 0 : payment;
+      monthlyStats[monthKey].profit += isNaN(profit) ? 0 : profit;
       monthlyStats[monthKey].projects += 1;
     });
     

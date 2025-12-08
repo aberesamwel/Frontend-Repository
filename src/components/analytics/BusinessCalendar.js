@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, TrendingUp, DollarSign, Users, Clock, Calend
 import { useTheme } from '../../contexts/ThemeContext';
 import { businessAnalytics } from '../../utils/timeBasedAnalytics';
 
-const BusinessCalendar = () => {
+const BusinessCalendar = ({ projects = [] }) => {
   const { getThemeClass } = useTheme();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
@@ -12,25 +12,35 @@ const BusinessCalendar = () => {
 
   useEffect(() => {
     loadCalendarData();
-  }, [currentDate]);
+  }, [currentDate, projects]);
 
   const loadCalendarData = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const analytics = businessAnalytics.getAnalytics();
     const data = {};
 
-    // Load data for each day of the month
+    // Initialize all days with zero data
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dateKey = date.toISOString().split('T')[0];
-      const dayData = analytics.timeHierarchy.days[dateKey] || {
-        summary: { totalSales: 0, totalPayments: 0, serviceCount: 0 },
-        events: []
-      };
-      data[dateKey] = dayData.summary;
+      data[dateKey] = { totalSales: 0, totalPayments: 0, serviceCount: 0 };
     }
+
+    // Aggregate project data by date
+    projects.forEach(project => {
+      const projectDate = new Date(project.createdAt || project.created_at);
+      const dateKey = projectDate.toISOString().split('T')[0];
+      
+      if (data[dateKey]) {
+        const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+        const amountPaid = parseFloat(project.amountPaid || project.amount_paid || 0);
+        data[dateKey].totalSales += isNaN(payment) ? 0 : payment;
+        data[dateKey].totalPayments += isNaN(amountPaid) ? 0 : amountPaid;
+        data[dateKey].serviceCount += 1;
+      }
+    });
+    
     setCalendarData(data);
   };
 
@@ -80,30 +90,47 @@ const BusinessCalendar = () => {
   const getSelectedDateDetails = () => {
     if (!selectedDate) return null;
     
-    const analytics = businessAnalytics.getAnalytics();
-    const dayData = analytics.timeHierarchy.days[selectedDate] || {
-      summary: { totalSales: 0, totalPayments: 0, serviceCount: 0 },
-      events: []
+    // Filter projects for selected date
+    const dayProjects = projects.filter(project => {
+      const projectDate = new Date(project.createdAt || project.created_at);
+      return projectDate.toISOString().split('T')[0] === selectedDate;
+    });
+    
+    const summary = {
+      totalSales: dayProjects.reduce((sum, p) => {
+        const payment = parseFloat(p.clientPayment || p.client_payment || 0);
+        return sum + (isNaN(payment) ? 0 : payment);
+      }, 0),
+      totalPayments: dayProjects.reduce((sum, p) => {
+        const amountPaid = parseFloat(p.amountPaid || p.amount_paid || 0);
+        return sum + (isNaN(amountPaid) ? 0 : amountPaid);
+      }, 0),
+      serviceCount: dayProjects.length
     };
     
-    // Get hourly breakdown for selected date
+    // Get hourly breakdown (simplified - group by creation hour)
     const hourlyData = [];
     for (let hour = 0; hour < 24; hour++) {
-      const hourKey = `${selectedDate}-${String(hour).padStart(2, '0')}`;
-      const hourData = analytics.timeHierarchy.hours[hourKey] || {
-        summary: { totalSales: 0, totalPayments: 0, serviceCount: 0 }
-      };
+      const hourProjects = dayProjects.filter(p => {
+        const projectDate = new Date(p.createdAt || p.created_at);
+        return projectDate.getHours() === hour;
+      });
+      
       hourlyData.push({
         hour,
         time: `${String(hour).padStart(2, '0')}:00`,
-        ...hourData.summary
+        totalSales: hourProjects.reduce((sum, p) => {
+          const payment = parseFloat(p.clientPayment || p.client_payment || 0);
+          return sum + (isNaN(payment) ? 0 : payment);
+        }, 0),
+        serviceCount: hourProjects.length
       });
     }
     
     return {
       date: selectedDate,
-      summary: dayData.summary,
-      events: dayData.events,
+      summary,
+      events: dayProjects,
       hourlyBreakdown: hourlyData
     };
   };

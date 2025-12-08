@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Users, Wrench, Truck, Bell } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
+import BusinessCalendar from '../components/analytics/BusinessCalendar';
 
-const Calendar = () => {
+const Calendar = ({ projects = [] }) => {
   const { theme, getThemeClass } = useTheme();
   const isDark = theme === 'dark';
   
@@ -185,6 +186,9 @@ const Calendar = () => {
           Add Event
         </button>
       </div>
+
+      {/* Business Performance Calendar */}
+      <BusinessCalendar projects={projects} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Calendar */}
