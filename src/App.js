@@ -172,10 +172,18 @@ function AppContent() {
         };
         updateData.status = statusMap[updatedProject.status] || updatedProject.status.toLowerCase().replace(/ /g, '_');
         
-        // Auto-set progress to 100% when status is Completed
-        if (updatedProject.status === 'Completed') {
-          updateData.progress = 100;
-        }
+        // Auto-calculate progress based on status
+        const progressMap = {
+          'Material Sourcing': 10,
+          'Welding Phase': 30,
+          'In Progress': 30,
+          'Painting': 50,
+          'Interior Fitting': 70,
+          'Quality Check': 90,
+          'Completed': 100,
+          'Delivered': 100
+        };
+        updateData.progress = progressMap[updatedProject.status] || 0;
       }
       if (updatedProject.progress !== undefined) updateData.progress = parseInt(updatedProject.progress) || 0;
       if (updatedProject.amount_paid !== undefined || updatedProject.amountPaid !== undefined) {
