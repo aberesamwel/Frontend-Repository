@@ -59,13 +59,13 @@ const ProjectTable = ({
               <tr key={project.id} className={`hover:${getThemeClass('bg', 'hover')} transition-colors`}>
                 <td className="px-4 py-4">
                   <div>
-                    <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId}</div>
-                    <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.vehicleType}</div>
+                    <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId || 'N/A'}</div>
+                    <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.vehicleType || 'N/A'}</div>
                   </div>
                 </td>
 
                 <td className="px-4 py-4">
-                  <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.clientName}</div>
+                  <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.clientName || 'N/A'}</div>
                 </td>
 
                 <td className="px-4 py-4">
@@ -83,15 +83,15 @@ const ProjectTable = ({
                 <td className="px-4 py-4">
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress}%</span>
+                      <span className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress || 0}%</span>
                       <span className={`text-xs ${getThemeClass('text', 'tertiary')}`}>
-                        ${(project.clientPayment/1000).toFixed(0)}K
+                        ${((project.clientPayment || 0)/1000).toFixed(0)}K
                       </span>
                     </div>
                     <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2`}>
                       <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(project.progress)}`}
-                        style={{ width: `${project.progress}%` }}
+                        className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(project.progress || 0)}`}
+                        style={{ width: `${project.progress || 0}%` }}
                       />
                     </div>
                   </div>
@@ -99,9 +99,9 @@ const ProjectTable = ({
 
                 <td className="px-4 py-4">
                   <div>
-                    <div className="text-sm font-bold text-green-600">${project.clientPayment.toLocaleString()}</div>
-                    <div className={`text-xs ${project.profit > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      Profit: ${project.profit.toLocaleString()}
+                    <div className="text-sm font-bold text-green-600">${(project.clientPayment || 0).toLocaleString()}</div>
+                    <div className={`text-xs ${(project.profit || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      Profit: ${(project.profit || 0).toLocaleString()}
                     </div>
                   </div>
                 </td>
