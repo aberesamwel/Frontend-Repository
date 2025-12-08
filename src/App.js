@@ -183,19 +183,14 @@ function AppContent() {
       console.log('Updating project:', updatedProject.id);
       console.log('Update data:', updateData);
       
-      // Optimistic UI update
-      setProjects(projects.map(p => 
-        p.id === updatedProject.id 
-          ? { ...p, ...updatedProject, status: updateData.status || p.status }
-          : p
-      ));
-      
       // Send to backend
       const response = await projectService.update(updatedProject.id, updateData);
       console.log('Backend response:', response.data);
       
-      // Update with backend response
-      setProjects(projects.map(p => p.id === updatedProject.id ? response.data : p));
+      // Update with backend response using functional setState
+      setProjects(prevProjects => 
+        prevProjects.map(p => p.id === updatedProject.id ? response.data : p)
+      );
       
       ActivityLogger.addActivity(
         'progress',
