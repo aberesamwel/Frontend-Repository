@@ -28,6 +28,7 @@ import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
+import { serviceService } from '../services/serviceService';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -37,22 +38,22 @@ const MetalWorks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  /**
-   * Services state - loads from localStorage or uses default sample data
-   * Each service contains: customer info, service details, pricing, payment status
-   */
-  const [services, setServices] = useState(() => {
-    const saved = localStorage.getItem('metalworks-services');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  /**
-   * Auto-save services to localStorage whenever they change
-   * This ensures data persists across page refreshes
-   */
   useEffect(() => {
-    localStorage.setItem('metalworks-services', JSON.stringify(services));
-  }, [services]);
+    const loadServices = async () => {
+      try {
+        const response = await serviceService.getAll();
+        setServices(response.data.results || response.data || []);
+      } catch (error) {
+        console.error('Error loading services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadServices();
+  }, []);
 
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
