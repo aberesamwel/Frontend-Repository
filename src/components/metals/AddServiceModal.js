@@ -224,10 +224,14 @@ const AddServiceModal = ({
                     <div>
                       <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Qty</label>
                       <input
-                        type="number"
-                        min="1"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={item.quantity}
-                        onChange={(e) => updateItem(item.id, 'quantity', e.target.value === '' ? '' : parseInt(e.target.value) || '')}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, '');
+                          updateItem(item.id, 'quantity', val);
+                        }}
                         className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
                         placeholder="0"
                       />
@@ -240,8 +244,8 @@ const AddServiceModal = ({
                         min="0"
                         step="0.01"
                         value={item.unitPrice}
-                        onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value === '' ? '' : parseFloat(e.target.value) || '')}
-                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
+                        onChange={(e) => updateItem(item.id, 'unitPrice', e.target.value)}
+                        className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-2 focus:ring-blue-500`}
                         placeholder="0.00"
                       />
                     </div>

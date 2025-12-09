@@ -85,20 +85,15 @@ const Tools = () => {
     setShowCheckoutModal(true);
   };
 
-  const handleReturn = (toolId) => {
-    const now = new Date();
-    setTools(prev => prev.map(tool => 
-      tool.id === toolId 
-        ? { 
-            ...tool, 
-            status: 'available', 
-            checkedOutBy: null, 
-            checkedOutTime: null, 
-            returnedTime: now.toISOString(),
-            lastReturnedBy: tool.checkedOutBy
-          }
-        : tool
-    ));
+  const handleReturn = async (toolId) => {
+    const tool = tools.find(t => t.id === toolId);
+    try {
+      await toolService.return(toolId, tool.checkedOutBy || 'Unknown', tool.condition, '');
+      const response = await toolService.getAll();
+      setTools(response.data.results || response.data || []);
+    } catch (error) {
+      console.error('Error returning tool:', error);
+    }
   };
 
   const handleToolAction = (toolId, actionId) => {
@@ -380,24 +375,20 @@ const Tools = () => {
     );
   };
 
-  const submitCheckout = () => {
+  const submitCheckout = async () => {
     if (!checkoutForm.employeeName) return;
     
-    setTools(prev => prev.map(tool => 
-      tool.id === selectedTool.id 
-        ? { 
-            ...tool, 
-            status: 'checked_out',
-            checkedOutBy: checkoutForm.employeeName,
-            checkedOutTime: new Date().toISOString(),
-            notes: checkoutForm.notes
-          }
-        : tool
-    ));
-    
-    setShowCheckoutModal(false);
-    setCheckoutForm({ employeeName: '', notes: '' });
-    setSelectedTool(null);
+    try {
+      await toolService.checkout(selectedTool.id, checkoutForm.employeeName, checkoutForm.notes);
+      const response = await toolService.getAll();
+      setTools(response.data.results || response.data || []);
+      setShowCheckoutModal(false);
+      setCheckoutForm({ employeeName: '', notes: '' });
+      setSelectedTool(null);
+    } catch (error) {
+      console.error('Error checking out tool:', error);
+      alert('Failed to checkout tool');
+    }
   };
 
   const submitAddTool = async () => {
