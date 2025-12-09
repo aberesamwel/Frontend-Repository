@@ -224,16 +224,12 @@ const AddServiceModal = ({
                     <div>
                       <label className={`block text-xs font-medium ${getThemeClass('text', 'secondary')} mb-1`}>Qty</label>
                       <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
+                        type="number"
+                        min="0"
                         value={item.quantity}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/[^0-9]/g, '');
-                          updateItem(item.id, 'quantity', val);
-                        }}
+                        onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
                         className={`w-full px-2 py-1.5 text-sm border ${getThemeClass('border', 'primary')} rounded ${getThemeClass('bg', 'primary')} ${getThemeClass('text', 'primary')} focus:ring-2 focus:ring-blue-500`}
-                        placeholder="0"
+                        placeholder="Qty"
                       />
                     </div>
                     
