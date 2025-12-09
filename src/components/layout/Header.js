@@ -1,21 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast } from 'lucide-react';
-import { notifications } from '../../data/mockData';
 import { useTheme } from '../../contexts/ThemeContext';
+import { notificationService } from '../../services/notificationService';
 
 const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
   const { currentTheme, toggleTheme, highContrast, toggleHighContrast, getThemeClass, isDark } = useTheme();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notificationList, setNotificationList] = useState(notifications);
+  const [notificationList, setNotificationList] = useState([]);
   
   useEffect(() => {
+    loadNotifications();
     const timer = setInterval(() => {
       setCurrentTime(new Date());
-      checkMeetingNotifications();
-    }, 1000);
+      loadNotifications();
+    }, 30000); // Refresh every 30 seconds
     return () => clearInterval(timer);
-  }, [profile]);
+  }, []);
+  
+  const loadNotifications = async () => {
+    try {
+      const response = await notificationService.getAll();
+      setNotificationList(response.data.results || response.data || []);
+    } catch (error) {
+      console.error('Error loading notifications:', error);
+    }
+  };
 
   const checkMeetingNotifications = () => {
     if (!profile?.meetings) return;
@@ -52,15 +62,22 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
 
   const unreadCount = notificationList.filter(n => !n.read).length;
 
-  const markAsRead = (id) => {
-    setNotificationList(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+  const markAsRead = async (id) => {
+    try {
+      await notificationService.markRead(id);
+      setNotificationList(prev => prev.map(n => n.id === id ? {...n, read: true} : n));
+    } catch (error) {
+      console.error('Error marking notification as read:', error);
+    }
   };
 
   const getNotificationIcon = (type) => {
     switch(type) {
-      case 'meeting': return Users;
-      case 'deadline': return AlertCircle;
-      case 'material': return Wrench;
+      case 'project': return Users;
+      case 'service': return Wrench;
+      case 'material': return AlertCircle;
+      case 'tool': return Wrench;
+      case 'payment': return Bell;
       default: return Bell;
     }
   };
