@@ -29,7 +29,7 @@ import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
 import { metalWorksService } from '../services/metalWorksService';
-import { seedMetalWorksServices } from '../utils/seedMetalWorks';
+
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -57,20 +57,13 @@ const MetalWorks = () => {
       setLoading(true);
       const response = await metalWorksService.getAll();
       const apiServices = response.data.results || response.data || [];
-      if (apiServices.length > 0) {
-        setServices(apiServices);
-      } else {
-        throw new Error('No API data available');
-      }
+      setServices(apiServices);
     } catch (error) {
       console.error('Error loading services from API:', error);
-      // Seed sample data if none exists
-      seedMetalWorksServices();
-      // Load from localStorage
+      // Load from localStorage as fallback
       const saved = localStorage.getItem('metalworks-services');
       if (saved) {
         const localServices = JSON.parse(saved);
-        console.log('Loaded from localStorage:', localServices);
         setServices(localServices);
       }
     } finally {
@@ -610,16 +603,6 @@ const MetalWorks = () => {
         </div>
         
         <div className="flex space-x-3">
-          <button 
-            onClick={() => {
-              seedMetalWorksServices(true);
-              loadServices();
-            }}
-            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            Load Sample Data
-          </button>
           <button 
             onClick={generatePDFReport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
