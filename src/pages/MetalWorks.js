@@ -29,6 +29,7 @@ import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
 import { metalWorksService } from '../services/metalWorksService';
+import { seedMetalWorksServices } from '../utils/seedMetalWorks';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -53,6 +54,8 @@ const MetalWorks = () => {
       setServices(apiServices);
     } catch (error) {
       console.error('Error loading services from API:', error);
+      // Seed sample data if none exists
+      seedMetalWorksServices();
       // Fallback to localStorage
       const saved = localStorage.getItem('metalworks-services');
       if (saved) {
