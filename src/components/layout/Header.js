@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { notificationService } from '../../services/notificationService';
+import { companyInfo } from '../../config/company';
 
 const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
   const { currentTheme, toggleTheme, highContrast, toggleHighContrast, getThemeClass, isDark } = useTheme();
@@ -115,7 +116,8 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
         {/* Title & Clock - Responsive */}
         <div className="hidden sm:block min-w-0 flex-1">
           <div className="flex items-center space-x-2 sm:space-x-3 mb-0.5 sm:mb-1">
-            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 tracking-tight truncate">Workshop Dashboard</h1>
+            <img src="/truck-logo.svg" alt="Truck" className="w-6 h-6 sm:w-7 sm:h-7" />
+            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-tight truncate">{companyInfo.shortName}</h1>
             <div className="px-2 py-0.5 sm:px-3 sm:py-1 bg-gradient-to-r from-green-100 to-emerald-100 rounded-full border border-green-200 flex-shrink-0">
               <span className="text-xs font-semibold text-green-700">Live</span>
             </div>

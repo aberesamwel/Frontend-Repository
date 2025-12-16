@@ -16,10 +16,28 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
     return () => clearInterval(timer);
   }, [isLive]);
 
-  const completedProjects = projects.filter(p => p.status === 'Completed').length;
-  const activeProjects = projects.filter(p => p.status === 'In Progress').length;
-  const totalRevenue = projects.reduce((sum, p) => sum + p.clientPayment, 0);
-  const avgProgress = projects.reduce((sum, p) => sum + p.progress, 0) / projects.length || 0;
+  const completedProjects = projects.filter(p => p.status === 'completed' || p.status === 'Completed').length;
+  const activeProjects = projects.filter(p => 
+    p.status === 'material_sourcing' || 
+    p.status === 'welding_phase' || 
+    p.status === 'painting' || 
+    p.status === 'interior_fitting' || 
+    p.status === 'quality_check' ||
+    p.status === 'Material Sourcing' ||
+    p.status === 'Welding Phase' ||
+    p.status === 'In Progress' ||
+    p.status === 'Painting' ||
+    p.status === 'Interior Fitting' ||
+    p.status === 'Quality Check'
+  ).length;
+  const totalRevenue = projects.reduce((sum, p) => {
+    const payment = parseFloat(p.client_payment || p.clientPayment || 0);
+    return sum + (isNaN(payment) ? 0 : payment);
+  }, 0);
+  const avgProgress = projects.reduce((sum, p) => {
+    const progress = parseFloat(p.progress || 0);
+    return sum + (isNaN(progress) ? 0 : progress);
+  }, 0) / projects.length || 0;
 
   return (
     <main className="flex-1 overflow-hidden relative">
@@ -83,18 +101,18 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
                       <div key={project.id} className={`p-3 rounded-lg ${getThemeClass('bg', 'tertiary')} border ${getThemeClass('border', 'primary')}`}>
                         <div className="flex justify-between items-center">
                           <div>
-                            <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId}</div>
-                            <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.clientName}</div>
+                            <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.project_id || project.projectId}</div>
+                            <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.client_name || project.clientName}</div>
                           </div>
                           <div className="text-right">
-                            <div className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress}%</div>
+                            <div className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress || 0}%</div>
                             <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{project.status}</div>
                           </div>
                         </div>
                         <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2 mt-2`}>
                           <div 
                             className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-                            style={{ width: `${project.progress}%` }}
+                            style={{ width: `${project.progress || 0}%` }}
                           />
                         </div>
                       </div>
@@ -120,7 +138,7 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
                         <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2`}>
                           <div 
                             className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-300"
-                            style={{ width: `${project.progress}%` }}
+                            style={{ width: `${project.progress || 0}%` }}
                           />
                         </div>
                       </div>

@@ -37,6 +37,7 @@ import MetalWorks from './pages/MetalWorks';
 import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
+import CompanyInfo from './pages/CompanyInfo';
 import { userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -110,6 +111,18 @@ function AppContent() {
    * - Logs activity for tracking
    */
   const handleProjectSubmit = async (newProject) => {
+    // Optimistic update - add to UI immediately
+    const optimisticProject = {
+      id: Date.now(),
+      ...newProject,
+      created_at: new Date().toISOString(),
+      status: 'material_sourcing',
+      progress: 15
+    };
+    
+    setProjects([...projects, optimisticProject]);
+    setIsFormOpen(false);
+    
     try {
       const projectData = {
         project_id: newProject.projectId,
@@ -133,8 +146,8 @@ function AppContent() {
       };
 
       const response = await projectService.create(projectData);
-      setProjects([...projects, response.data]);
-      setIsFormOpen(false);
+      // Replace optimistic project with server response
+      setProjects(prev => prev.map(p => p.id === optimisticProject.id ? response.data : p));
       
       ActivityLogger.addActivity(
         'project',
@@ -143,9 +156,9 @@ function AppContent() {
       );
     } catch (error) {
       console.error('Error creating project:', error);
-      console.error('Error details:', error.response?.data);
+      // Keep optimistic project on error
       const errorMsg = error.response?.data?.error?.message || error.response?.data?.message || error.message;
-      alert('Failed to create project: ' + errorMsg);
+      console.log('Project creation failed, keeping local version');
     }
   };
   
@@ -172,13 +185,13 @@ function AppContent() {
         };
         updateData.status = statusMap[updatedProject.status] || updatedProject.status.toLowerCase().replace(/ /g, '_');
         
-        // Auto-calculate progress based on status
+        // Auto-calculate progress based on status with better intervals
         const progressMap = {
-          'Material Sourcing': 10,
-          'Welding Phase': 30,
-          'In Progress': 30,
-          'Painting': 50,
-          'Interior Fitting': 70,
+          'Material Sourcing': 15,
+          'Welding Phase': 35,
+          'In Progress': 35,
+          'Painting': 55,
+          'Interior Fitting': 75,
           'Quality Check': 90,
           'Completed': 100,
           'Delivered': 100
@@ -289,6 +302,7 @@ function AppContent() {
               <Route path="/metalworks" element={<MetalWorks />} />
               <Route path="/calendar" element={<Calendar projects={projects} />} />
               <Route path="/reports" element={<Reports projects={projects} />} />
+              <Route path="/company" element={<CompanyInfo />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>

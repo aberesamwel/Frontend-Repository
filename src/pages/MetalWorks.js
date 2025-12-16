@@ -28,7 +28,7 @@ import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
-import { serviceService } from '../services/serviceService';
+import { metalWorksService } from '../services/metalWorksService';
 
 const MetalWorks = () => {
   const { theme, getThemeClass } = useTheme();
@@ -38,22 +38,32 @@ const MetalWorks = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
+  // Load metal works services from API with localStorage fallback
   const [services, setServices] = useState([]);
-  const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
-    const loadServices = async () => {
-      try {
-        const response = await serviceService.getAll();
-        setServices(response.data.results || response.data || []);
-      } catch (error) {
-        console.error('Error loading services:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
     loadServices();
   }, []);
+
+  const loadServices = async () => {
+    try {
+      setLoading(true);
+      const response = await metalWorksService.getAll();
+      const apiServices = response.data.results || response.data || [];
+      setServices(apiServices);
+    } catch (error) {
+      console.error('Error loading services from API:', error);
+      // Fallback to localStorage
+      const saved = localStorage.getItem('metalworks-services');
+      if (saved) {
+        setServices(JSON.parse(saved));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  const [loading, setLoading] = useState(false);
 
   const [showServiceModal, setShowServiceModal] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
@@ -102,11 +112,16 @@ const MetalWorks = () => {
   };
 
   const filteredServices = services.filter(service => {
-    const matchesSearch = service.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.ticketId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         service.phone.includes(searchTerm);
+    const customerName = service.customer_name || service.customerName || '';
+    const ticketId = service.ticket_id || service.ticketId || '';
+    const phone = service.phone || '';
+    const serviceType = service.service_type || service.serviceType || '';
+    
+    const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ticketId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         phone.includes(searchTerm);
     const matchesStatus = filterStatus === 'all' || service.status === filterStatus;
-    const matchesService = filterService === 'all' || service.serviceType === filterService;
+    const matchesService = filterService === 'all' || serviceType.includes(filterService);
     return matchesSearch && matchesStatus && matchesService;
   });
 
@@ -129,61 +144,52 @@ const MetalWorks = () => {
    * Validates required fields, generates unique ticket ID,
    * calculates payment status, and records analytics events
    */
-  const handleAddService = (serviceData) => {
+  const handleAddService = async (serviceData) => {
     // Validate required fields
     if (!serviceData.customerName || !serviceData.phone) {
       alert('Please fill in all required fields: Customer Name and Phone');
       return;
     }
     
-    // Validate at least one item with material
-    const hasValidItem = serviceData.items && serviceData.items.some(item => item.material && item.material.trim() !== '');
-    if (!hasValidItem) {
-      alert('Please add at least one service item with material specified');
-      return;
-    }
-
     const totalAmount = serviceData.totalAmount || 0;
     const amountPaid = parseFloat(serviceData.amountPaid) || 0;
     const paymentStatus = amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial';
     
-    const service = {
+    const optimisticService = {
       id: Date.now(),
-      ticketId: `PX-${Date.now()}`,
-      customerName: serviceData.customerName,
+      ticket_id: `MW-${Date.now()}`,
+      customer_name: serviceData.customerName,
       phone: serviceData.phone,
+      service_type: serviceData.serviceType || 'cutting',
+      material: serviceData.material || '',
       priority: serviceData.priority || 'standard',
-      totalAmount,
-      amountPaid,
-      paymentStatus,
-      paymentMethod: serviceData.paymentMethod || null,
+      total_amount: totalAmount,
+      amount_paid: amountPaid,
+      payment_status: paymentStatus,
+      payment_method: serviceData.paymentMethod || null,
       status: 'pending',
-      dropOffTime: new Date().toISOString(),
+      created_at: new Date().toISOString(),
       items: serviceData.items || [],
       quantity: serviceData.quantity || 0
     };
     
-    // Save contact
-    contactsManager.saveContact(service.customerName, service.phone, 'metalworks');
-
-    // Record in analytics system
-    businessAnalytics.recordEvent('service_created', {
-      serviceId: service.id,
-      ticketId: service.ticketId,
-      totalAmount: service.totalAmount,
-      serviceType: service.serviceType,
-      customerName: service.customerName
-    });
+    // Optimistic update
+    setServices([...services, optimisticService]);
+    setShowServiceModal(false);
     
-    // Record initial debt
-    businessAnalytics.recordEvent('debt_created', {
-      serviceId: service.id,
-      ticketId: service.ticketId,
-      debtAmount: service.totalAmount,
-      customerName: service.customerName
-    });
-
-    setServices(prev => [...prev, service]);
+    try {
+      const response = await metalWorksService.create(optimisticService);
+      // Replace optimistic service with server response
+      setServices(prev => prev.map(s => s.id === optimisticService.id ? response.data : s));
+      
+      // Save contact
+      contactsManager.saveContact(serviceData.customerName, serviceData.phone, 'metalworks');
+    } catch (error) {
+      console.error('Error creating service:', error);
+      // Keep optimistic service and save to localStorage as backup
+      const updatedServices = [...services, optimisticService];
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+    }
     
     // Reset form
     setNewService({
@@ -208,37 +214,27 @@ const MetalWorks = () => {
    * Updates service work status (pending → in_progress → completed → picked_up)
    * Records completion and pickup events in analytics system
    */
-  const handleStatusUpdate = (serviceId, newStatus) => {
-    const now = new Date().toISOString();
-    setServices(prev => prev.map(service => {
+  const handleStatusUpdate = async (serviceId, newStatus) => {
+    const updatedServices = services.map(service => {
       if (service.id === serviceId) {
-        const updates = { status: newStatus };
+        const updatedService = { ...service, status: newStatus };
         if (newStatus === 'completed') {
-          updates.completedTime = now;
-          // Record service completion
-          businessAnalytics.recordEvent('service_completed', {
-            serviceId: service.id,
-            ticketId: service.ticketId,
-            totalAmount: service.totalAmount,
-            amountPaid: service.amountPaid,
-            remainingDebt: service.totalAmount - service.amountPaid,
-            customerName: service.customerName
-          });
+          updatedService.completed_at = new Date().toISOString();
+        } else if (newStatus === 'picked_up') {
+          updatedService.delivered_at = new Date().toISOString();
         }
-        if (newStatus === 'picked_up') {
-          updates.pickupTime = now;
-          // Record pickup
-          businessAnalytics.recordEvent('service_picked_up', {
-            serviceId: service.id,
-            ticketId: service.ticketId,
-            finalDebt: service.totalAmount - service.amountPaid,
-            customerName: service.customerName
-          });
-        }
-        return { ...service, ...updates };
+        return updatedService;
       }
       return service;
-    }));
+    });
+    setServices(updatedServices);
+    
+    try {
+      await metalWorksService.update(serviceId, { status: newStatus });
+    } catch (error) {
+      console.error('Error updating service status:', error);
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+    }
   };
 
   /**
@@ -246,39 +242,33 @@ const MetalWorks = () => {
    * Calculates payment status (unpaid/partial/paid)
    * Records payment events in analytics for business intelligence
    */
-  const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
-    setServices(prev => prev.map(service => {
+  const handlePaymentUpdate = async (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
+    const updatedServices = services.map(service => {
       if (service.id === serviceId) {
-        const oldAmountPaid = service.amountPaid || 0;
-        let amountPaid = 0;
-        if (paymentStatus === 'paid') {
-          amountPaid = service.totalAmount;
-        } else if (paymentStatus === 'partial') {
-          amountPaid = customAmount !== null ? customAmount : service.amountPaid;
+        const updatedService = { ...service };
+        if (customAmount !== null) {
+          updatedService.amount_paid = parseFloat(customAmount) || 0;
         }
-        
-        // Record payment in analytics if amount changed
-        if (amountPaid !== oldAmountPaid) {
-          const paymentAmount = amountPaid - oldAmountPaid;
-          if (paymentAmount > 0) {
-            businessAnalytics.recordEvent('payment_received', {
-              serviceId: service.id,
-              ticketId: service.ticketId,
-              paymentAmount,
-              totalPaid: amountPaid,
-              remainingDebt: service.totalAmount - amountPaid,
-              paymentMethod: paymentMethod || service.paymentMethod,
-              customerName: service.customerName
-            });
-          }
+        if (paymentMethod) {
+          updatedService.payment_method = paymentMethod;
         }
-        
-        const updates = { amountPaid, paymentStatus };
-        if (paymentMethod) updates.paymentMethod = paymentMethod;
-        return { ...service, ...updates };
+        updatedService.payment_status = paymentStatus;
+        return updatedService;
       }
       return service;
-    }));
+    });
+    setServices(updatedServices);
+    
+    try {
+      const updateData = { payment_status: paymentStatus };
+      if (customAmount !== null) updateData.amount_paid = parseFloat(customAmount) || 0;
+      if (paymentMethod) updateData.payment_method = paymentMethod;
+      
+      await metalWorksService.update(serviceId, updateData);
+    } catch (error) {
+      console.error('Error updating payment:', error);
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+    }
   };
 
   /**
@@ -295,33 +285,66 @@ const MetalWorks = () => {
     const thisYear = now.getFullYear();
     
     // Daily Sales
-    const todayServices = services.filter(s => 
-      new Date(s.dropOffTime).toDateString() === today
-    );
-    const dailySales = todayServices.reduce((sum, s) => sum + s.totalAmount, 0);
-    const dailyPayments = todayServices.reduce((sum, s) => sum + s.amountPaid, 0);
+    const todayServices = services.filter(s => {
+      const dateStr = s.created_at || s.dropOffTime;
+      return dateStr && new Date(dateStr).toDateString() === today;
+    });
+    const dailySales = todayServices.reduce((sum, s) => {
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      return sum + amount;
+    }, 0);
+    const dailyPayments = todayServices.reduce((sum, s) => {
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      return sum + paid;
+    }, 0);
     
     // Monthly Sales
     const thisMonthServices = services.filter(s => {
-      const serviceDate = new Date(s.dropOffTime);
+      const dateStr = s.created_at || s.dropOffTime;
+      if (!dateStr) return false;
+      const serviceDate = new Date(dateStr);
       return serviceDate.getMonth() === thisMonth && serviceDate.getFullYear() === thisYear;
     });
-    const monthlySales = thisMonthServices.reduce((sum, s) => sum + s.totalAmount, 0);
-    const monthlyPayments = thisMonthServices.reduce((sum, s) => sum + s.amountPaid, 0);
+    const monthlySales = thisMonthServices.reduce((sum, s) => {
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      return sum + amount;
+    }, 0);
+    const monthlyPayments = thisMonthServices.reduce((sum, s) => {
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      return sum + paid;
+    }, 0);
     
     // Yearly Sales
     const thisYearServices = services.filter(s => {
-      const serviceDate = new Date(s.dropOffTime);
+      const dateStr = s.created_at || s.dropOffTime;
+      if (!dateStr) return false;
+      const serviceDate = new Date(dateStr);
       return serviceDate.getFullYear() === thisYear;
     });
-    const yearlySales = thisYearServices.reduce((sum, s) => sum + s.totalAmount, 0);
-    const yearlyPayments = thisYearServices.reduce((sum, s) => sum + s.amountPaid, 0);
+    const yearlySales = thisYearServices.reduce((sum, s) => {
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      return sum + amount;
+    }, 0);
+    const yearlyPayments = thisYearServices.reduce((sum, s) => {
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      return sum + paid;
+    }, 0);
     
     // All-time totals
     const completedServices = services.filter(s => s.status === 'completed');
-    const totalRevenue = services.reduce((sum, s) => sum + s.totalAmount, 0);
-    const totalPayments = services.reduce((sum, s) => sum + s.amountPaid, 0);
-    const totalDebt = services.reduce((sum, s) => sum + Math.max(0, s.totalAmount - s.amountPaid), 0);
+    const totalRevenue = services.reduce((sum, s) => {
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      return sum + amount;
+    }, 0);
+    const totalPayments = services.reduce((sum, s) => {
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      return sum + paid;
+    }, 0);
+    const totalDebt = services.reduce((sum, s) => {
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      return sum + Math.max(0, amount - paid);
+    }, 0);
     
     // Estimate profit (30% margin on collected payments)
     const PROFIT_MARGIN = 0.30;
@@ -593,7 +616,7 @@ const MetalWorks = () => {
       <MetalStatsCards stats={stats} />
       
       {/* Business Performance Calendar */}
-      <BusinessCalendar />
+      <BusinessCalendar projects={services} />
         
 
 

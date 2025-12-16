@@ -27,8 +27,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, profile, setProfile }) => {
       <div className="flex items-center justify-between h-16 sm:h-20 px-4 sm:px-6 border-b border-slate-700/50 bg-gradient-to-r from-slate-800/50 to-slate-700/30">
         <div className="flex items-center space-x-3 sm:space-x-4">
           <div className="relative">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 ring-2 ring-blue-400/20">
-              <Wrench className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 ring-2 ring-blue-400/20 p-2">
+              <img src="/truck-logo.svg" alt="Logo" className="w-full h-full" />
             </div>
             <div className="absolute -top-0.5 -right-0.5 sm:-top-1 sm:-right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full border-2 border-slate-800 animate-pulse"></div>
           </div>

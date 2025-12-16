@@ -42,34 +42,43 @@ const MetalStatsCards = ({ stats }) => {
   };
 
   const currentPeriod = periods[selectedPeriod];
-  const collectionRate = currentPeriod.sales > 0 ? (currentPeriod.payments / currentPeriod.sales * 100) : 0;
+  const sales = parseFloat(currentPeriod.sales) || 0;
+  const payments = parseFloat(currentPeriod.payments) || 0;
+  const profit = parseFloat(currentPeriod.profit) || 0;
+  const services = parseInt(currentPeriod.services) || 0;
+  const totalDebt = parseFloat(stats.totalDebt) || 0;
+  const averageJobValue = parseFloat(stats.averageJobValue) || 0;
+  const pendingServices = parseInt(stats.pendingServices) || 0;
+  const profitMargin = parseFloat(stats.profitMargin) || 0;
+  
+  const collectionRate = sales > 0 ? (payments / sales * 100) : 0;
 
   const cards = [
     {
       title: "Sales Volume",
-      value: `$${currentPeriod.sales.toFixed(2)}`,
-      subtitle: `${currentPeriod.services} services • ${currentPeriod.subtitle}`,
+      value: `$${sales.toFixed(2)}`,
+      subtitle: `${services} services • ${currentPeriod.subtitle}`,
       icon: TrendingUp,
       color: 'blue'
     },
     {
       title: "Cash Collected",
-      value: `$${currentPeriod.payments.toFixed(2)}`,
+      value: `$${payments.toFixed(2)}`,
       subtitle: `${collectionRate.toFixed(1)}% collection rate`,
       icon: DollarSign,
       color: 'green'
     },
     {
       title: "Estimated Profit",
-      value: `$${currentPeriod.profit.toFixed(2)}`,
-      subtitle: `${stats.profitMargin}% profit margin (estimated)`,
+      value: `$${profit.toFixed(2)}`,
+      subtitle: `${profitMargin}% profit margin (estimated)`,
       icon: TrendingUp,
       color: 'purple'
     },
     {
       title: "Customer Debt",
-      value: `$${stats.totalDebt.toFixed(2)}`,
-      subtitle: `${stats.pendingServices} pending • Avg: $${stats.averageJobValue.toFixed(0)}`,
+      value: `$${totalDebt.toFixed(2)}`,
+      subtitle: `${pendingServices} pending • Avg: $${averageJobValue.toFixed(0)}`,
       icon: Calendar,
       color: 'red'
     }

@@ -1,9 +1,10 @@
 import React, { useMemo, useState, useRef } from 'react';
 import RevenueChart from '../components/MaintenanceChart';
-import { FileText, Download, TrendingUp, DollarSign, Users, Calendar, BarChart3, ChevronLeft, ChevronRight, Printer, Eye } from 'lucide-react';
+import { FileText, Download, TrendingUp, DollarSign, Users, Calendar, BarChart3, ChevronLeft, ChevronRight, Printer, Eye, Truck } from 'lucide-react';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { useReactToPrint } from 'react-to-print';
+import { companyInfo } from '../config/company';
 
 const Reports = ({ projects }) => {
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,31 +80,51 @@ const Reports = ({ projects }) => {
     let yPosition = margin;
 
     // Header with brand colors
-    pdf.setFillColor(30, 41, 59); // slate-800
-    pdf.rect(0, 0, pageWidth, 40, 'F');
+    pdf.setFillColor(30, 41, 59);
+    pdf.rect(0, 0, pageWidth, 50, 'F');
     
-    // Logo area
-    pdf.setFillColor(59, 130, 246); // blue-500
-    pdf.roundedRect(margin, 10, 12, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
-    pdf.text('PX', margin + 4, 18);
+    // Truck logo box
+    pdf.setFillColor(59, 130, 246);
+    pdf.roundedRect(margin, 10, 18, 18, 2, 2, 'F');
+    
+    // Draw truck icon
+    pdf.setFillColor(255, 255, 255);
+    // Truck body
+    pdf.rect(margin + 3, 16, 8, 6, 'F');
+    // Cabin
+    pdf.triangle(margin + 11, 16, margin + 15, 16, margin + 15, 22, 'F');
+    // Wheels
+    pdf.setFillColor(30, 41, 59);
+    pdf.circle(margin + 5, 23, 1.5, 'F');
+    pdf.circle(margin + 9, 23, 1.5, 'F');
+    pdf.circle(margin + 13, 23, 1.5, 'F');
     
     // Company name
-    pdf.setFontSize(20);
+    pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Pexsteel Workshop', margin + 20, 18);
+    pdf.text(companyInfo.name, margin + 20, 16);
     
-    pdf.setFontSize(12);
+    pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Performance Report', margin + 20, 26);
+    pdf.text(companyInfo.tagline, margin + 20, 22);
+    
+    // Contact info
+    pdf.setFontSize(8);
+    pdf.text(`📞 ${companyInfo.contact.phone} | 📧 ${companyInfo.contact.email}`, margin + 20, 28);
+    pdf.text(`📍 ${companyInfo.contact.location}`, margin + 20, 33);
+    
+    // Report title
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('PERFORMANCE REPORT', margin + 20, 42);
     
     // Date
-    pdf.setFontSize(10);
-    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - margin - 40, 18);
-    pdf.text(`Document ID: RPT-${Date.now()}`, pageWidth - margin - 40, 26);
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - margin - 45, 16);
+    pdf.text(`Document ID: RPT-${Date.now()}`, pageWidth - margin - 45, 22);
     
-    yPosition = 55;
+    yPosition = 60;
     
     // Executive Summary
     pdf.setTextColor(0, 0, 0);
@@ -246,8 +267,8 @@ const Reports = ({ projects }) => {
       pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
       
       pdf.setTextColor(255, 255, 255);
-      pdf.setFontSize(8);
-      pdf.text('Confidential - Pexsteel Workshop Management System', margin, pageHeight - 8);
+      pdf.setFontSize(7);
+      pdf.text(`${companyInfo.name} | ${companyInfo.contact.phone} | ${companyInfo.contact.email}`, margin, pageHeight - 8);
       pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 8);
     }
     
@@ -256,7 +277,12 @@ const Reports = ({ projects }) => {
 
   const exportToCSV = () => {
     const reportData = [
-      ['Pexsteel Workshop - Performance Report'],
+      [companyInfo.name],
+      [companyInfo.tagline],
+      [`Phone: ${companyInfo.contact.phone} | Email: ${companyInfo.contact.email}`],
+      [`Location: ${companyInfo.contact.location}`],
+      [''],
+      ['PERFORMANCE REPORT'],
       ['Generated on:', new Date().toLocaleDateString()],
       [''],
       ['FINANCIAL SUMMARY'],
@@ -331,22 +357,25 @@ const Reports = ({ projects }) => {
         {/* Document Content */}
         <div ref={reportRef} className="max-w-4xl mx-auto bg-white shadow-lg print:shadow-none print:max-w-none">
           {/* Document Header */}
-          <div className="px-8 py-6 border-b border-gray-200">
+          <div className="px-8 py-8 bg-gradient-to-r from-slate-800 to-slate-700 text-white">
             <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Pexsteel Workshop</h1>
-                <h2 className="text-xl text-gray-700 mb-4">Performance Report</h2>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>Report Period: {new Date().toLocaleDateString()}</p>
-                  <p>Generated: {new Date().toLocaleString()}</p>
-                  <p>Total Projects: {projects.length}</p>
+              <div className="flex-1">
+                <div className="bg-white rounded-lg p-4 inline-block mb-2">
+                  <img src="/company-logo.svg" alt="PEX STEEL & FABRICATION LIMITED" className="h-24" />
+                </div>
+                <div className="text-xs text-slate-300 space-y-1">
+                  <p>📞 {companyInfo.contact.phone} | 📧 {companyInfo.contact.email}</p>
+                  <p>📍 {companyInfo.contact.location}</p>
                 </div>
               </div>
               <div className="text-right">
-                <div className="w-16 h-16 bg-blue-600 rounded-lg flex items-center justify-center mb-2">
-                  <BarChart3 className="w-8 h-8 text-white" />
+                <h2 className="text-xl font-bold mb-2">PERFORMANCE REPORT</h2>
+                <div className="text-xs text-slate-300 space-y-1">
+                  <p>Generated: {new Date().toLocaleDateString()}</p>
+                  <p>Time: {new Date().toLocaleTimeString()}</p>
+                  <p>Document ID: RPT-{Date.now()}</p>
+                  <p>Total Projects: {projects.length}</p>
                 </div>
-                <p className="text-xs text-gray-500">Document ID: RPT-{Date.now()}</p>
               </div>
             </div>
           </div>
@@ -543,9 +572,10 @@ const Reports = ({ projects }) => {
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-4 border-t border-gray-200 text-center text-xs text-gray-500">
-            <p>This report is confidential and proprietary to Pexsteel Workshop Management System</p>
-            <p>Generated on {new Date().toLocaleString()} | Page {currentPage} of {totalPages}</p>
+          <div className="px-8 py-4 bg-slate-800 text-white text-center text-xs">
+            <p className="mb-1">{companyInfo.name} - {companyInfo.tagline}</p>
+            <p>📞 {companyInfo.contact.phone} | 📧 {companyInfo.contact.email} | 📍 {companyInfo.contact.location}</p>
+            <p className="mt-2 text-slate-400">Generated on {new Date().toLocaleString()} | Page {currentPage} of {totalPages}</p>
           </div>
         </div>
       </div>

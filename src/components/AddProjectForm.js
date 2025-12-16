@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Plus, Trash2 } from 'lucide-react';
 import { contactsManager } from '../utils/contactsManager';
+import { materialService } from '../services/materialService';
+import { checkAndSeedMaterials } from '../utils/seedMaterials';
 
 const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }) => {
   const generateProjectId = () => {
@@ -46,6 +48,13 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
 
   const [availableMaterials, setAvailableMaterials] = useState([]);
   const [materialsInventory, setMaterialsInventory] = useState([]);
+  const [isAddingCustomMaterial, setIsAddingCustomMaterial] = useState(false);
+  const [customMaterialForm, setCustomMaterialForm] = useState({
+    name: '',
+    unit: 'pcs',
+    price: '',
+    supplier: ''
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -54,22 +63,83 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
         ...prev,
         projectId: generateProjectId()
       }));
-    }
-    
-    const savedMaterials = localStorage.getItem('bodycraft-materials');
-    if (savedMaterials) {
-      const materials = JSON.parse(savedMaterials);
-      setMaterialsInventory(materials);
-      setAvailableMaterials(materials.map(m => m.name));
-    } else {
-      // Fallback to default materials if none exist
-      setAvailableMaterials([
-        'ANGLE LINES', 'CHANNELS', 'PAINT', 'RED OXIDE', 'THINNER',
-        'TUBES', 'FLAT BAR', 'ROUND BAR', 'PIPES', 'GAS',
-        'WHITE SILICON', 'SAND PAPER', 'FILLER'
-      ]);
+      loadMaterials();
     }
   }, [isOpen]);
+
+  const loadMaterials = async () => {
+    try {
+      // Check and seed materials if needed
+      await checkAndSeedMaterials();
+      
+      const response = await materialService.getAll();
+      const materials = response.data.results || response.data || [];
+      setMaterialsInventory(materials);
+      setAvailableMaterials(materials.map(m => m.name));
+      // Update localStorage for offline access
+      localStorage.setItem('bodycraft-materials', JSON.stringify(materials));
+    } catch (error) {
+      console.error('Failed to load materials:', error);
+      // Fallback to localStorage
+      const savedMaterials = localStorage.getItem('bodycraft-materials');
+      if (savedMaterials) {
+        const materials = JSON.parse(savedMaterials);
+        setMaterialsInventory(materials);
+        setAvailableMaterials(materials.map(m => m.name));
+      }
+    }
+  };
+
+  const handleAddCustomMaterial = (materialId) => {
+    setIsAddingCustomMaterial(true);
+    setCustomMaterialForm({ name: '', unit: 'pcs', price: '', supplier: '' });
+  };
+
+  const saveCustomMaterial = async () => {
+    try {
+      const materialData = {
+        name: customMaterialForm.name.trim().toUpperCase(),
+        quantity: 0, // Start with 0 quantity
+        unit: customMaterialForm.unit,
+        price: parseFloat(customMaterialForm.price) || 0,
+        supplier: customMaterialForm.supplier || 'Custom'
+      };
+
+      const response = await materialService.create(materialData);
+      
+      // Reload materials to include the new one
+      await loadMaterials();
+      
+      // Close the form
+      setIsAddingCustomMaterial(false);
+      
+      alert(`Material "${materialData.name}" added successfully!`);
+    } catch (error) {
+      console.error('Failed to add custom material:', error);
+      alert('Failed to add material: ' + (error.response?.data?.message || error.message));
+    }
+  };
+
+  const deductMaterialsFromInventory = async (usedMaterials) => {
+    try {
+      for (const material of usedMaterials) {
+        if (material.name && material.quantity) {
+          const inventoryItem = materialsInventory.find(item => item.name === material.name);
+          if (inventoryItem && inventoryItem.quantity >= parseFloat(material.quantity)) {
+            // Deduct from inventory
+            const newQuantity = inventoryItem.quantity - parseFloat(material.quantity);
+            await materialService.update(inventoryItem.id, {
+              ...inventoryItem,
+              quantity: newQuantity
+            });
+          }
+        }
+      }
+      console.log('✅ Materials deducted from inventory');
+    } catch (error) {
+      console.error('Failed to deduct materials:', error);
+    }
+  };
 
   const addMaterial = () => {
     setMaterials([...materials, { 
@@ -90,15 +160,22 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
       if (m.id === id) {
         const updated = { ...m, [field]: value };
         
-        // Auto-populate when material name is selected
-        if (field === 'name' && value) {
+        // Handle custom material input
+        if (field === 'name' && value === 'CUSTOM_MATERIAL') {
+          handleAddCustomMaterial(id);
+          return m; // Return unchanged until custom material is created
+        } else if (field === 'name' && value) {
+          // Auto-populate when material name is selected
           const inventoryItem = materialsInventory.find(item => item.name === value);
           if (inventoryItem) {
-            updated.quantity = 1; // Default quantity
+            updated.quantity = 1;
             updated.price = inventoryItem.price;
             updated.unit = inventoryItem.unit;
             updated.availableQuantity = inventoryItem.quantity;
             updated.total = 1 * inventoryItem.price;
+            updated.isCustom = false;
+          } else {
+            updated.isCustom = true;
           }
         } else if (field === 'quantity' || field === 'price') {
           updated.total = (parseFloat(updated.quantity) || 0) * (parseFloat(updated.price) || 0);
@@ -174,6 +251,9 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
       deliveredDate: null,
       deliveredTime: null
     };
+    
+    // Deduct materials from inventory when project is created
+    await deductMaterialsFromInventory(materials.filter(m => m.name.trim()));
     
     onAddProject(newProject);
     // Reset form to initial state
@@ -323,16 +403,24 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
                   {/* Material Name - Full width on mobile */}
                   <div className="sm:col-span-4">
                     <label className="block text-xs font-medium text-slate-600 mb-1 sm:hidden">Material</label>
-                    <select
-                      value={material.name}
-                      onChange={(e) => updateMaterial(material.id, 'name', e.target.value)}
-                      className="w-full px-3 py-2.5 sm:px-2 sm:py-1 text-base sm:text-sm border border-slate-300 rounded-lg sm:rounded focus:ring-2 sm:focus:ring-1 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
-                    >
-                      <option value="">Select Material</option>
-                      {availableMaterials.map(mat => (
-                        <option key={mat} value={mat}>{mat}</option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        value={material.name}
+                        onChange={(e) => updateMaterial(material.id, 'name', e.target.value)}
+                        className="w-full px-3 py-2.5 sm:px-2 sm:py-1 text-base sm:text-sm border border-slate-300 rounded-lg sm:rounded focus:ring-2 sm:focus:ring-1 focus:ring-blue-500 focus:border-blue-500 touch-manipulation"
+                      >
+                        <option value="">Select Material</option>
+                        <optgroup label="Available Materials">
+                          {availableMaterials.map(mat => (
+                            <option key={mat} value={mat}>{mat}</option>
+                          ))}
+                        </optgroup>
+
+                        <optgroup label="Add New">
+                          <option value="CUSTOM_MATERIAL">+ Add Custom Material</option>
+                        </optgroup>
+                      </select>
+                    </div>
                   </div>
                   
                   {/* Quantity */}
@@ -362,7 +450,11 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
                     {/* Inventory Status */}
                     {material.name && (
                       <div className="mt-1">
-                        {material.quantity ? (
+                        {material.isCustom ? (
+                          <div className="text-xs text-blue-600">
+                            Custom Material - Set quantity manually
+                          </div>
+                        ) : material.quantity ? (
                           <div className={`text-xs ${
                             checkInventoryAvailability(material.name, material.quantity).available
                               ? 'text-green-600'
@@ -454,6 +546,97 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
           </div>
         </form>
       </div>
+
+      {/* Custom Material Modal */}
+      {isAddingCustomMaterial && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-60 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h3 className="text-lg font-semibold text-slate-900">Add New Material</h3>
+              <button 
+                onClick={() => setIsAddingCustomMaterial(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Material Name</label>
+                <input
+                  type="text"
+                  required
+                  value={customMaterialForm.name}
+                  onChange={(e) => setCustomMaterialForm({...customMaterialForm, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., CUSTOM STEEL PLATE"
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
+                  <select
+                    value={customMaterialForm.unit}
+                    onChange={(e) => setCustomMaterialForm({...customMaterialForm, unit: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="pcs">Pieces</option>
+                    <option value="kg">Kilograms</option>
+                    <option value="m">Meters</option>
+                    <option value="m2">Square Meters</option>
+                    <option value="l">Liters</option>
+                    <option value="box">Box</option>
+                    <option value="roll">Roll</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Unit Price ($)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={customMaterialForm.price}
+                    onChange={(e) => setCustomMaterialForm({...customMaterialForm, price: e.target.value})}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Supplier (Optional)</label>
+                <input
+                  type="text"
+                  value={customMaterialForm.supplier}
+                  onChange={(e) => setCustomMaterialForm({...customMaterialForm, supplier: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Supplier name"
+                />
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCustomMaterial(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={saveCustomMaterial}
+                  disabled={!customMaterialForm.name.trim()}
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-300 transition-colors"
+                >
+                  Add Material
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

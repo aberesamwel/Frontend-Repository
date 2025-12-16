@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Package, AlertTriangle, TrendingUp, Search, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Package, AlertTriangle, TrendingUp, Search, Edit2, Trash2, X, Download } from 'lucide-react';
 import { ActivityLogger } from '../utils/activityLogger';
 import { materialService } from '../services/materialService';
+import { seedDefaultMaterials } from '../utils/seedMaterials';
 
 const Materials = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,17 +29,25 @@ const Materials = () => {
   const loadMaterials = async () => {
     try {
       setLoading(true);
+      console.log('🔄 Loading materials from API...');
       const response = await materialService.getAll();
       const materialsData = response.data.results || response.data || [];
+      console.log('✅ Materials loaded:', materialsData.length, 'items');
+      console.log('📋 Materials data:', materialsData);
       setMaterials(materialsData);
       // Also save to localStorage for backward compatibility
       localStorage.setItem('bodycraft-materials', JSON.stringify(materialsData));
     } catch (error) {
-      console.error('Error loading materials:', error);
+      console.error('❌ Error loading materials:', error);
+      console.log('🔄 Trying localStorage fallback...');
       // Fallback to localStorage if API fails
       const saved = localStorage.getItem('bodycraft-materials');
       if (saved) {
-        setMaterials(JSON.parse(saved));
+        const localMaterials = JSON.parse(saved);
+        console.log('✅ Loaded from localStorage:', localMaterials.length, 'items');
+        setMaterials(localMaterials);
+      } else {
+        console.log('❌ No materials in localStorage either');
       }
     } finally {
       setLoading(false);
@@ -47,36 +56,49 @@ const Materials = () => {
 
   const addMaterial = async (e) => {
     e.preventDefault();
+    
+    const quantity = parseFloat(newMaterial.quantity) || 0;
+    const newMat = {
+      id: Date.now(),
+      name: newMaterial.name.trim().toUpperCase(),
+      quantity: quantity,
+      unit: newMaterial.unit,
+      price: parseFloat(newMaterial.price) || 0,
+      supplier: newMaterial.supplier?.trim() || 'Unknown',
+      status: quantity > 25 ? 'in_stock' : quantity > 10 ? 'low_stock' : 'critical',
+      min_stock: 10,
+      critical_stock: 5,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    // Optimistic update - add to UI immediately
+    const updatedMaterials = [...materials, newMat];
+    setMaterials(updatedMaterials);
+    localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
+    
+    // Close form and reset
+    setNewMaterial({ name: '', quantity: '', unit: '', price: '', supplier: '' });
+    setIsAddFormOpen(false);
+    
+    // Try to sync with API in background
     try {
-      const quantity = parseFloat(newMaterial.quantity) || 0;
-      const materialData = {
-        name: newMaterial.name,
-        quantity: quantity,
-        unit: newMaterial.unit,
-        price: parseFloat(newMaterial.price),
-        supplier: newMaterial.supplier || ''
-      };
-      
-      const response = await materialService.create(materialData);
-      setMaterials([...materials, response.data]);
-      
-      // Update localStorage
-      const updatedMaterials = [...materials, response.data];
-      localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
-      
-      setNewMaterial({ name: '', quantity: '', unit: '', price: '', supplier: '' });
-      setIsAddFormOpen(false);
-      
-      // Log material addition activity
-      ActivityLogger.addActivity(
-        'material',
-        `New material added: ${response.data.name} (${quantity} ${response.data.unit}) from ${response.data.supplier}`,
-        'info'
-      );
+      console.log('📤 Syncing with API...');
+      const response = await materialService.create(newMat);
+      // Update with server response if successful
+      const serverMaterials = materials.map(m => m.id === newMat.id ? response.data : m).concat(response.data.id !== newMat.id ? [response.data] : []);
+      setMaterials(serverMaterials);
+      localStorage.setItem('bodycraft-materials', JSON.stringify(serverMaterials));
+      console.log('✅ API sync successful');
     } catch (error) {
-      console.error('Error adding material:', error);
-      alert('Failed to add material: ' + (error.response?.data?.message || error.message));
+      console.log('📦 API sync failed, keeping local version');
     }
+    
+    ActivityLogger.addActivity(
+      'material',
+      `New material added: ${newMat.name} (${quantity} ${newMat.unit})`,
+      'info'
+    );
   };
 
   const deleteMaterial = async (id) => {
@@ -105,9 +127,13 @@ const Materials = () => {
   };
 
   const filteredMaterials = materials.filter(material =>
-    material.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    material.supplier.toLowerCase().includes(searchTerm.toLowerCase())
+    material.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    material.supplier?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  console.log('🔍 Current materials state:', materials);
+  console.log('🔍 Filtered materials:', filteredMaterials);
+  console.log('🔍 Loading state:', loading);
 
   const getStatusColor = (status) => {
     const statusLower = (status || '').toLowerCase().replace(' ', '_');
@@ -148,6 +174,42 @@ const Materials = () => {
 
   const getLowStockCount = () => {
     return materials.filter(m => m.status === 'low_stock' || m.status === 'critical').length;
+  };
+
+  const handleSeedMaterials = async () => {
+    try {
+      setLoading(true);
+      console.log('🌱 Seeding materials...');
+      const result = await seedDefaultMaterials();
+      if (result.success) {
+        console.log('✅ Seeding successful:', result.message);
+        alert(result.message);
+        await loadMaterials();
+      } else {
+        console.log('❌ Seeding failed:', result.message);
+        // If API fails, create materials in localStorage as fallback
+        const defaultMaterials = [
+          { id: 1, name: 'ANGLE LINES', unit: 'pcs', price: 15.50, supplier: 'Steel Supply Co', quantity: 100, status: 'in_stock', min_stock: 10, critical_stock: 5 },
+          { id: 2, name: 'CHANNELS', unit: 'pcs', price: 25.00, supplier: 'Steel Supply Co', quantity: 50, status: 'in_stock', min_stock: 10, critical_stock: 5 },
+          { id: 3, name: 'PAINT', unit: 'l', price: 45.00, supplier: 'Paint World', quantity: 20, status: 'in_stock', min_stock: 5, critical_stock: 2 },
+          { id: 4, name: 'RED OXIDE', unit: 'l', price: 35.00, supplier: 'Paint World', quantity: 15, status: 'in_stock', min_stock: 5, critical_stock: 2 },
+          { id: 5, name: 'THINNER', unit: 'l', price: 12.00, supplier: 'Paint World', quantity: 25, status: 'in_stock', min_stock: 5, critical_stock: 2 },
+          { id: 6, name: 'TUBES', unit: 'pcs', price: 18.75, supplier: 'Steel Supply Co', quantity: 80, status: 'in_stock', min_stock: 15, critical_stock: 5 },
+          { id: 7, name: 'FLAT BAR', unit: 'pcs', price: 22.50, supplier: 'Steel Supply Co', quantity: 60, status: 'in_stock', min_stock: 10, critical_stock: 5 },
+          { id: 8, name: 'ROUND BAR', unit: 'pcs', price: 20.00, supplier: 'Steel Supply Co', quantity: 40, status: 'in_stock', min_stock: 10, critical_stock: 5 },
+          { id: 9, name: 'PIPES', unit: 'pcs', price: 30.00, supplier: 'Steel Supply Co', quantity: 35, status: 'in_stock', min_stock: 10, critical_stock: 5 },
+          { id: 10, name: 'GAS', unit: 'kg', price: 8.50, supplier: 'Gas Depot', quantity: 200, status: 'in_stock', min_stock: 50, critical_stock: 20 }
+        ];
+        localStorage.setItem('bodycraft-materials', JSON.stringify(defaultMaterials));
+        setMaterials(defaultMaterials);
+        alert('Materials loaded locally (API unavailable)');
+      }
+    } catch (error) {
+      console.error('❌ Error seeding materials:', error);
+      alert('Failed to load default materials');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -226,8 +288,35 @@ const Materials = () => {
 
       {/* Materials Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-slate-500">Loading materials...</div>
+          </div>
+        ) : materials.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Package className="w-12 h-12 text-slate-400 mb-4" />
+            <h3 className="text-lg font-medium text-slate-900 mb-2">No Materials Found</h3>
+            <p className="text-slate-500 mb-4">Get started by loading default materials or adding your own.</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleSeedMaterials}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Load Default Materials
+              </button>
+              <button
+                onClick={() => setIsAddFormOpen(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Material
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Material</th>
@@ -244,7 +333,7 @@ const Materials = () => {
                 <tr key={material.id} className="hover:bg-slate-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="font-medium text-slate-900">{material.name}</div>
-                    <div className="text-sm text-slate-500">Updated: {material.lastUpdated}</div>
+                    <div className="text-sm text-slate-500">Updated: {material.updated_at ? new Date(material.updated_at).toLocaleDateString() : 'N/A'}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-slate-900">{material.quantity} {material.unit}</div>
@@ -282,8 +371,9 @@ const Materials = () => {
                 </tr>
               ))}
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Add Material Modal */}
