@@ -46,20 +46,32 @@ const MetalWorks = () => {
     loadServices();
   }, []);
 
+  // Debug: Log services data
+  useEffect(() => {
+    console.log('MetalWorks services:', services);
+    console.log('Services length:', services.length);
+  }, [services]);
+
   const loadServices = async () => {
     try {
       setLoading(true);
       const response = await metalWorksService.getAll();
       const apiServices = response.data.results || response.data || [];
-      setServices(apiServices);
+      if (apiServices.length > 0) {
+        setServices(apiServices);
+      } else {
+        throw new Error('No API data available');
+      }
     } catch (error) {
       console.error('Error loading services from API:', error);
       // Seed sample data if none exists
       seedMetalWorksServices();
-      // Fallback to localStorage
+      // Load from localStorage
       const saved = localStorage.getItem('metalworks-services');
       if (saved) {
-        setServices(JSON.parse(saved));
+        const localServices = JSON.parse(saved);
+        console.log('Loaded from localStorage:', localServices);
+        setServices(localServices);
       }
     } finally {
       setLoading(false);
@@ -598,6 +610,16 @@ const MetalWorks = () => {
         </div>
         
         <div className="flex space-x-3">
+          <button 
+            onClick={() => {
+              seedMetalWorksServices(true);
+              loadServices();
+            }}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            Load Sample Data
+          </button>
           <button 
             onClick={generatePDFReport}
             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium flex items-center transition-colors"

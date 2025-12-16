@@ -94,10 +94,12 @@ export const sampleMetalWorksServices = [
   }
 ];
 
-export const seedMetalWorksServices = () => {
+export const seedMetalWorksServices = (force = false) => {
   const existing = localStorage.getItem('metalworks-services');
-  if (!existing) {
+  if (!existing || force) {
     localStorage.setItem('metalworks-services', JSON.stringify(sampleMetalWorksServices));
     console.log('Seeded metal works services with sample data');
+    return true;
   }
+  return false;
 };
