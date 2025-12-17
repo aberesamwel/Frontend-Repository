@@ -48,14 +48,17 @@ const MetalWorks = () => {
 
 
 
-  const loadServices = async () => {
+  const loadServices = () => {
     try {
       setLoading(true);
-      const response = await metalWorksService.getAll();
-      const apiServices = response.data.results || response.data || [];
-      setServices(apiServices);
+      const saved = localStorage.getItem('metalworks-services');
+      if (saved) {
+        setServices(JSON.parse(saved));
+      } else {
+        setServices([]);
+      }
     } catch (error) {
-      console.error('Error loading services from API:', error);
+      console.error('Error loading services from localStorage:', error);
       setServices([]);
     } finally {
       setLoading(false);
@@ -153,21 +156,29 @@ const MetalWorks = () => {
     const totalAmount = serviceData.totalAmount || 0;
     const amountPaid = parseFloat(serviceData.amountPaid) || 0;
     
-    const servicePayload = {
-      service_type: serviceData.serviceType || 'cutting',
-      description: `${serviceData.serviceType || 'cutting'} service`,
-      customer_name: serviceData.customerName,
+    const newService = {
+      id: Date.now(),
+      ticketId: `MW-${Date.now()}`,
+      customerName: serviceData.customerName,
       phone: serviceData.phone,
-      status: 'pending',
+      serviceType: serviceData.serviceType || 'cutting',
+      material: serviceData.material || '',
       priority: serviceData.priority || 'standard',
-      total_cost: totalAmount,
-      notes: serviceData.notes || ''
+      totalAmount: totalAmount,
+      amountPaid: amountPaid,
+      paymentStatus: amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial',
+      paymentMethod: serviceData.paymentMethod || null,
+      status: 'pending',
+      dropOffTime: new Date().toISOString(),
+      items: serviceData.items || [],
+      quantity: serviceData.quantity || 0
     };
     
     try {
-      await metalWorksService.create(servicePayload);
-      // Reload services from backend
-      await loadServices();
+      // Save to localStorage
+      const updatedServices = [...services, newService];
+      setServices(updatedServices);
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
       
       // Save contact
       contactsManager.saveContact(serviceData.customerName, serviceData.phone, 'metalworks');
@@ -199,11 +210,22 @@ const MetalWorks = () => {
    * Updates service work status (pending → in_progress → completed → picked_up)
    * Records completion and pickup events in analytics system
    */
-  const handleStatusUpdate = async (serviceId, newStatus) => {
+  const handleStatusUpdate = (serviceId, newStatus) => {
     try {
-      await metalWorksService.update(serviceId, { status: newStatus });
-      // Reload services from backend
-      await loadServices();
+      const updatedServices = services.map(service => {
+        if (service.id === serviceId) {
+          const updatedService = { ...service, status: newStatus };
+          if (newStatus === 'completed') {
+            updatedService.completedTime = new Date().toISOString();
+          } else if (newStatus === 'picked_up') {
+            updatedService.pickupTime = new Date().toISOString();
+          }
+          return updatedService;
+        }
+        return service;
+      });
+      setServices(updatedServices);
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
     } catch (error) {
       console.error('Error updating service status:', error);
       alert('Failed to update status. Please try again.');
@@ -215,15 +237,24 @@ const MetalWorks = () => {
    * Calculates payment status (unpaid/partial/paid)
    * Records payment events in analytics for business intelligence
    */
-  const handlePaymentUpdate = async (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
+  const handlePaymentUpdate = (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
     try {
-      const updateData = { payment_status: paymentStatus };
-      if (customAmount !== null) updateData.amount_paid = parseFloat(customAmount) || 0;
-      if (paymentMethod) updateData.payment_method = paymentMethod;
-      
-      await metalWorksService.update(serviceId, updateData);
-      // Reload services from backend
-      await loadServices();
+      const updatedServices = services.map(service => {
+        if (service.id === serviceId) {
+          const updatedService = { ...service };
+          if (customAmount !== null) {
+            updatedService.amountPaid = parseFloat(customAmount) || 0;
+          }
+          if (paymentMethod) {
+            updatedService.paymentMethod = paymentMethod;
+          }
+          updatedService.paymentStatus = paymentStatus;
+          return updatedService;
+        }
+        return service;
+      });
+      setServices(updatedServices);
+      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
     } catch (error) {
       console.error('Error updating payment:', error);
       alert('Failed to update payment. Please try again.');
