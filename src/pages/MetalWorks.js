@@ -117,7 +117,7 @@ const MetalWorks = () => {
   };
 
   const filteredServices = services.filter(service => {
-    const customerName = service.customer_name || service.customerName || '';
+    const customerName = service.client_name || service.customer_name || service.customerName || '';
     const ticketId = service.ticket_id || service.ticketId || '';
     const phone = service.phone || '';
     const serviceType = service.service_type || service.serviceType || '';
@@ -262,7 +262,7 @@ const MetalWorks = () => {
     
     // Daily Sales
     const todayServices = services.filter(s => {
-      const dateStr = s.created_at || s.dropOffTime;
+      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
       return dateStr && new Date(dateStr).toDateString() === today;
     });
     const dailySales = todayServices.reduce((sum, s) => {
@@ -276,7 +276,7 @@ const MetalWorks = () => {
     
     // Monthly Sales
     const thisMonthServices = services.filter(s => {
-      const dateStr = s.created_at || s.dropOffTime;
+      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
       if (!dateStr) return false;
       const serviceDate = new Date(dateStr);
       return serviceDate.getMonth() === thisMonth && serviceDate.getFullYear() === thisYear;
@@ -292,7 +292,7 @@ const MetalWorks = () => {
     
     // Yearly Sales
     const thisYearServices = services.filter(s => {
-      const dateStr = s.created_at || s.dropOffTime;
+      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
       if (!dateStr) return false;
       const serviceDate = new Date(dateStr);
       return serviceDate.getFullYear() === thisYear;
