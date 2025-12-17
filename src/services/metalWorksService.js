@@ -2,17 +2,17 @@ import api from './api';
 
 export const metalWorksService = {
   // Get all metal works services
-  getAll: () => api.get('/metalworks/'),
+  getAll: () => api.get('/services/'),
   
   // Create new metal works service
-  create: (serviceData) => api.post('/metalworks/', serviceData),
+  create: (serviceData) => api.post('/services/', serviceData),
   
   // Update existing service
-  update: (id, serviceData) => api.put(`/metalworks/${id}/`, serviceData),
+  update: (id, serviceData) => api.put(`/services/${id}/`, serviceData),
   
   // Delete service
-  delete: (id) => api.delete(`/metalworks/${id}/`),
+  delete: (id) => api.delete(`/services/${id}/`),
   
   // Get service by ID
-  getById: (id) => api.get(`/metalworks/${id}/`)
+  getById: (id) => api.get(`/services/${id}/`)
 };
