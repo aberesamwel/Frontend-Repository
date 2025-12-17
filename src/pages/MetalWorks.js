@@ -153,14 +153,37 @@ const MetalWorks = () => {
     const totalAmount = serviceData.totalAmount || 0;
     const amountPaid = parseFloat(serviceData.amountPaid) || 0;
     
+    // First create or find client
+    let clientId = null;
+    try {
+      const clientResponse = await fetch('/api/clients/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: serviceData.customerName,
+          phone: serviceData.phone,
+          service_type: 'metalworks'
+        })
+      });
+      if (clientResponse.ok) {
+        const client = await clientResponse.json();
+        clientId = client.id;
+      }
+    } catch (error) {
+      console.error('Error creating client:', error);
+    }
+    
     const servicePayload = {
-      client_name: serviceData.customerName,
-      phone: serviceData.phone,
+      client: clientId,
       priority: serviceData.priority || 'standard',
-      total_amount: totalAmount,
       amount_paid: amountPaid,
       payment_method: serviceData.paymentMethod || null,
-      items: serviceData.items || [],
+      items: serviceData.items || [{
+        service_type: 'cutting',
+        material: 'Steel',
+        quantity: 1,
+        unit_price: totalAmount
+      }],
       notes: serviceData.notes || ''
     };
     
