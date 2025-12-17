@@ -46,11 +46,7 @@ const MetalWorks = () => {
     loadServices();
   }, []);
 
-  // Debug: Log services data
-  useEffect(() => {
-    console.log('MetalWorks services:', services);
-    console.log('Services length:', services.length);
-  }, [services]);
+
 
   const loadServices = async () => {
     try {
