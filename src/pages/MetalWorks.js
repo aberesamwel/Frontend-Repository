@@ -56,12 +56,7 @@ const MetalWorks = () => {
       setServices(apiServices);
     } catch (error) {
       console.error('Error loading services from API:', error);
-      // Load from localStorage as fallback
-      const saved = localStorage.getItem('metalworks-services');
-      if (saved) {
-        const localServices = JSON.parse(saved);
-        setServices(localServices);
-      }
+      setServices([]);
     } finally {
       setLoading(false);
     }
@@ -157,61 +152,47 @@ const MetalWorks = () => {
     
     const totalAmount = serviceData.totalAmount || 0;
     const amountPaid = parseFloat(serviceData.amountPaid) || 0;
-    const paymentStatus = amountPaid === 0 ? 'unpaid' : amountPaid >= totalAmount ? 'paid' : 'partial';
     
-    const optimisticService = {
-      id: Date.now(),
-      ticket_id: `MW-${Date.now()}`,
-      customer_name: serviceData.customerName,
+    const servicePayload = {
+      client_name: serviceData.customerName,
       phone: serviceData.phone,
-      service_type: serviceData.serviceType || 'cutting',
-      material: serviceData.material || '',
       priority: serviceData.priority || 'standard',
       total_amount: totalAmount,
       amount_paid: amountPaid,
-      payment_status: paymentStatus,
       payment_method: serviceData.paymentMethod || null,
-      status: 'pending',
-      created_at: new Date().toISOString(),
       items: serviceData.items || [],
-      quantity: serviceData.quantity || 0
+      notes: serviceData.notes || ''
     };
     
-    // Optimistic update
-    setServices([...services, optimisticService]);
-    setShowServiceModal(false);
-    
     try {
-      const response = await serviceService.create(optimisticService);
-      // Replace optimistic service with server response
-      setServices(prev => prev.map(s => s.id === optimisticService.id ? response.data : s));
+      await serviceService.create(servicePayload);
+      // Reload services from backend
+      await loadServices();
       
       // Save contact
       contactsManager.saveContact(serviceData.customerName, serviceData.phone, 'metalworks');
+      
+      setShowServiceModal(false);
+      
+      // Reset form
+      setNewService({
+        customerName: '',
+        phone: '',
+        serviceType: 'cutting',
+        material: '',
+        gauge: '',
+        dimensions: '',
+        specifications: '',
+        quantity: 1,
+        unitPrice: 0,
+        amountPaid: 0,
+        paymentMethod: '',
+        priority: 'standard'
+      });
     } catch (error) {
       console.error('Error creating service:', error);
-      // Keep optimistic service and save to localStorage as backup
-      const updatedServices = [...services, optimisticService];
-      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+      alert('Failed to create service. Please try again.');
     }
-    
-    // Reset form
-    setNewService({
-      customerName: '',
-      phone: '',
-      serviceType: 'cutting',
-      material: '',
-      gauge: '',
-      dimensions: '',
-      specifications: '',
-      quantity: 1,
-      unitPrice: 0,
-      amountPaid: 0,
-      paymentMethod: '',
-      priority: 'standard'
-    });
-    
-    setShowServiceModal(false);
   };
 
   /**
@@ -219,25 +200,13 @@ const MetalWorks = () => {
    * Records completion and pickup events in analytics system
    */
   const handleStatusUpdate = async (serviceId, newStatus) => {
-    const updatedServices = services.map(service => {
-      if (service.id === serviceId) {
-        const updatedService = { ...service, status: newStatus };
-        if (newStatus === 'completed') {
-          updatedService.completed_at = new Date().toISOString();
-        } else if (newStatus === 'picked_up') {
-          updatedService.delivered_at = new Date().toISOString();
-        }
-        return updatedService;
-      }
-      return service;
-    });
-    setServices(updatedServices);
-    
     try {
       await serviceService.update(serviceId, { status: newStatus });
+      // Reload services from backend
+      await loadServices();
     } catch (error) {
       console.error('Error updating service status:', error);
-      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+      alert('Failed to update status. Please try again.');
     }
   };
 
@@ -247,31 +216,17 @@ const MetalWorks = () => {
    * Records payment events in analytics for business intelligence
    */
   const handlePaymentUpdate = async (serviceId, paymentStatus, customAmount = null, paymentMethod = null) => {
-    const updatedServices = services.map(service => {
-      if (service.id === serviceId) {
-        const updatedService = { ...service };
-        if (customAmount !== null) {
-          updatedService.amount_paid = parseFloat(customAmount) || 0;
-        }
-        if (paymentMethod) {
-          updatedService.payment_method = paymentMethod;
-        }
-        updatedService.payment_status = paymentStatus;
-        return updatedService;
-      }
-      return service;
-    });
-    setServices(updatedServices);
-    
     try {
       const updateData = { payment_status: paymentStatus };
       if (customAmount !== null) updateData.amount_paid = parseFloat(customAmount) || 0;
       if (paymentMethod) updateData.payment_method = paymentMethod;
       
       await serviceService.update(serviceId, updateData);
+      // Reload services from backend
+      await loadServices();
     } catch (error) {
       console.error('Error updating payment:', error);
-      localStorage.setItem('metalworks-services', JSON.stringify(updatedServices));
+      alert('Failed to update payment. Please try again.');
     }
   };
 
