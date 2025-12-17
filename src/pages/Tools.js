@@ -400,13 +400,11 @@ const Tools = () => {
       const toolData = {
         name: addToolForm.name,
         category: addToolForm.category,
-        serial_number: addToolForm.serialNumber,
+        serialNumber: addToolForm.serialNumber,
         status: 'available',
         condition: addToolForm.condition,
-        quantity: quantity,
-        tool_group: quantity > 1 ? addToolForm.serialNumber : null,
         location: 'Tool Room',
-        notes: addToolForm.notes
+        notes: addToolForm.notes || ''
       };
       
       const response = await toolService.create(toolData);
