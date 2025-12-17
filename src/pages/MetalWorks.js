@@ -28,7 +28,7 @@ import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
-import { serviceService } from '../services/serviceService';
+import { metalWorksService } from '../services/metalWorksService';
 
 
 const MetalWorks = () => {
@@ -51,7 +51,7 @@ const MetalWorks = () => {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const response = await serviceService.getAll();
+      const response = await metalWorksService.getAll();
       const apiServices = response.data.results || response.data || [];
       setServices(apiServices);
     } catch (error) {
@@ -154,21 +154,18 @@ const MetalWorks = () => {
     const amountPaid = parseFloat(serviceData.amountPaid) || 0;
     
     const servicePayload = {
-      ticket_id: `MW-${Date.now()}`,
+      service_type: serviceData.serviceType || 'cutting',
+      description: `${serviceData.serviceType || 'cutting'} service`,
+      customer_name: serviceData.customerName,
+      phone: serviceData.phone,
+      status: 'pending',
       priority: serviceData.priority || 'standard',
-      amount_paid: amountPaid,
-      payment_method: serviceData.paymentMethod || null,
-      items: serviceData.items && serviceData.items.length > 0 ? serviceData.items : [{
-        service_type: 'cutting',
-        material: serviceData.material || 'Steel',
-        quantity: parseInt(serviceData.quantity) || 1,
-        unit_price: parseFloat(serviceData.unitPrice) || totalAmount
-      }],
+      total_cost: totalAmount,
       notes: serviceData.notes || ''
     };
     
     try {
-      await serviceService.create(servicePayload);
+      await metalWorksService.create(servicePayload);
       // Reload services from backend
       await loadServices();
       
@@ -204,7 +201,7 @@ const MetalWorks = () => {
    */
   const handleStatusUpdate = async (serviceId, newStatus) => {
     try {
-      await serviceService.update(serviceId, { status: newStatus });
+      await metalWorksService.update(serviceId, { status: newStatus });
       // Reload services from backend
       await loadServices();
     } catch (error) {
@@ -224,7 +221,7 @@ const MetalWorks = () => {
       if (customAmount !== null) updateData.amount_paid = parseFloat(customAmount) || 0;
       if (paymentMethod) updateData.payment_method = paymentMethod;
       
-      await serviceService.update(serviceId, updateData);
+      await metalWorksService.update(serviceId, updateData);
       // Reload services from backend
       await loadServices();
     } catch (error) {
