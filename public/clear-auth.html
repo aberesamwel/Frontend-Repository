@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Authentication</title>
+</head>
+<body>
+    <h1>Clearing Authentication...</h1>
+    <script>
+        // Clear all authentication data
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('auth_token');
+        
+        // Clear all localStorage to be safe
+        localStorage.clear();
+        sessionStorage.clear();
+        
+        alert('All authentication data cleared! Close this tab and refresh your app.');
+        
+        // Auto redirect to main app
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 2000);
+    </script>
+</body>
+</html>

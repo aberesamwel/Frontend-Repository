@@ -28,7 +28,7 @@ import { businessAnalytics } from '../utils/timeBasedAnalytics';
 import BusinessCalendar from '../components/analytics/BusinessCalendar';
 import Pagination from '../components/shared/Pagination';
 import { contactsManager } from '../utils/contactsManager';
-import { metalWorksService } from '../services/metalWorksService';
+import { serviceService } from '../services/serviceService';
 
 
 const MetalWorks = () => {
@@ -51,7 +51,7 @@ const MetalWorks = () => {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const response = await metalWorksService.getAll();
+      const response = await serviceService.getAll();
       const apiServices = response.data.results || response.data || [];
       setServices(apiServices);
     } catch (error) {
@@ -180,7 +180,7 @@ const MetalWorks = () => {
     };
     
     try {
-      await metalWorksService.create(servicePayload);
+      await serviceService.create(servicePayload);
       
       // Reload services from backend
       await loadServices();
@@ -218,7 +218,7 @@ const MetalWorks = () => {
    */
   const handleStatusUpdate = async (serviceId, newStatus) => {
     try {
-      await metalWorksService.update(serviceId, { status: newStatus });
+      await serviceService.update(serviceId, { status: newStatus });
       // Reload services from backend
       await loadServices();
     } catch (error) {
@@ -238,7 +238,7 @@ const MetalWorks = () => {
       if (customAmount !== null) updateData.amount_paid = parseFloat(customAmount) || 0;
       if (paymentMethod) updateData.payment_method = paymentMethod;
       
-      await metalWorksService.update(serviceId, updateData);
+      await serviceService.update(serviceId, updateData);
       // Reload services from backend
       await loadServices();
     } catch (error) {

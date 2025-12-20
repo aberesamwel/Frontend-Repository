@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast } from 'lucide-react';
+import { Menu, Search, Bell, ChevronDown, Plus, Calendar, Clock, X, AlertCircle, Users, Wrench, Sun, Moon, Contrast, LogOut } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { notificationService } from '../../services/notificationService';
 import { companyInfo } from '../../config/company';
 
 const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profile }) => {
   const { currentTheme, toggleTheme, highContrast, toggleHighContrast, getThemeClass, isDark } = useTheme();
+  const { logout, user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationList, setNotificationList] = useState([]);
@@ -288,15 +290,25 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
           </button>
         </div>
 
+        {/* Logout Button */}
+        <button
+          onClick={logout}
+          className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:text-red-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500`}
+          title="Logout"
+          aria-label="Logout"
+        >
+          <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+        </button>
+
         {/* User Profile */}
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="flex items-center space-x-2 sm:space-x-3 text-right">
             <div className="hidden sm:block text-right">
-              <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>{profile?.name || 'User'}</div>
+              <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>{user?.username || profile?.name || 'User'}</div>
               <div className={`text-xs ${getThemeClass('text', 'muted')}`}>{profile?.role || 'Manager'}</div>
             </div>
             <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm sm:text-base lg:text-lg shadow-lg ring-2 ring-white">
-              {profile?.initials || 'U'}
+              {user?.username?.charAt(0).toUpperCase() || profile?.initials || 'U'}
             </div>
           </div>
         </div>

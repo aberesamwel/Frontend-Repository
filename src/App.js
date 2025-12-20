@@ -41,6 +41,8 @@ import CompanyInfo from './pages/CompanyInfo';
 import { userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 import { businessAnalytics } from './utils/timeBasedAnalytics';
 import { projectService } from './services/projectService';
 import { clientService } from './services/clientService';
@@ -91,7 +93,37 @@ function AppContent() {
     try {
       setLoading(true);
       const response = await projectService.getAll();
-      setProjects(response.data.results || response.data);
+      const projectsData = response.data.results || response.data;
+      
+      // Normalize backend data to frontend format
+      const normalizedProjects = projectsData.map(project => ({
+        id: project.id,
+        projectId: project.projectId || project.project_id,
+        clientName: project.clientName || project.client_name,
+        phone: project.phone,
+        chassisBrand: project.chassisBrand || project.chassis_brand,
+        chassisModel: project.chassisModel || project.chassis_model,
+        bodyType: project.bodyType || project.body_type,
+        vehicleType: project.vehicleType || project.vehicle_type,
+        clientPayment: parseFloat(project.clientPayment || project.client_payment || 0),
+        materialCost: parseFloat(project.materialCost || project.material_cost || 0),
+        laborCost: parseFloat(project.laborCost || project.labor_cost || 0),
+        profit: parseFloat(project.profit || 0),
+        profitMargin: parseFloat(project.profitMargin || project.profit_margin || 0),
+        status: project.status,
+        progress: parseInt(project.progress || 0),
+        startDate: project.startDate || project.start_date,
+        estimatedCompletion: project.estimatedCompletion || project.estimated_completion,
+        completedAt: project.completedAt || project.completed_at,
+        deliveredAt: project.deliveredAt || project.delivered_at,
+        materials: project.materials || [],
+        notes: project.notes || '',
+        amountPaid: parseFloat(project.amountPaid || project.amount_paid || 0),
+        createdAt: project.createdAt || project.created_at,
+        updatedAt: project.updatedAt || project.updated_at
+      }));
+      
+      setProjects(normalizedProjects);
     } catch (error) {
       console.error('Error loading projects:', error);
     } finally {
@@ -324,9 +356,13 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
+      <AuthProvider>
+        <Router>
+          <ProtectedRoute>
+            <AppContent />
+          </ProtectedRoute>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

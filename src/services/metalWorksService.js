@@ -10,6 +10,9 @@ export const metalWorksService = {
   // Update existing service
   update: (id, serviceData) => api.put(`/services/${id}/`, serviceData),
   
+  // Update service status
+  updateStatus: (id, status) => api.patch(`/services/${id}/update_status/`, { status }),
+  
   // Delete service
   delete: (id) => api.delete(`/services/${id}/`),
   

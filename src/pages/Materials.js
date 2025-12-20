@@ -21,7 +21,7 @@ const Materials = () => {
 
   const statusOptions = ['In Stock', 'Low Stock', 'Critical', 'Out of Stock', 'On Order'];
 
-  // Load materials from API
+  // Load materials from API after component mounts
   useEffect(() => {
     loadMaterials();
   }, []);
@@ -101,6 +101,46 @@ const Materials = () => {
     );
   };
 
+  const updateMaterial = async (e) => {
+    e.preventDefault();
+    
+    const quantity = parseFloat(editingMaterial.quantity) || 0;
+    const updatedMat = {
+      ...editingMaterial,
+      quantity: quantity,
+      price: parseFloat(editingMaterial.price) || 0,
+      status: quantity > 25 ? 'in_stock' : quantity > 10 ? 'low_stock' : 'critical',
+      updated_at: new Date().toISOString()
+    };
+    
+    // Optimistic update - update UI immediately
+    const updatedMaterials = materials.map(m => m.id === editingMaterial.id ? updatedMat : m);
+    setMaterials(updatedMaterials);
+    localStorage.setItem('bodycraft-materials', JSON.stringify(updatedMaterials));
+    
+    // Close form and reset
+    setEditingMaterial(null);
+    
+    // Try to sync with API in background
+    try {
+      console.log('📤 Updating material in API...');
+      const response = await materialService.update(editingMaterial.id, updatedMat);
+      // Update with server response if successful
+      const serverMaterials = materials.map(m => m.id === editingMaterial.id ? response.data : m);
+      setMaterials(serverMaterials);
+      localStorage.setItem('bodycraft-materials', JSON.stringify(serverMaterials));
+      console.log('✅ API update successful');
+    } catch (error) {
+      console.log('📦 API update failed, keeping local version');
+    }
+    
+    ActivityLogger.addActivity(
+      'material',
+      `Material updated: ${updatedMat.name} - Quantity: ${quantity} ${updatedMat.unit}, Price: $${updatedMat.price}`,
+      'info'
+    );
+  };
+
   const deleteMaterial = async (id) => {
     try {
       const material = materials.find(m => m.id === id);
@@ -152,14 +192,13 @@ const Materials = () => {
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   };
 
-  // Refresh materials periodically from API
-  useEffect(() => {
-    const interval = setInterval(() => {
-      loadMaterials();
-    }, 30000); // Refresh every 30 seconds
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Refresh materials periodically from API (disabled for now)
+  // useEffect(() => {
+  //   const interval = setInterval(() => {
+  //     loadMaterials();
+  //   }, 30000);
+  //   return () => clearInterval(interval);
+  // }, []);
 
   const calculateStatus = (quantity) => {
     if (quantity === 0) return 'Out of Stock';
@@ -474,6 +513,103 @@ const Materials = () => {
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Material
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Material Modal */}
+      {editingMaterial && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900">Edit Material</h2>
+              <button onClick={() => setEditingMaterial(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={updateMaterial} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Material Name</label>
+                <input
+                  type="text"
+                  value={editingMaterial.name}
+                  disabled
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Material name cannot be changed</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+                <input
+                  type="number"
+                  required
+                  value={editingMaterial.quantity}
+                  onChange={(e) => setEditingMaterial({...editingMaterial, quantity: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="100"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Unit</label>
+                <input
+                  type="text"
+                  value={editingMaterial.unit}
+                  disabled
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Unit cannot be changed</p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Unit Price ($)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  required
+                  value={editingMaterial.price}
+                  onChange={(e) => setEditingMaterial({...editingMaterial, price: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="25.50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Supplier</label>
+                <input
+                  type="text"
+                  value={editingMaterial.supplier}
+                  disabled
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg bg-slate-50 text-slate-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Supplier cannot be changed</p>
+              </div>
+              
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <strong>New Total Value:</strong> ${(parseFloat(editingMaterial.quantity || 0) * parseFloat(editingMaterial.price || 0)).toFixed(2)}
+                </p>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingMaterial(null)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                >
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Update Material
                 </button>
               </div>
             </form>

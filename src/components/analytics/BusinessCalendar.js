@@ -31,7 +31,7 @@ const BusinessCalendar = ({ projects = [] }) => {
 
     // Aggregate project data by date
     projects.forEach(project => {
-      const dateStr = project.createdAt || project.created_at;
+      const dateStr = project.createdAt || project.created_at || project.drop_off_time;
       if (!dateStr) return;
       
       const projectDate = new Date(dateStr);
@@ -40,7 +40,7 @@ const BusinessCalendar = ({ projects = [] }) => {
       const dateKey = projectDate.toISOString().split('T')[0];
       
       if (data[dateKey]) {
-        const payment = parseFloat(project.clientPayment || project.client_payment || 0);
+        const payment = parseFloat(project.clientPayment || project.client_payment || project.total_amount || 0);
         const amountPaid = parseFloat(project.amountPaid || project.amount_paid || 0);
         data[dateKey].totalSales += isNaN(payment) ? 0 : payment;
         data[dateKey].totalPayments += isNaN(amountPaid) ? 0 : amountPaid;

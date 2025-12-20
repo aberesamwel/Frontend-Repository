@@ -69,14 +69,13 @@ const AddProjectForm = ({ isOpen, onClose, onAddProject, existingProjects = [] }
 
   const loadMaterials = async () => {
     try {
-      // Check and seed materials if needed
-      await checkAndSeedMaterials();
+      // Don't auto-seed to avoid auth errors
+      // await checkAndSeedMaterials();
       
       const response = await materialService.getAll();
       const materials = response.data.results || response.data || [];
       setMaterialsInventory(materials);
       setAvailableMaterials(materials.map(m => m.name));
-      // Update localStorage for offline access
       localStorage.setItem('bodycraft-materials', JSON.stringify(materials));
     } catch (error) {
       console.error('Failed to load materials:', error);

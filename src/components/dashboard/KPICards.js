@@ -46,7 +46,7 @@ const KPICards = ({ projects = [] }) => {
     },
     { 
       title: 'Total Sales', 
-      value: totalRevenue >= 1000 ? `$${(totalRevenue/1000).toFixed(1)}K` : `$${totalRevenue.toFixed(0)}`, 
+      value: `$${totalRevenue.toLocaleString()}`, 
       change: '+22.5%', 
       changeType: 'positive', 
       icon: DollarSign,

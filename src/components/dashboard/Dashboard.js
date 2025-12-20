@@ -31,7 +31,7 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
     p.status === 'Quality Check'
   ).length;
   const totalRevenue = projects.reduce((sum, p) => {
-    const payment = parseFloat(p.client_payment || p.clientPayment || 0);
+    const payment = parseFloat(p.clientPayment || p.client_payment || 0);
     return sum + (isNaN(payment) ? 0 : payment);
   }, 0);
   const avgProgress = projects.reduce((sum, p) => {
@@ -101,8 +101,8 @@ const Dashboard = ({ searchTerm, projects, isFormOpen, setIsFormOpen, onAddProje
                       <div key={project.id} className={`p-3 rounded-lg ${getThemeClass('bg', 'tertiary')} border ${getThemeClass('border', 'primary')}`}>
                         <div className="flex justify-between items-center">
                           <div>
-                            <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.project_id || project.projectId}</div>
-                            <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.client_name || project.clientName}</div>
+                            <div className={`font-medium ${getThemeClass('text', 'primary')}`}>{project.projectId || project.project_id}</div>
+                            <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{project.clientName || project.client_name}</div>
                           </div>
                           <div className="text-right">
                             <div className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>{project.progress || 0}%</div>
