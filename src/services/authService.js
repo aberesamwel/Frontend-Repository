@@ -113,7 +113,17 @@ const authService = {
 
   logout: async () => {
     try {
-      // No logout endpoint needed for JWT - just clear tokens
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (refreshToken) {
+        await fetch(`${API_BASE_URL}/auth/logout`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authService.getToken()}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refresh_token: refreshToken }),
+        });
+      }
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
