@@ -83,10 +83,25 @@ const ResetPasswordForm = () => {
           navigate('/');
         }, 3000);
       } else {
-        setError(result.error || 'Password reset failed');
+        // Handle specific error messages from backend
+        let errorMessage = 'Password reset failed';
+        if (result.error) {
+          if (typeof result.error === 'string') {
+            errorMessage = result.error;
+          } else if (result.error.message) {
+            errorMessage = result.error.message;
+          }
+        }
+        setError(errorMessage);
       }
     } catch (error) {
-      setError(error.message || 'Network error occurred');
+      let errorMessage = 'Network error occurred';
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
