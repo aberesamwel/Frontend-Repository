@@ -38,6 +38,7 @@ import Calendar from './pages/Calendar';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import CompanyInfo from './pages/CompanyInfo';
+import ResetPasswordForm from './components/auth/ResetPasswordForm';
 import { userProfile } from './data/mockData';
 import { ActivityLogger } from './utils/activityLogger';
 import { ThemeProvider, useTheme } from './contexts/ThemeContext';
@@ -358,9 +359,16 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
-          <ProtectedRoute>
-            <AppContent />
-          </ProtectedRoute>
+          <Routes>
+            {/* Public route for password reset */}
+            <Route path="/reset-password" element={<ResetPasswordForm />} />
+            {/* Protected routes */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <AppContent />
+              </ProtectedRoute>
+            } />
+          </Routes>
         </Router>
       </AuthProvider>
     </ThemeProvider>
