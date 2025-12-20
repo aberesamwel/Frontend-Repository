@@ -111,10 +111,16 @@ const authService = {
     }
   },
 
+  /**
+   * Enhanced logout function with proper token blacklisting
+   * Calls backend logout endpoint to invalidate refresh tokens
+   * Ensures complete session cleanup for security
+   */
   logout: async () => {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
+        // Call backend logout to blacklist the refresh token
         await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           headers: {
@@ -127,6 +133,7 @@ const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // Always clear local storage regardless of backend call success
       localStorage.removeItem('user');
       localStorage.removeItem('token');
       localStorage.removeItem('refresh_token');

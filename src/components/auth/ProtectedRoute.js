@@ -7,10 +7,15 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading, login } = useAuth();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
+  /**
+   * Handles login with proper state management
+   * Ensures immediate navigation after successful authentication
+   */
   const handleLogin = async (credentials) => {
     const result = await login(credentials);
     if (result.success) {
       // Login successful - component will re-render due to context update
+      // No manual navigation needed, ProtectedRoute will automatically show children
       return result;
     }
     return result;

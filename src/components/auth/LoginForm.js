@@ -28,6 +28,7 @@ const LoginForm = ({ onLogin, onForgotPassword }) => {
         loginData.totp_code = formData.twoFactorCode;
       }
       
+      // Attempt login with credentials
       const result = await authService.login(loginData);
       
       if (result.requiresTwoFactor) {
@@ -35,6 +36,7 @@ const LoginForm = ({ onLogin, onForgotPassword }) => {
         setError(result.message || 'Please enter your 2FA code');
       } else if (result.success) {
         // Call the onLogin callback which will update the auth context
+        // This triggers immediate re-render and navigation to dashboard
         await onLogin(loginData);
       } else {
         setError(result.error);

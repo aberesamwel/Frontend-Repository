@@ -40,11 +40,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * Login function that handles authentication and immediate state updates
+   * Forces re-render to prevent authentication delay issues
+   */
   const login = async (credentials) => {
     const result = await authService.login(credentials);
     if (result.success) {
       setUser(result.user);
       // Force immediate re-render by updating loading state
+      // This prevents the "login success but still showing login form" issue
       setLoading(false);
     }
     return result;
