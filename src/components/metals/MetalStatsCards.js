@@ -2,41 +2,44 @@ import React, { useState } from 'react';
 import { TrendingUp, DollarSign, Calendar, BarChart3, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
-const MetalStatsCards = ({ stats }) => {
+const MetalStatsCards = ({ stats = {} }) => {
   const { getThemeClass } = useTheme();
   const [selectedPeriod, setSelectedPeriod] = useState('today');
+
+  // Debug logging
+  console.log('MetalStatsCards received stats:', stats);
 
   const periods = {
     today: {
       title: "Today's Sales",
-      sales: stats.dailySales,
-      payments: stats.dailyPayments,
-      profit: stats.dailyProfit,
-      services: stats.dailyServices,
+      sales: stats.dailySales || 0,
+      payments: stats.dailyPayments || 0,
+      profit: stats.dailyProfit || 0,
+      services: stats.dailyServices || 0,
       subtitle: "Daily Performance"
     },
     month: {
       title: "This Month",
-      sales: stats.monthlySales,
-      payments: stats.monthlyPayments,
-      profit: stats.monthlyProfit,
-      services: stats.monthlyServices,
+      sales: stats.monthlySales || 0,
+      payments: stats.monthlyPayments || 0,
+      profit: stats.monthlyProfit || 0,
+      services: stats.monthlyServices || 0,
       subtitle: "Monthly Performance"
     },
     year: {
       title: "This Year",
-      sales: stats.yearlySales,
-      payments: stats.yearlyPayments,
-      profit: stats.yearlyProfit,
-      services: stats.yearlyServices,
+      sales: stats.yearlySales || 0,
+      payments: stats.yearlyPayments || 0,
+      profit: stats.yearlyProfit || 0,
+      services: stats.yearlyServices || 0,
       subtitle: "Yearly Performance"
     },
     total: {
       title: "All Time",
-      sales: stats.totalRevenue,
-      payments: stats.totalPayments,
-      profit: stats.totalProfit,
-      services: stats.totalServices,
+      sales: stats.totalRevenue || 0,
+      payments: stats.totalPayments || 0,
+      profit: stats.totalProfit || 0,
+      services: stats.totalServices || 0,
       subtitle: "Business Lifetime"
     }
   };

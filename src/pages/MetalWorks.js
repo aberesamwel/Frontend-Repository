@@ -247,24 +247,48 @@ const MetalWorks = () => {
     }
   };
 
-  /**
-   * Calculates comprehensive business statistics:
-   * - Daily, monthly, yearly sales and payments
-   * - Service counts and completion rates
-   * - Total revenue, payments, and outstanding debt
-   * - Average job value and profit margins
-   */
   const getServiceStats = () => {
     const now = new Date();
     const today = now.toDateString();
     const thisMonth = now.getMonth();
     const thisYear = now.getFullYear();
     
-    // Daily Sales
+    console.log('Calculating stats for services:', services.length);
+    if (services.length > 0) {
+      console.log('Sample service:', services[0]);
+      console.log('Service date field:', services[0].drop_off_time);
+      console.log('Today string:', today);
+    }
+    
+    // All-time totals (calculate first for debugging)
+    const totalRevenue = services.reduce((sum, s) => {
+      // Handle both string and number formats from backend
+      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
+      console.log(`Service ${s.ticket_id}: total_amount = ${s.total_amount}, parsed = ${amount}`);
+      return sum + amount;
+    }, 0);
+    const totalPayments = services.reduce((sum, s) => {
+      // Handle both string and number formats from backend
+      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      console.log(`Service ${s.ticket_id}: amount_paid = ${s.amount_paid}, parsed = ${paid}`);
+      return sum + paid;
+    }, 0);
+    
+    console.log('Total Revenue:', totalRevenue);
+    console.log('Total Payments:', totalPayments);
+    
+    // Daily Sales - Fix date comparison
     const todayServices = services.filter(s => {
       const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
-      return dateStr && new Date(dateStr).toDateString() === today;
+      if (!dateStr) return false;
+      const serviceDate = new Date(dateStr);
+      const serviceDateString = serviceDate.toDateString();
+      console.log(`Comparing service date ${serviceDateString} with today ${today}`);
+      return serviceDateString === today;
     });
+    
+    console.log('Today services:', todayServices.length);
+    
     const dailySales = todayServices.reduce((sum, s) => {
       const amount = parseFloat(s.total_amount || s.totalAmount || 0);
       return sum + amount;
@@ -306,16 +330,7 @@ const MetalWorks = () => {
       return sum + paid;
     }, 0);
     
-    // All-time totals
     const completedServices = services.filter(s => s.status === 'completed');
-    const totalRevenue = services.reduce((sum, s) => {
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      return sum + amount;
-    }, 0);
-    const totalPayments = services.reduce((sum, s) => {
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
-      return sum + paid;
-    }, 0);
     const totalDebt = services.reduce((sum, s) => {
       const amount = parseFloat(s.total_amount || s.totalAmount || 0);
       const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
@@ -329,7 +344,7 @@ const MetalWorks = () => {
     const yearlyProfit = yearlyPayments * PROFIT_MARGIN;
     const totalProfit = totalPayments * PROFIT_MARGIN;
     
-    return {
+    const statsResult = {
       // Daily metrics
       dailySales,
       dailyPayments,
@@ -361,6 +376,9 @@ const MetalWorks = () => {
       completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0,
       profitMargin: PROFIT_MARGIN * 100
     };
+    
+    console.log('Final calculated stats:', statsResult);
+    return statsResult;
   };
 
   const stats = getServiceStats();
