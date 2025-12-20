@@ -34,7 +34,8 @@ const LoginForm = ({ onLogin, onForgotPassword }) => {
         setRequiresTwoFactor(true);
         setError(result.message || 'Please enter your 2FA code');
       } else if (result.success) {
-        onLogin(result.user);
+        // Call the onLogin callback which will update the auth context
+        await onLogin(loginData);
       } else {
         setError(result.error);
       }

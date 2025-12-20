@@ -44,6 +44,8 @@ export const AuthProvider = ({ children }) => {
     const result = await authService.login(credentials);
     if (result.success) {
       setUser(result.user);
+      // Force immediate re-render by updating loading state
+      setLoading(false);
     }
     return result;
   };

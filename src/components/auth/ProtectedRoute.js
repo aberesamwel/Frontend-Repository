@@ -7,6 +7,15 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading, login } = useAuth();
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
+  const handleLogin = async (credentials) => {
+    const result = await login(credentials);
+    if (result.success) {
+      // Login successful - component will re-render due to context update
+      return result;
+    }
+    return result;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -26,7 +35,7 @@ const ProtectedRoute = ({ children }) => {
     
     return (
       <LoginForm 
-        onLogin={login}
+        onLogin={handleLogin}
         onForgotPassword={() => setShowForgotPassword(true)}
       />
     );
