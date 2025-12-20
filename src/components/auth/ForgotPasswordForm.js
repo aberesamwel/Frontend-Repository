@@ -16,9 +16,24 @@ const ForgotPasswordForm = ({ onBack }) => {
 
     try {
       const result = await authService.forgotPassword(email);
-      setMessage(result.message);
+      if (result.message) {
+        setMessage(result.message);
+      } else {
+        setMessage('If the email exists, a reset link has been sent');
+      }
     } catch (error) {
-      setError(error.message || 'Failed to send reset email');
+      // Handle different error formats
+      let errorMessage = 'Failed to send reset email';
+      
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.error) {
+        errorMessage = error.error.message || error.error.details || errorMessage;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -23,10 +23,22 @@ const authService = {
         localStorage.setItem('user', JSON.stringify(data.user));
         return { success: true, user: data.user };
       } else {
-        const errorMessage = typeof data.error === 'string' ? data.error : 
-                           data.error?.message || 
-                           data.message || 
-                           'Login failed';
+        // Handle backend error format properly
+        let errorMessage = 'Login failed';
+        
+        if (data.error) {
+          // Backend error format: {error: {message, details, status_code}}
+          if (typeof data.error === 'string') {
+            errorMessage = data.error;
+          } else if (data.error.message) {
+            errorMessage = data.error.message;
+          } else if (data.error.details) {
+            errorMessage = data.error.details;
+          }
+        } else if (data.message) {
+          errorMessage = data.message;
+        }
+        
         return { success: false, error: errorMessage };
       }
     } catch (error) {

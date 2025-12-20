@@ -42,9 +42,18 @@ const LoginForm = ({ onLogin, onForgotPassword }) => {
         setError(result.error);
       }
     } catch (error) {
-      const errorMessage = typeof error === 'string' ? error : 
-                          error?.message || 
-                          'Network error occurred';
+      // Handle different error formats from backend
+      let errorMessage = 'Network error occurred';
+      
+      if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error?.error) {
+        // Backend error format: {error: {message, details, status_code}}
+        errorMessage = error.error.message || error.error.details || 'Login failed';
+      } else if (error?.message) {
+        errorMessage = error.message;
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);
