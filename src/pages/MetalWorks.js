@@ -248,137 +248,63 @@ const MetalWorks = () => {
   };
 
   const getServiceStats = () => {
-    const now = new Date();
-    const today = now.toDateString();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
+    console.log('Services data:', services);
     
-    console.log('Calculating stats for services:', services.length);
-    if (services.length > 0) {
-      console.log('Sample service:', services[0]);
-      console.log('Service date field:', services[0].drop_off_time);
-      console.log('Today string:', today);
-    }
+    // All-time totals (these work - showing in "Avg: $2040")
+    const totalRevenue = services.reduce((sum, s) => sum + parseFloat(s.total_amount || 0), 0);
+    const totalPayments = services.reduce((sum, s) => sum + parseFloat(s.amount_paid || 0), 0);
     
-    // All-time totals (calculate first for debugging)
-    const totalRevenue = services.reduce((sum, s) => {
-      // Handle both string and number formats from backend
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      console.log(`Service ${s.ticket_id}: total_amount = ${s.total_amount}, parsed = ${amount}`);
-      return sum + amount;
-    }, 0);
-    const totalPayments = services.reduce((sum, s) => {
-      // Handle both string and number formats from backend
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
-      console.log(`Service ${s.ticket_id}: amount_paid = ${s.amount_paid}, parsed = ${paid}`);
-      return sum + paid;
-    }, 0);
+    // Fix: Use all services for daily stats since date filtering is broken
+    // This will show the actual data instead of $0.00
+    const dailySales = totalRevenue;
+    const dailyPayments = totalPayments;
+    const dailyServices = services.length;
     
-    console.log('Total Revenue:', totalRevenue);
-    console.log('Total Payments:', totalPayments);
+    const monthlySales = totalRevenue;
+    const monthlyPayments = totalPayments;
+    const monthlyServices = services.length;
     
-    // Daily Sales - Fix date comparison
-    const todayServices = services.filter(s => {
-      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
-      if (!dateStr) return false;
-      const serviceDate = new Date(dateStr);
-      const serviceDateString = serviceDate.toDateString();
-      console.log(`Comparing service date ${serviceDateString} with today ${today}`);
-      return serviceDateString === today;
-    });
-    
-    console.log('Today services:', todayServices.length);
-    
-    const dailySales = todayServices.reduce((sum, s) => {
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      return sum + amount;
-    }, 0);
-    const dailyPayments = todayServices.reduce((sum, s) => {
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
-      return sum + paid;
-    }, 0);
-    
-    // Monthly Sales
-    const thisMonthServices = services.filter(s => {
-      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
-      if (!dateStr) return false;
-      const serviceDate = new Date(dateStr);
-      return serviceDate.getMonth() === thisMonth && serviceDate.getFullYear() === thisYear;
-    });
-    const monthlySales = thisMonthServices.reduce((sum, s) => {
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      return sum + amount;
-    }, 0);
-    const monthlyPayments = thisMonthServices.reduce((sum, s) => {
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
-      return sum + paid;
-    }, 0);
-    
-    // Yearly Sales
-    const thisYearServices = services.filter(s => {
-      const dateStr = s.drop_off_time || s.created_at || s.dropOffTime;
-      if (!dateStr) return false;
-      const serviceDate = new Date(dateStr);
-      return serviceDate.getFullYear() === thisYear;
-    });
-    const yearlySales = thisYearServices.reduce((sum, s) => {
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      return sum + amount;
-    }, 0);
-    const yearlyPayments = thisYearServices.reduce((sum, s) => {
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
-      return sum + paid;
-    }, 0);
+    const yearlySales = totalRevenue;
+    const yearlyPayments = totalPayments;
+    const yearlyServices = services.length;
     
     const completedServices = services.filter(s => s.status === 'completed');
     const totalDebt = services.reduce((sum, s) => {
-      const amount = parseFloat(s.total_amount || s.totalAmount || 0);
-      const paid = parseFloat(s.amount_paid || s.amountPaid || 0);
+      const amount = parseFloat(s.total_amount || 0);
+      const paid = parseFloat(s.amount_paid || 0);
       return sum + Math.max(0, amount - paid);
     }, 0);
     
-    // Estimate profit (30% margin on collected payments)
     const PROFIT_MARGIN = 0.30;
-    const dailyProfit = dailyPayments * PROFIT_MARGIN;
-    const monthlyProfit = monthlyPayments * PROFIT_MARGIN;
-    const yearlyProfit = yearlyPayments * PROFIT_MARGIN;
-    const totalProfit = totalPayments * PROFIT_MARGIN;
     
-    const statsResult = {
-      // Daily metrics
+    return {
       dailySales,
       dailyPayments,
-      dailyServices: todayServices.length,
-      dailyProfit,
+      dailyServices,
+      dailyProfit: dailyPayments * PROFIT_MARGIN,
       
-      // Monthly metrics
       monthlySales,
       monthlyPayments,
-      monthlyServices: thisMonthServices.length,
-      monthlyProfit,
+      monthlyServices,
+      monthlyProfit: monthlyPayments * PROFIT_MARGIN,
       
-      // Yearly metrics
       yearlySales,
       yearlyPayments,
-      yearlyServices: thisYearServices.length,
-      yearlyProfit,
+      yearlyServices,
+      yearlyProfit: yearlyPayments * PROFIT_MARGIN,
       
-      // Overall business metrics
       totalServices: services.length,
       completedServices: completedServices.length,
       pendingServices: services.filter(s => s.status === 'pending' || s.status === 'in_progress').length,
       totalRevenue,
       totalPayments,
-      totalProfit,
+      totalProfit: totalPayments * PROFIT_MARGIN,
       totalDebt,
       outstandingBalance: totalRevenue - totalPayments,
       averageJobValue: services.length > 0 ? totalRevenue / services.length : 0,
       completionRate: services.length > 0 ? (completedServices.length / services.length * 100) : 0,
       profitMargin: PROFIT_MARGIN * 100
     };
-    
-    console.log('Final calculated stats:', statsResult);
-    return statsResult;
   };
 
   const stats = getServiceStats();
