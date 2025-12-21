@@ -32,11 +32,26 @@ const Materials = () => {
       console.log('🔄 Loading materials from API...');
       const response = await materialService.getAll();
       const materialsData = response.data.results || response.data || [];
-      console.log('✅ Materials loaded:', materialsData.length, 'items');
-      console.log('📋 Materials data:', materialsData);
-      setMaterials(materialsData);
+      
+      // Fix status for materials with incorrect status
+      const fixedMaterials = materialsData.map(material => {
+        const quantity = parseFloat(material.quantity || 0);
+        const correctStatus = quantity === 0 ? 'out_of_stock' : 
+                             quantity <= 5 ? 'critical' : 
+                             quantity <= 10 ? 'low_stock' : 'in_stock';
+        
+        return {
+          ...material,
+          status: correctStatus,
+          quantity: quantity
+        };
+      });
+      
+      console.log('✅ Materials loaded:', fixedMaterials.length, 'items');
+      console.log('📋 Materials data:', fixedMaterials);
+      setMaterials(fixedMaterials);
       // Also save to localStorage for backward compatibility
-      localStorage.setItem('bodycraft-materials', JSON.stringify(materialsData));
+      localStorage.setItem('bodycraft-materials', JSON.stringify(fixedMaterials));
     } catch (error) {
       console.error('❌ Error loading materials:', error);
       console.log('🔄 Trying localStorage fallback...');
@@ -65,7 +80,7 @@ const Materials = () => {
       unit: newMaterial.unit,
       price: parseFloat(newMaterial.price) || 0,
       supplier: newMaterial.supplier?.trim() || 'Unknown',
-      status: quantity > 25 ? 'in_stock' : quantity > 10 ? 'low_stock' : 'critical',
+      status: quantity === 0 ? 'out_of_stock' : quantity <= 5 ? 'critical' : quantity <= 10 ? 'low_stock' : 'in_stock',
       min_stock: 10,
       critical_stock: 5,
       created_at: new Date().toISOString(),
@@ -109,7 +124,7 @@ const Materials = () => {
       ...editingMaterial,
       quantity: quantity,
       price: parseFloat(editingMaterial.price) || 0,
-      status: quantity > 25 ? 'in_stock' : quantity > 10 ? 'low_stock' : 'critical',
+      status: quantity === 0 ? 'out_of_stock' : quantity <= 5 ? 'critical' : quantity <= 10 ? 'low_stock' : 'in_stock',
       updated_at: new Date().toISOString()
     };
     
@@ -213,10 +228,10 @@ const Materials = () => {
   // }, []);
 
   const calculateStatus = (quantity) => {
-    if (quantity === 0) return 'Out of Stock';
-    if (quantity <= 10) return 'Critical';
-    if (quantity <= 25) return 'Low Stock';
-    return 'In Stock';
+    if (quantity === 0) return 'out_of_stock';
+    if (quantity <= 5) return 'critical';
+    if (quantity <= 10) return 'low_stock';
+    return 'in_stock';
   };
 
   const getTotalValue = () => {
