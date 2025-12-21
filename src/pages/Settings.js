@@ -26,15 +26,21 @@ const Settings = () => {
 
   const loadSettings = async () => {
     try {
-      const response = await fetch('/api/v1/settings/', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/v1/settings/', {
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          ...(token && { 'Authorization': `Bearer ${token}` }),
           'Content-Type': 'application/json'
         }
       });
+      
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
+      } else {
+        console.error('Settings API error:', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Response:', text);
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -46,17 +52,21 @@ const Settings = () => {
   const saveSettings = async () => {
     setSaving(true);
     try {
-      const response = await fetch('/api/v1/settings/update', {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/v1/settings/update', {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          ...(token && { 'Authorization': `Bearer ${token}` }),
           'Content-Type': 'application/json'
         },
         body: JSON.stringify(settings)
       });
+      
       if (response.ok) {
         alert('Settings saved successfully!');
       } else {
+        const text = await response.text();
+        console.error('Save error:', text);
         alert('Failed to save settings');
       }
     } catch (error) {
