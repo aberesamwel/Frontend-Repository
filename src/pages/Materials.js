@@ -178,18 +178,30 @@ const Materials = () => {
   const getStatusColor = (status) => {
     const statusLower = (status || '').toLowerCase().replace(' ', '_');
     switch (statusLower) {
-      case 'in_stock': return 'bg-green-100 text-green-800';
-      case 'low_stock': return 'bg-yellow-100 text-yellow-800';
-      case 'critical': return 'bg-red-100 text-red-800';
-      case 'out_of_stock': return 'bg-gray-100 text-gray-800';
-      case 'on_order': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'in_stock': return 'bg-green-100 text-green-800 border border-green-200';
+      case 'low_stock': return 'bg-yellow-100 text-yellow-800 border border-yellow-200';
+      case 'critical': return 'bg-red-100 text-red-800 border border-red-200';
+      case 'out_of_stock': return 'bg-gray-100 text-gray-800 border border-gray-200';
+      case 'on_order': return 'bg-blue-100 text-blue-800 border border-blue-200';
+      default: return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
   };
 
   const formatStatus = (status) => {
     if (!status) return 'Unknown';
     return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getStatusIcon = (status) => {
+    const statusLower = (status || '').toLowerCase().replace(' ', '_');
+    switch (statusLower) {
+      case 'in_stock': return '✅';
+      case 'low_stock': return '⚠️';
+      case 'critical': return '🔴';
+      case 'out_of_stock': return '❌';
+      case 'on_order': return '📦';
+      default: return '❓';
+    }
   };
 
   // Refresh materials periodically from API (disabled for now)
@@ -387,9 +399,20 @@ const Materials = () => {
                     <div className="text-sm text-slate-900">{material.supplier}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(material.status)}`}>
+                    <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(material.status)}`}>
+                      <span className="mr-1">{getStatusIcon(material.status)}</span>
                       {formatStatus(material.status)}
                     </span>
+                    {material.quantity <= material.critical_stock && (
+                      <div className="text-xs text-red-600 mt-1 font-medium">
+                        ⚠️ Critical Level!
+                      </div>
+                    )}
+                    {material.quantity <= material.min_stock && material.quantity > material.critical_stock && (
+                      <div className="text-xs text-yellow-600 mt-1 font-medium">
+                        🟡 Low Stock
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex space-x-2">
