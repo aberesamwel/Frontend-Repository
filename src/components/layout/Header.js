@@ -16,9 +16,16 @@ const Header = ({ setSidebarOpen, searchTerm, setSearchTerm, onAddProject, profi
     loadNotifications();
     const timer = setInterval(() => {
       setCurrentTime(new Date());
+    }, 1000); // Update every second for real-time clock
+    
+    const notificationTimer = setInterval(() => {
       loadNotifications();
-    }, 30000); // Refresh every 30 seconds
-    return () => clearInterval(timer);
+    }, 30000); // Check notifications every 30 seconds
+    
+    return () => {
+      clearInterval(timer);
+      clearInterval(notificationTimer);
+    };
   }, []);
   
   const loadNotifications = async () => {

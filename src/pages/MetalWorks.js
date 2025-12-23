@@ -218,7 +218,7 @@ const MetalWorks = () => {
    */
   const handleStatusUpdate = async (serviceId, newStatus) => {
     try {
-      await serviceService.update(serviceId, { status: newStatus });
+      await serviceService.updateStatus(serviceId, newStatus);
       // Reload services from backend
       await loadServices();
     } catch (error) {

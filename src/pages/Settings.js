@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Bell, Shield, Database, Mail, Building, Save } from 'lucide-react';
+import { User, Bell, Shield, Database, Mail, Building, Save, Eye, EyeOff } from 'lucide-react';
+import EmailManagement from '../components/EmailManagement';
 
 const Settings = () => {
   const [settings, setSettings] = useState({
     company_name: 'Pexsteel',
     company_email: '',
+    company_email_2: '',
     company_phone: '',
     company_address: '',
     smtp_host: 'smtp.gmail.com',
@@ -19,6 +21,7 @@ const Settings = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -36,14 +39,32 @@ const Settings = () => {
       
       if (response.ok) {
         const data = await response.json();
-        setSettings(data);
+        // Ensure all fields have default values to prevent controlled/uncontrolled warnings
+        const settingsData = {
+          company_name: data.company_name || 'Pexsteel',
+          company_email: data.company_email || '',
+          company_email_2: data.company_email_2 || '',
+          company_phone: data.company_phone || '',
+          company_address: data.company_address || '',
+          smtp_host: data.smtp_host || 'smtp.gmail.com',
+          smtp_port: data.smtp_port || 587,
+          smtp_use_tls: data.smtp_use_tls !== undefined ? data.smtp_use_tls : true,
+          smtp_username: data.smtp_username || '',
+          smtp_password: data.smtp_password || '',
+          low_stock_threshold: data.low_stock_threshold || 10,
+          critical_stock_threshold: data.critical_stock_threshold || 5,
+          currency: data.currency || 'USD',
+          timezone: data.timezone || 'UTC'
+        };
+        setSettings(settingsData);
       } else {
-        console.error('Settings API error:', response.status, response.statusText);
-        const text = await response.text();
-        console.error('Response:', text);
+        const errorData = await response.json();
+        console.error('Settings API error:', errorData);
+        // Keep default settings if API fails
       }
     } catch (error) {
       console.error('Error loading settings:', error);
+      // Keep default settings if request fails
     } finally {
       setLoading(false);
     }
@@ -53,21 +74,37 @@ const Settings = () => {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
+      
+      // Clean up data before sending
+      const cleanSettings = { ...settings };
+      if (cleanSettings.smtp_username === '') {
+        cleanSettings.smtp_username = null;
+      }
+      
+      console.log('Sending settings:', cleanSettings);
+      
       const response = await fetch('http://localhost:8000/api/v1/settings/update', {
         method: 'PUT',
         headers: {
           ...(token && { 'Authorization': `Bearer ${token}` }),
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify(settings)
+        body: JSON.stringify(cleanSettings)
       });
       
       if (response.ok) {
         alert('Settings saved successfully!');
       } else {
-        const text = await response.text();
-        console.error('Save error:', text);
-        alert('Failed to save settings');
+        const errorData = await response.json();
+        console.error('Save error:', errorData);
+        if (errorData.error && errorData.error.details) {
+          const errors = Object.entries(errorData.error.details)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('\n');
+          alert(`Failed to save settings:\n${errors}`);
+        } else {
+          alert('Failed to save settings');
+        }
       }
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -180,6 +217,15 @@ const Settings = () => {
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Secondary Email</label>
+              <input 
+                type="email" 
+                value={settings.company_email_2}
+                onChange={(e) => handleInputChange('company_email_2', e.target.value)}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
               <input 
                 type="text" 
@@ -249,13 +295,22 @@ const Settings = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
-              <input 
-                type="password" 
-                value={settings.smtp_password}
-                onChange={(e) => handleInputChange('smtp_password', e.target.value)}
-                placeholder={settings.smtp_password === '***masked***' ? 'Password is set' : 'Enter password'}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={settings.smtp_password}
+                  onChange={(e) => handleInputChange('smtp_password', e.target.value)}
+                  placeholder={settings.smtp_password === '***masked***' ? 'Password is set' : 'Enter password'}
+                  className="w-full px-3 py-2 pr-10 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" 
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -321,6 +376,11 @@ const Settings = () => {
             </button>
           </div>
         </div>
+      </div>
+      
+      {/* Email Management Section */}
+      <div className="mt-8">
+        <EmailManagement />
       </div>
     </div>
   );
