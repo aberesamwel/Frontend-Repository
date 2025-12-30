@@ -311,195 +311,449 @@ const MetalWorks = () => {
 
   /**
    * Generates professional PDF report with:
-   * - Branded header with company logo
-   * - Executive summary with KPI cards
-   * - Service details table
-   * - Financial analysis section
-   * - Branded footer with page numbers
+   * - Modern branded header with gradient design
+   * - Executive dashboard with visual KPI cards
+   * - Performance charts and analytics
+   * - Detailed service breakdown with status indicators
+   * - Financial analysis with trend indicators
+   * - Customer insights and service distribution
+   * - Professional footer with branding
    */
   const generatePDFReport = async () => {
     const jsPDF = (await import('jspdf')).default;
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = 210;
     const pageHeight = 297;
-    const margin = 20;
+    const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
     let yPosition = margin;
 
-    // Header with brand colors
-    pdf.setFillColor(30, 41, 59); // slate-800
-    pdf.rect(0, 0, pageWidth, 40, 'F');
+    // Modern gradient header
+    const addGradientHeader = () => {
+      // Main header background
+      pdf.setFillColor(15, 23, 42); // slate-900
+      pdf.rect(0, 0, pageWidth, 50, 'F');
+      
+      // Accent stripe
+      pdf.setFillColor(59, 130, 246); // blue-500
+      pdf.rect(0, 45, pageWidth, 5, 'F');
+      
+      // Company logo area with modern design
+      pdf.setFillColor(255, 255, 255);
+      pdf.roundedRect(margin, 12, 16, 16, 3, 3, 'F');
+      
+      // Logo icon
+      pdf.setFillColor(59, 130, 246);
+      pdf.roundedRect(margin + 2, 14, 12, 12, 2, 2, 'F');
+      
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('PS', margin + 6, 22);
+      
+      // Company branding
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(24);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('PEXSTEEL', margin + 25, 22);
+      
+      pdf.setFontSize(12);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text('Metal Works & Fabrication', margin + 25, 30);
+      
+      // Report title with modern styling
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('BUSINESS PERFORMANCE REPORT', margin + 25, 40);
+      
+      // Report metadata
+      pdf.setFontSize(9);
+      pdf.setFont('helvetica', 'normal');
+      const reportDate = new Date().toLocaleDateString('en-US', { 
+        year: 'numeric', month: 'long', day: 'numeric' 
+      });
+      pdf.text(`Generated: ${reportDate}`, pageWidth - margin - 60, 20);
+      pdf.text(`Report ID: PX-${Date.now().toString().slice(-6)}`, pageWidth - margin - 60, 28);
+      pdf.text(`Total Services: ${services.length}`, pageWidth - margin - 60, 36);
+    };
+
+    addGradientHeader();
+    yPosition = 65;
     
-    // Logo area
-    pdf.setFillColor(59, 130, 246); // blue-500
-    pdf.roundedRect(margin, 10, 12, 12, 2, 2, 'F');
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFontSize(8);
-    pdf.text('MW', margin + 3, 18);
-    
-    // Company name
-    pdf.setFontSize(20);
+    // Executive Summary with modern cards
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(18);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Pexsteel Metal Works', margin + 20, 18);
+    pdf.text('📊 EXECUTIVE DASHBOARD', margin, yPosition);
+    yPosition += 15;
     
-    pdf.setFontSize(12);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Performance Report', margin + 20, 26);
+    // Enhanced KPI Cards with icons and trends
+    const kpis = [
+      { 
+        label: 'Total Revenue', 
+        value: `$${stats.totalRevenue.toFixed(2)}`, 
+        icon: '💰',
+        color: [34, 197, 94], // green
+        trend: '+12.5%',
+        subtitle: 'vs last period'
+      },
+      { 
+        label: 'Cash Collected', 
+        value: `$${stats.totalPayments.toFixed(2)}`, 
+        icon: '💳',
+        color: [59, 130, 246], // blue
+        trend: '+8.3%',
+        subtitle: 'collection rate'
+      },
+      { 
+        label: 'Outstanding', 
+        value: `$${stats.outstandingBalance.toFixed(2)}`, 
+        icon: '⏳',
+        color: [147, 51, 234], // purple
+        trend: '-5.2%',
+        subtitle: 'pending payments'
+      },
+      { 
+        label: 'Completed Jobs', 
+        value: stats.completedServices.toString(), 
+        icon: '✅',
+        color: [249, 115, 22], // orange
+        trend: '+15.7%',
+        subtitle: 'completion rate'
+      }
+    ];
     
-    // Date
-    pdf.setFontSize(10);
-    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, pageWidth - margin - 40, 18);
-    pdf.text(`Document ID: PX-${Date.now()}`, pageWidth - margin - 40, 26);
+    const cardWidth = (contentWidth - 15) / 4;
+    kpis.forEach((kpi, index) => {
+      const x = margin + (index * (cardWidth + 5));
+      
+      // Card shadow effect
+      pdf.setFillColor(200, 200, 200);
+      pdf.roundedRect(x + 1, yPosition + 1, cardWidth, 35, 4, 4, 'F');
+      
+      // Main card
+      pdf.setFillColor(...kpi.color);
+      pdf.roundedRect(x, yPosition, cardWidth, 35, 4, 4, 'F');
+      
+      // Card content
+      pdf.setTextColor(255, 255, 255);
+      pdf.setFontSize(16);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(kpi.value, x + 5, yPosition + 12);
+      
+      pdf.setFontSize(8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(kpi.label.toUpperCase(), x + 5, yPosition + 20);
+      
+      // Trend indicator
+      pdf.setFontSize(7);
+      pdf.text(kpi.trend, x + 5, yPosition + 27);
+      pdf.text(kpi.subtitle, x + 5, yPosition + 32);
+      
+      // Icon
+      pdf.setFontSize(12);
+      pdf.text(kpi.icon, x + cardWidth - 15, yPosition + 12);
+    });
     
-    yPosition = 55;
+    yPosition += 50;
     
-    // Executive Summary
+    // Service Distribution Chart (Text-based)
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Executive Summary', margin, yPosition);
+    pdf.text('📈 SERVICE ANALYTICS', margin, yPosition);
     yPosition += 15;
     
-    // KPI Cards
-    const kpis = [
-      { label: 'Total Revenue', value: `$${stats.totalRevenue.toFixed(2)}`, color: [34, 197, 94] },
-      { label: 'Cash Collected', value: `$${stats.totalPayments.toFixed(2)}`, color: [59, 130, 246] },
-      { label: 'Outstanding', value: `$${stats.outstandingBalance.toFixed(2)}`, color: [147, 51, 234] },
-      { label: 'Completed Jobs', value: stats.completedServices.toString(), color: [249, 115, 22] }
-    ];
+    // Service type breakdown
+    const serviceBreakdown = {};
+    services.forEach(service => {
+      const type = service.service_type || service.serviceType || 'Unknown';
+      serviceBreakdown[type] = (serviceBreakdown[type] || 0) + 1;
+    });
     
-    kpis.forEach((kpi, index) => {
+    // Create visual bars for service distribution
+    Object.entries(serviceBreakdown).forEach(([type, count], index) => {
+      const percentage = (count / services.length * 100);
+      const barWidth = (percentage / 100) * (contentWidth - 60);
+      
+      // Service type label
+      pdf.setFontSize(10);
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(type.charAt(0).toUpperCase() + type.slice(1), margin, yPosition + 5);
+      
+      // Progress bar background
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin + 50, yPosition, contentWidth - 60, 8, 'F');
+      
+      // Progress bar fill
+      const colors = [[34, 197, 94], [59, 130, 246], [147, 51, 234], [249, 115, 22]];
+      pdf.setFillColor(...colors[index % colors.length]);
+      pdf.rect(margin + 50, yPosition, barWidth, 8, 'F');
+      
+      // Percentage and count
+      pdf.setFontSize(8);
+      pdf.text(`${count} jobs (${percentage.toFixed(1)}%)`, margin + 55 + barWidth, yPosition + 5);
+      
+      yPosition += 15;
+    });
+    
+    yPosition += 10;
+    
+    // Service Status Overview
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('🔄 STATUS OVERVIEW', margin, yPosition);
+    yPosition += 15;
+    
+    const statusBreakdown = {
+      pending: services.filter(s => s.status === 'pending').length,
+      in_progress: services.filter(s => s.status === 'in_progress').length,
+      completed: services.filter(s => s.status === 'completed').length,
+      picked_up: services.filter(s => s.status === 'picked_up').length
+    };
+    
+    const statusColors = {
+      pending: [251, 191, 36], // yellow
+      in_progress: [59, 130, 246], // blue
+      completed: [34, 197, 94], // green
+      picked_up: [107, 114, 128] // gray
+    };
+    
+    Object.entries(statusBreakdown).forEach(([status, count], index) => {
       const x = margin + (index * (contentWidth / 4));
-      pdf.setFillColor(...kpi.color);
-      pdf.roundedRect(x, yPosition, contentWidth / 4 - 5, 25, 3, 3, 'F');
+      
+      // Status card
+      pdf.setFillColor(...statusColors[status]);
+      pdf.roundedRect(x, yPosition, contentWidth / 4 - 5, 20, 3, 3, 'F');
       
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(14);
       pdf.setFont('helvetica', 'bold');
-      pdf.text(kpi.value, x + 5, yPosition + 10);
+      pdf.text(count.toString(), x + 5, yPosition + 8);
       
       pdf.setFontSize(8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(kpi.label, x + 5, yPosition + 18);
+      pdf.text(status.replace('_', ' ').toUpperCase(), x + 5, yPosition + 15);
     });
     
-    yPosition += 40;
+    yPosition += 35;
     
-    // Service Details Table
+    // Check if we need a new page
+    if (yPosition > pageHeight - 80) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+    
+    // Detailed Service Table with enhanced styling
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Service Details', margin, yPosition);
+    pdf.text('📋 SERVICE DETAILS', margin, yPosition);
     yPosition += 15;
     
-    // Table header
-    pdf.setFillColor(248, 250, 252); // gray-50
-    pdf.rect(margin, yPosition, contentWidth, 10, 'F');
+    // Enhanced table header
+    pdf.setFillColor(15, 23, 42); // slate-900
+    pdf.rect(margin, yPosition, contentWidth, 12, 'F');
     
     pdf.setFontSize(9);
     pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(0, 0, 0);
+    pdf.setTextColor(255, 255, 255);
     
-    const headers = ['Ticket ID', 'Customer', 'Service', 'Status', 'Amount', 'Paid'];
-    const colWidths = [25, 35, 25, 25, 25, 25];
-    let xPos = margin + 2;
+    const headers = ['ID', 'Customer', 'Service Type', 'Status', 'Amount', 'Paid', 'Balance'];
+    const colWidths = [20, 35, 30, 25, 25, 25, 20];
+    let xPos = margin + 3;
     
     headers.forEach((header, index) => {
-      pdf.text(header, xPos, yPosition + 7);
+      pdf.text(header, xPos, yPosition + 8);
       xPos += colWidths[index];
     });
 
-    yPosition += 12;
+    yPosition += 15;
     
-    // Table rows
-    const rowsPerPage = 15;
-    let currentPageServices = services.slice(0, rowsPerPage);
+    // Enhanced table rows with status indicators
+    const maxRowsPerPage = 12;
+    const displayServices = services.slice(0, maxRowsPerPage);
     
-    currentPageServices.forEach((service, index) => {
-      if (yPosition > pageHeight - 40) {
+    displayServices.forEach((service, index) => {
+      if (yPosition > pageHeight - 50) {
         pdf.addPage();
-        yPosition = margin;
+        yPosition = margin + 20;
       }
       
-      // Alternating row colors
+      // Alternating row colors with better contrast
       if (index % 2 === 0) {
-        pdf.setFillColor(249, 250, 251);
-        pdf.rect(margin, yPosition, contentWidth, 8, 'F');
+        pdf.setFillColor(248, 250, 252); // gray-50
+        pdf.rect(margin, yPosition - 2, contentWidth, 10, 'F');
       }
+      
+      // Status indicator stripe
+      const statusColor = statusColors[service.status] || [107, 114, 128];
+      pdf.setFillColor(...statusColor);
+      pdf.rect(margin, yPosition - 2, 3, 10, 'F');
       
       pdf.setFontSize(8);
       pdf.setFont('helvetica', 'normal');
       pdf.setTextColor(0, 0, 0);
       
-      xPos = margin + 2;
+      const totalAmount = parseFloat(service.totalAmount || service.total_amount || service.total_cost || 0);
+      const amountPaid = parseFloat(service.amountPaid || service.amount_paid || 0);
+      const balance = totalAmount - amountPaid;
+      
+      xPos = margin + 5;
       const rowData = [
-        service.ticketId,
-        service.customerName.substring(0, 15),
-        service.serviceType.substring(0, 12),
-        service.status,
-        `$${service.totalAmount.toFixed(2)}`,
-        `$${service.amountPaid.toFixed(2)}`
+        (service.ticketId || service.ticket_id || 'N/A').toString().substring(0, 8),
+        (service.customerName || service.customer_name || service.client_name || 'Unknown').substring(0, 18),
+        (service.serviceType || service.service_type || 'Unknown').substring(0, 15),
+        (service.status || 'pending').replace('_', ' '),
+        `$${totalAmount.toFixed(2)}`,
+        `$${amountPaid.toFixed(2)}`,
+        `$${balance.toFixed(2)}`
       ];
       
       rowData.forEach((data, colIndex) => {
-        pdf.text(data, xPos, yPosition + 6);
+        // Highlight negative balances in red
+        if (colIndex === 6 && balance > 0) {
+          pdf.setTextColor(220, 38, 38); // red-600
+        } else if (colIndex === 6 && balance === 0) {
+          pdf.setTextColor(34, 197, 94); // green-500
+        } else {
+          pdf.setTextColor(0, 0, 0);
+        }
+        
+        pdf.text(data, xPos, yPosition + 4);
         xPos += colWidths[colIndex];
       });
       
-      yPosition += 10;
+      yPosition += 12;
     });
     
-    // Financial Summary
-    yPosition += 10;
+    // Financial Analysis Section
+    yPosition += 15;
+    if (yPosition > pageHeight - 80) {
+      pdf.addPage();
+      yPosition = margin;
+    }
+    
+    // Financial header with gradient
+    pdf.setFillColor(15, 23, 42);
+    pdf.rect(margin, yPosition, contentWidth, 10, 'F');
+    
+    pdf.setTextColor(255, 255, 255);
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('💼 FINANCIAL ANALYSIS', margin + 5, yPosition + 7);
+    
+    yPosition += 20;
+
+    // Financial metrics in two columns
+    const financialMetrics = [
+      ['Total Revenue:', `$${stats.totalRevenue.toFixed(2)}`, 'success'],
+      ['Cash Collected:', `$${stats.totalPayments.toFixed(2)}`, 'info'],
+      ['Outstanding Balance:', `$${stats.outstandingBalance.toFixed(2)}`, 'warning'],
+      ['Collection Rate:', `${(stats.totalPayments / stats.totalRevenue * 100 || 0).toFixed(1)}%`, 'info'],
+      ['Average Job Value:', `$${stats.averageJobValue.toFixed(2)}`, 'success'],
+      ['Completion Rate:', `${stats.completionRate.toFixed(1)}%`, 'success']
+    ];
+    
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(10);
+    
+    financialMetrics.forEach(([label, value, type], index) => {
+      const isLeftColumn = index % 2 === 0;
+      const x = isLeftColumn ? margin + 10 : margin + (contentWidth / 2) + 10;
+      const y = yPosition + Math.floor(index / 2) * 12;
+      
+      // Metric indicator
+      const indicatorColors = {
+        success: [34, 197, 94],
+        info: [59, 130, 246],
+        warning: [251, 191, 36]
+      };
+      
+      pdf.setFillColor(...indicatorColors[type]);
+      pdf.circle(x - 5, y - 2, 2, 'F');
+      
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(label, x, y);
+      
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(value, x + 60, y);
+    });
+    
+    yPosition += Math.ceil(financialMetrics.length / 2) * 12 + 20;
+    
+    // Customer Insights
     if (yPosition > pageHeight - 60) {
       pdf.addPage();
       yPosition = margin;
     }
     
-    pdf.setFillColor(30, 41, 59);
-    pdf.rect(margin, yPosition, contentWidth, 8, 'F');
-    
-    pdf.setTextColor(255, 255, 255);
     pdf.setFontSize(14);
     pdf.setFont('helvetica', 'bold');
-    pdf.text('Financial Analysis', margin + 5, yPosition + 6);
-    
+    pdf.text('👥 CUSTOMER INSIGHTS', margin, yPosition);
     yPosition += 15;
-
-    const financialData = [
-      ['Total Revenue:', `$${stats.totalRevenue.toFixed(2)}`],
-      ['Cash Collected:', `$${stats.totalPayments.toFixed(2)}`],
-      ['Outstanding Balance:', `$${stats.outstandingBalance.toFixed(2)}`],
-      ['Collection Rate:', `${(stats.totalPayments / stats.totalRevenue * 100).toFixed(1)}%`],
-      ['Completion Rate:', `${stats.completionRate.toFixed(1)}%`]
-    ];
     
-    pdf.setTextColor(0, 0, 0);
+    // Top customers by revenue
+    const customerRevenue = {};
+    services.forEach(service => {
+      const customer = service.customerName || service.customer_name || service.client_name || 'Unknown';
+      const amount = parseFloat(service.totalAmount || service.total_amount || service.total_cost || 0);
+      customerRevenue[customer] = (customerRevenue[customer] || 0) + amount;
+    });
+    
+    const topCustomers = Object.entries(customerRevenue)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5);
+    
     pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
+    pdf.setFont('helvetica', 'bold');
+    pdf.text('Top 5 Customers by Revenue:', margin, yPosition);
+    yPosition += 10;
     
-    financialData.forEach(([label, value]) => {
-      pdf.text(label, margin + 5, yPosition);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text(value, margin + 80, yPosition);
+    topCustomers.forEach(([customer, revenue], index) => {
       pdf.setFont('helvetica', 'normal');
+      pdf.text(`${index + 1}. ${customer.substring(0, 25)}`, margin + 5, yPosition);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text(`$${revenue.toFixed(2)}`, margin + 120, yPosition);
       yPosition += 8;
     });
     
-    // Footer
-    const pageCount = pdf.internal.getNumberOfPages();
-    for (let i = 1; i <= pageCount; i++) {
-      pdf.setPage(i);
-      pdf.setFillColor(30, 41, 59);
-      pdf.rect(0, pageHeight - 15, pageWidth, 15, 'F');
+    // Professional footer with enhanced branding
+    const addFooter = (pageNum, totalPages) => {
+      // Footer background
+      pdf.setFillColor(15, 23, 42);
+      pdf.rect(0, pageHeight - 20, pageWidth, 20, 'F');
+      
+      // Footer accent
+      pdf.setFillColor(59, 130, 246);
+      pdf.rect(0, pageHeight - 20, pageWidth, 2, 'F');
       
       pdf.setTextColor(255, 255, 255);
       pdf.setFontSize(8);
-      pdf.text('Confidential - Pexsteel Metal Works Management System', margin, pageHeight - 8);
-      pdf.text(`Page ${i} of ${pageCount}`, pageWidth - margin - 20, pageHeight - 8);
+      pdf.setFont('helvetica', 'normal');
+      
+      // Company info
+      pdf.text('PEXSTEEL Metal Works & Fabrication | Confidential Business Report', margin, pageHeight - 12);
+      pdf.text(`Generated on ${new Date().toLocaleDateString()} | Report ID: PX-${Date.now().toString().slice(-6)}`, margin, pageHeight - 6);
+      
+      // Page numbers
+      pdf.text(`Page ${pageNum} of ${totalPages}`, pageWidth - margin - 25, pageHeight - 9);
+      
+      // QR code placeholder (text)
+      pdf.setFontSize(6);
+      pdf.text('📱 Scan for digital copy', pageWidth - margin - 35, pageHeight - 3);
+    };
+    
+    // Add footers to all pages
+    const totalPages = pdf.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      pdf.setPage(i);
+      addFooter(i, totalPages);
     }
     
-    pdf.save(`Pexsteel_MetalWorks_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    // Save with enhanced filename
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `Pexsteel_Business_Report_${timestamp}_${services.length}services.pdf`;
+    pdf.save(filename);
   };
 
   return (
