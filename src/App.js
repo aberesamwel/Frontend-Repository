@@ -150,7 +150,7 @@ function AppContent() {
       ...newProject,
       created_at: new Date().toISOString(),
       status: 'material_sourcing',
-      progress: 15
+      progress: 10
     };
     
     setProjects([...projects, optimisticProject]);
@@ -220,12 +220,12 @@ function AppContent() {
         
         // Auto-calculate progress based on status with better intervals
         const progressMap = {
-          'Material Sourcing': 15,
-          'Welding Phase': 35,
-          'In Progress': 35,
-          'Painting': 55,
-          'Interior Fitting': 75,
-          'Quality Check': 90,
+          'Material Sourcing': 10,
+          'Welding Phase': 30,
+          'In Progress': 30,
+          'Painting': 50,
+          'Interior Fitting': 70,
+          'Quality Check': 85,
           'Completed': 100,
           'Delivered': 100
         };
