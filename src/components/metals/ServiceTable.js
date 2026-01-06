@@ -53,14 +53,16 @@ const ServiceTable = ({
           </thead>
           <tbody className={`divide-y ${getThemeClass('border', 'primary')}`}>
             {services.map((service) => {
-              const serviceType = service.service_type || service.serviceType || '';
-              const ServiceIcon = getServiceIcon(serviceType);
+              const serviceType = service.service || service.service_type || service.serviceType || '';
+              const ServiceIcon = getServiceIcon(serviceType.toLowerCase());
               const totalAmount = parseFloat(service.total_amount || service.totalAmount || 0);
               const amountPaid = parseFloat(service.amount_paid || service.amountPaid || 0);
               const ticketId = service.ticket_id || service.ticketId || '';
-              const customerName = service.customer_name || service.customerName || '';
+              const customerName = service.customer || service.client_name || service.customer_name || service.customerName || '';
               const phone = service.phone || '';
               const balanceAmount = totalAmount - amountPaid;
+              const dropOffTime = service.drop_off_time || service.dropOffTime || service.created_at;
+              const pickupTime = service.pickup_time || service.pickupTime;
               
               return (
                 <tr key={service.id} className={`hover:${getThemeClass('bg', 'hover')} transition-colors`}>
@@ -94,11 +96,11 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div>
                       <div className={`font-medium ${getThemeClass('text', 'primary')} capitalize`}>
-                        {serviceType.replace('_', ' ') || 'N/A'}
+                        {serviceType.replace('_', ' ') || 'Metal Works'}
                       </div>
-                      <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material || 'N/A'}</div>
+                      <div className={`text-sm ${getThemeClass('text', 'muted')}`}>{service.material || 'Steel'}</div>
                       <div className="flex items-center space-x-3 mt-1">
-                        <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity || 0}</div>
+                        <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Qty: {service.quantity || 1}</div>
                         {service.gauge && (
                           <div className={`text-xs ${getThemeClass('text', 'tertiary')}`}>Gauge: {service.gauge}</div>
                         )}
@@ -181,21 +183,21 @@ const ServiceTable = ({
                   <td className="py-4 px-6">
                     <div className="space-y-1">
                       <div className={`text-sm ${getThemeClass('text', 'primary')}`}>
-                        {new Date(service.dropOffTime).toLocaleDateString('en-US', { 
+                        {dropOffTime ? new Date(dropOffTime).toLocaleDateString('en-US', { 
                           weekday: 'short', 
                           month: 'short', 
                           day: 'numeric' 
-                        })}
+                        }) : 'No date'}
                       </div>
                       <div className={`text-xs ${getThemeClass('text', 'muted')}`}>
-                        {new Date(service.dropOffTime).toLocaleTimeString('en-US', { 
+                        {dropOffTime ? new Date(dropOffTime).toLocaleTimeString('en-US', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
-                        })}
+                        }) : ''}
                       </div>
-                      {service.pickupTime && (
+                      {pickupTime && (
                         <div className="text-xs text-green-600 font-medium">
-                          ✓ Picked up {new Date(service.pickupTime).toLocaleDateString('en-US', { 
+                          ✓ Picked up {new Date(pickupTime).toLocaleDateString('en-US', { 
                             month: 'short', 
                             day: 'numeric' 
                           })}

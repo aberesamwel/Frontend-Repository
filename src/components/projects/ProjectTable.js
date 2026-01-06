@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Calendar } from 'lucide-react';
+import { Eye, Calendar, ChevronRight } from 'lucide-react';
 import { useTheme } from '../../contexts/ThemeContext';
 
 const ProjectTable = ({ 
@@ -56,7 +56,8 @@ const ProjectTable = ({
 
   return (
     <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
-      <div className="overflow-x-auto">
+      {/* Desktop Table View */}
+      <div className="hidden lg:block overflow-x-auto">
         <table className="w-full">
           <thead className={`${getThemeClass('bg', 'tertiary')} border-b ${getThemeClass('border', 'primary')}`}>
             <tr>
@@ -152,6 +153,90 @@ const ProjectTable = ({
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="lg:hidden">
+        <div className="divide-y divide-gray-200">
+          {projects.map((project) => (
+            <div key={project.id} className={`p-4 hover:${getThemeClass('bg', 'hover')} transition-colors`}>
+              {/* Header Row */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className={`font-semibold ${getThemeClass('text', 'primary')} truncate`}>
+                    {project.projectId || 'N/A'}
+                  </div>
+                  <div className={`text-sm ${getThemeClass('text', 'muted')} truncate`}>
+                    {project.clientName || 'N/A'}
+                  </div>
+                </div>
+                <button 
+                  onClick={() => onViewDetails(project)}
+                  className={`p-2 ${isDark ? 'text-blue-400 hover:bg-white/10' : 'text-blue-600 hover:bg-blue-50'} rounded-lg transition-colors touch-manipulation`}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Status and Progress */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <select
+                    value={formatStatus(project.status)}
+                    onChange={(e) => onUpdateProject({...project, status: e.target.value})}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all ${getStatusColor(formatStatus(project.status))} hover:shadow-md touch-manipulation`}
+                  >
+                    {statusOptions.map(status => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  <div className={`text-sm font-medium ${getThemeClass('text', 'primary')}`}>
+                    {project.progress || 0}%
+                  </div>
+                </div>
+
+                {/* Progress Bar */}
+                <div className={`w-full ${isDark ? 'bg-white/20' : 'bg-slate-200'} rounded-full h-2`}>
+                  <div 
+                    className={`h-2 rounded-full transition-all duration-300 ${getProgressColor(project.progress || 0)}`}
+                    style={{ width: `${project.progress || 0}%` }}
+                  />
+                </div>
+
+                {/* Financial Info */}
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-bold text-green-600">
+                      ${(project.clientPayment || 0).toLocaleString()}
+                    </div>
+                    <div className={`text-xs ${(project.profit || 0) > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      Profit: ${(project.profit || 0).toLocaleString()}
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="flex items-center space-x-2">
+                    {project.status === 'Completed' && !project.deliveredAt && (
+                      <button 
+                        onClick={() => onDelivery(project.id)}
+                        className={`px-3 py-1.5 ${isDark ? 'text-green-400 hover:bg-white/10' : 'text-green-600 hover:bg-green-50'} font-medium text-xs rounded-lg transition-colors touch-manipulation border border-current`}
+                      >
+                        Deliver
+                      </button>
+                    )}
+                    
+                    {project.deliveredAt && (
+                      <span className={`text-xs ${isDark ? 'text-green-400' : 'text-green-600'} font-medium flex items-center px-2 py-1 rounded-lg bg-green-50`}>
+                        <Calendar className="w-3 h-3 mr-1" />
+                        Delivered
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

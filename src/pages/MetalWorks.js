@@ -117,16 +117,16 @@ const MetalWorks = () => {
   };
 
   const filteredServices = services.filter(service => {
-    const customerName = service.client_name || service.customer_name || service.customerName || '';
+    const customerName = service.customer || service.client_name || service.customer_name || service.customerName || '';
     const ticketId = service.ticket_id || service.ticketId || '';
     const phone = service.phone || '';
-    const serviceType = service.service_type || service.serviceType || '';
+    const serviceType = service.service || service.service_type || service.serviceType || '';
     
     const matchesSearch = customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          ticketId.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          phone.includes(searchTerm);
     const matchesStatus = filterStatus === 'all' || service.status === filterStatus;
-    const matchesService = filterService === 'all' || serviceType.includes(filterService);
+    const matchesService = filterService === 'all' || serviceType.toLowerCase().includes(filterService.toLowerCase());
     return matchesSearch && matchesStatus && matchesService;
   });
 

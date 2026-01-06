@@ -175,29 +175,29 @@ const BusinessCalendar = ({ projects = [] }) => {
   const selectedDetails = getSelectedDateDetails();
 
   return (
-    <div className={`${getThemeClass('bg', 'secondary')} rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
+    <div className={`${getThemeClass('bg', 'secondary')} rounded-lg sm:rounded-xl shadow-sm border ${getThemeClass('border', 'primary')} overflow-hidden`}>
       {/* Collapsible Header */}
       <div 
         onClick={() => setIsCalendarExpanded(!isCalendarExpanded)}
-        className={`flex items-center justify-between p-4 cursor-pointer hover:${getThemeClass('bg', 'hover')} transition-colors border-b ${getThemeClass('border', 'primary')}`}
+        className={`flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:${getThemeClass('bg', 'hover')} transition-colors border-b ${getThemeClass('border', 'primary')} touch-manipulation`}
       >
-        <div className="flex items-center space-x-3">
-          <div className={`p-2 rounded-lg ${getThemeClass('bg', 'primary')} text-blue-600`}>
-            <Calendar className="w-5 h-5" />
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+          <div className={`p-1.5 sm:p-2 rounded-lg ${getThemeClass('bg', 'primary')} text-blue-600 flex-shrink-0`}>
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div>
-            <h3 className={`text-lg font-semibold ${getThemeClass('text', 'primary')}`}>
+          <div className="min-w-0 flex-1">
+            <h3 className={`text-base sm:text-lg font-semibold ${getThemeClass('text', 'primary')} truncate`}>
               Performance Calendar
             </h3>
-            <p className={`text-sm ${getThemeClass('text', 'muted')}`}>
-              {selectedDate ? `Selected: ${new Date(selectedDate).toLocaleDateString()}` : 'Click to explore daily performance'}
+            <p className={`text-xs sm:text-sm ${getThemeClass('text', 'muted')} truncate`}>
+              {selectedDate ? `Selected: ${new Date(selectedDate).toLocaleDateString()}` : 'Tap to explore daily performance'}
             </p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
           {selectedDate && (
-            <div className="text-right mr-4">
-              <div className={`text-sm font-semibold ${getThemeClass('text', 'primary')}`}>
+            <div className="text-right mr-2 sm:mr-4 hidden xs:block">
+              <div className={`text-xs sm:text-sm font-semibold ${getThemeClass('text', 'primary')}`}>
                 ${calendarData[selectedDate]?.totalSales?.toFixed(0) || '0'}
               </div>
               <div className={`text-xs ${getThemeClass('text', 'muted')}`}>
@@ -205,170 +205,179 @@ const BusinessCalendar = ({ projects = [] }) => {
               </div>
             </div>
           )}
-          {isCalendarExpanded ? (
-            <ChevronUp className={`w-5 h-5 ${getThemeClass('text', 'secondary')}`} />
-          ) : (
-            <ChevronDown className={`w-5 h-5 ${getThemeClass('text', 'secondary')}`} />
-          )}
+          <div className="p-1 sm:p-0">
+            {isCalendarExpanded ? (
+              <ChevronUp className={`w-4 h-4 sm:w-5 sm:h-5 ${getThemeClass('text', 'secondary')}`} />
+            ) : (
+              <ChevronDown className={`w-4 h-4 sm:w-5 sm:h-5 ${getThemeClass('text', 'secondary')}`} />
+            )}
+          </div>
         </div>
       </div>
 
       {/* Expandable Calendar Content */}
       <div className={`transition-all duration-300 ease-in-out ${isCalendarExpanded ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
-        <div className="p-6">
-          <div className="flex flex-col lg:flex-row gap-6">
+        <div className="p-3 sm:p-4 lg:p-6">
+          <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:gap-6">
             {/* Calendar */}
             <div className="flex-1">
               {/* Calendar Navigation */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <div className="flex items-center space-x-2 sm:space-x-4">
                   <button
                     onClick={() => navigateMonth(-1)}
-                    className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
+                    className={`p-2 sm:p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')} touch-manipulation`}
                   >
-                    <ChevronLeft className="w-5 h-5" />
+                    <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
-                  <span className={`text-lg font-medium ${getThemeClass('text', 'primary')} min-w-[200px] text-center`}>
+                  <span className={`text-sm sm:text-lg font-medium ${getThemeClass('text', 'primary')} min-w-[140px] sm:min-w-[200px] text-center`}>
                     {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                   </span>
                   <button
                     onClick={() => navigateMonth(1)}
-                    className={`p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')}`}
+                    className={`p-2 sm:p-2 rounded-lg ${getThemeClass('bg', 'hover')} ${getThemeClass('text', 'secondary')} hover:${getThemeClass('text', 'primary')} touch-manipulation`}
                   >
-                    <ChevronRight className="w-5 h-5" />
+                    <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </button>
                 </div>
                 <button
                   onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
-                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                  className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors touch-manipulation"
                 >
                   Today
                 </button>
               </div>
 
-          {/* Day Names */}
-          <div className="grid grid-cols-7 gap-1 mb-2">
-            {dayNames.map(day => (
-              <div key={day} className={`text-center text-sm font-medium ${getThemeClass('text', 'muted')} py-2`}>
-                {day}
-              </div>
-            ))}
-          </div>
-
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {getDaysInMonth().map((dayInfo, index) => {
-              if (!dayInfo) {
-                return <div key={index} className="h-20"></div>;
-              }
-
-              const intensity = getDayIntensity(dayInfo.data);
-              const hasActivity = dayInfo.data.serviceCount > 0 || dayInfo.data.totalSales > 0;
-              const colorClass = getDayColor(intensity, hasActivity);
-
-              return (
-                <div
-                  key={dayInfo.date}
-                  onClick={() => handleDateClick(dayInfo.date)}
-                  className={`h-20 p-2 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-md ${
-                    dayInfo.isSelected 
-                      ? 'ring-2 ring-blue-500 bg-blue-50' 
-                      : dayInfo.isToday 
-                        ? 'ring-2 ring-green-500 bg-green-50'
-                        : colorClass
-                  } ${getThemeClass('border', 'secondary')}`}
-                >
-                  <div className="flex flex-col h-full">
-                    <div className={`text-sm font-medium ${dayInfo.isToday ? 'text-green-700' : getThemeClass('text', 'primary')}`}>
-                      {dayInfo.day}
+              {/* Calendar Grid */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {/* Day Headers */}
+                <div className="grid grid-cols-7 bg-gray-50">
+                  {dayNames.map(day => (
+                    <div key={day} className="p-2 sm:p-3 text-center text-xs sm:text-sm font-medium text-gray-600 border-r border-gray-200 last:border-r-0">
+                      <span className="hidden sm:inline">{day}</span>
+                      <span className="sm:hidden">{day.slice(0, 1)}</span>
                     </div>
-                    {hasActivity && (
-                      <div className="flex-1 flex flex-col justify-center text-xs">
-                        <div className="text-green-700 font-semibold">${dayInfo.data.totalSales.toFixed(0)}</div>
-                        <div className="text-blue-600">{dayInfo.data.serviceCount} jobs</div>
-                      </div>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              );
-            })}
-          </div>
+                
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7">
+                  {getDaysInMonth().map((day, index) => {
+                    if (!day) {
+                      return <div key={index} className="aspect-square sm:aspect-auto sm:h-16 lg:h-20 border-r border-b border-gray-200 last:border-r-0"></div>;
+                    }
+                    
+                    const intensity = getDayIntensity(day.data);
+                    const hasActivity = day.data.serviceCount > 0;
+                    const dayColor = getDayColor(intensity, hasActivity);
+                    
+                    return (
+                      <div
+                        key={day.date}
+                        onClick={() => handleDateClick(day.date)}
+                        className={`aspect-square sm:aspect-auto sm:h-16 lg:h-20 border-r border-b border-gray-200 last:border-r-0 cursor-pointer transition-all duration-200 hover:bg-blue-50 ${
+                          day.isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                        } ${day.isToday ? 'bg-blue-100' : dayColor} touch-manipulation`}
+                      >
+                        <div className="h-full p-1 sm:p-2 flex flex-col justify-between">
+                          <div className={`text-xs sm:text-sm font-medium ${
+                            day.isToday ? 'text-blue-700' : hasActivity ? 'text-white' : 'text-gray-700'
+                          }`}>
+                            {day.day}
+                          </div>
+                          {hasActivity && (
+                            <div className="hidden sm:block">
+                              <div className={`text-xs font-bold ${
+                                hasActivity ? 'text-white' : 'text-gray-600'
+                              }`}>
+                                ${day.data.totalSales.toFixed(0)}
+                              </div>
+                              <div className={`text-xs ${
+                                hasActivity ? 'text-white/80' : 'text-gray-500'
+                              }`}>
+                                {day.data.serviceCount} svc
+                              </div>
+                            </div>
+                          )}
+                          {hasActivity && (
+                            <div className="sm:hidden w-1.5 h-1.5 bg-white rounded-full self-end"></div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
 
-          {/* Legend */}
-          <div className="flex items-center justify-center space-x-4 mt-4 text-sm">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gray-50 border rounded"></div>
-              <span className={getThemeClass('text', 'muted')}>No Activity</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-200 rounded"></div>
-              <span className={getThemeClass('text', 'muted')}>Low</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-400 rounded"></div>
-              <span className={getThemeClass('text', 'muted')}>High</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-green-500 rounded animate-pulse"></div>
-              <span className={getThemeClass('text', 'muted')}>Peak Performance 🔥</span>
-            </div>
-          </div>
-            </div>
-
-            {/* Selected Date Details */}
+            {/* Selected Date Details - Mobile: Below calendar, Desktop: Side panel */}
             {selectedDetails && (
-              <div className="lg:w-80">
-                <div className={`${getThemeClass('bg', 'primary')} rounded-lg p-4 border ${getThemeClass('border', 'secondary')}`}>
-                  <h4 className={`font-semibold ${getThemeClass('text', 'primary')} mb-4`}>
+              <div className="w-full lg:w-80 xl:w-96">
+                <div className={`${getThemeClass('bg', 'primary')} rounded-lg border ${getThemeClass('border', 'primary')} p-3 sm:p-4`}>
+                  <h4 className={`text-base sm:text-lg font-semibold ${getThemeClass('text', 'primary')} mb-3 sm:mb-4`}>
                     {new Date(selectedDetails.date).toLocaleDateString('en-US', { 
                       weekday: 'long', 
-                      year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
                     })}
                   </h4>
-
-                  {/* Daily Summary */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <DollarSign className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                      <div className="text-lg font-bold text-blue-600">${selectedDetails.summary.totalSales.toFixed(2)}</div>
-                      <div className="text-xs text-blue-600">Sales</div>
+                  
+                  {/* Summary Cards - Mobile: 2x2 grid, Desktop: stacked */}
+                  <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 sm:gap-3 mb-4">
+                    <div className={`${getThemeClass('bg', 'secondary')} rounded-lg p-2 sm:p-3`}>
+                      <div className="flex items-center space-x-2">
+                        <DollarSign className="w-4 h-4 text-green-600" />
+                        <span className={`text-xs sm:text-sm ${getThemeClass('text', 'muted')}`}>Sales</span>
+                      </div>
+                      <div className={`text-lg sm:text-xl font-bold ${getThemeClass('text', 'primary')}`}>
+                        ${selectedDetails.summary.totalSales.toFixed(0)}
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                      <div className="text-lg font-bold text-green-600">${selectedDetails.summary.totalPayments.toFixed(2)}</div>
-                      <div className="text-xs text-green-600">Collected</div>
+                    
+                    <div className={`${getThemeClass('bg', 'secondary')} rounded-lg p-2 sm:p-3`}>
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="w-4 h-4 text-blue-600" />
+                        <span className={`text-xs sm:text-sm ${getThemeClass('text', 'muted')}`}>Payments</span>
+                      </div>
+                      <div className={`text-lg sm:text-xl font-bold ${getThemeClass('text', 'primary')}`}>
+                        ${selectedDetails.summary.totalPayments.toFixed(0)}
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <Users className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                      <div className="text-lg font-bold text-purple-600">{selectedDetails.summary.serviceCount}</div>
-                      <div className="text-xs text-purple-600">Services</div>
-                    </div>
-                    <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <Clock className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                      <div className="text-lg font-bold text-orange-600">{selectedDetails.events.length}</div>
-                      <div className="text-xs text-orange-600">Events</div>
+                    
+                    <div className={`${getThemeClass('bg', 'secondary')} rounded-lg p-2 sm:p-3 col-span-2 lg:col-span-1`}>
+                      <div className="flex items-center space-x-2">
+                        <Users className="w-4 h-4 text-purple-600" />
+                        <span className={`text-xs sm:text-sm ${getThemeClass('text', 'muted')}`}>Services</span>
+                      </div>
+                      <div className={`text-lg sm:text-xl font-bold ${getThemeClass('text', 'primary')}`}>
+                        {selectedDetails.summary.serviceCount}
+                      </div>
                     </div>
                   </div>
-
-                  {/* Hourly Breakdown */}
-                  <div>
-                    <h5 className={`font-medium ${getThemeClass('text', 'primary')} mb-3`}>Hourly Activity</h5>
-                    <div className="space-y-1 max-h-40 overflow-y-auto">
-                      {selectedDetails.hourlyBreakdown
-                        .filter(hour => hour.totalSales > 0 || hour.serviceCount > 0)
-                        .map(hour => (
-                          <div key={hour.hour} className="flex justify-between items-center py-1 px-2 bg-gray-50 rounded text-sm">
-                            <span className="font-medium">{hour.time}</span>
-                            <div className="flex space-x-3">
-                              <span className="text-green-600">${hour.totalSales.toFixed(0)}</span>
-                              <span className="text-blue-600">{hour.serviceCount} jobs</span>
+                  
+                  {/* Events List - Scrollable on mobile */}
+                  {selectedDetails.events.length > 0 && (
+                    <div>
+                      <h5 className={`text-sm font-medium ${getThemeClass('text', 'primary')} mb-2`}>Events</h5>
+                      <div className="space-y-2 max-h-32 sm:max-h-40 lg:max-h-60 overflow-y-auto">
+                        {selectedDetails.events.slice(0, 5).map((event, index) => (
+                          <div key={index} className={`${getThemeClass('bg', 'hover')} rounded p-2 text-xs sm:text-sm`}>
+                            <div className={`font-medium ${getThemeClass('text', 'primary')} truncate`}>
+                              {event.client_name || event.clientName || 'Unknown Client'}
+                            </div>
+                            <div className={`${getThemeClass('text', 'muted')} truncate`}>
+                              ${parseFloat(event.total_amount || event.clientPayment || 0).toFixed(0)}
                             </div>
                           </div>
                         ))}
+                        {selectedDetails.events.length > 5 && (
+                          <div className={`text-xs ${getThemeClass('text', 'muted')} text-center py-1`}>
+                            +{selectedDetails.events.length - 5} more events
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
